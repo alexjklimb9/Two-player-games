@@ -17,11 +17,12 @@
         <div class="panel">
           <p class="eyebrow">Two Player Games</p>
           <h1>Rope Bridge</h1>
-          <p>Hold the phone sideways. One player uses the left half, the other uses the right half.</p>
+          <p>Hold the phone sideways. Both players must reach their glowing exits and stay there together.</p>
           <div class="instructions">
-            <div><strong>Left Player</strong><span>Hold left side to walk left. Swipe up to jump.</span></div>
-            <div><strong>Right Player</strong><span>Hold right side to walk right. Swipe up to jump.</span></div>
+            <div><strong>Left Player</strong><span>Hold the left half to move left. Swipe up to jump.</span></div>
+            <div><strong>Right Player</strong><span>Hold the right half to move right. Swipe up to jump.</span></div>
           </div>
+          <p class="tip">Tip: jumping together shakes the whole bridge. Falling costs time, not the whole round.</p>
           <button id="startButton">Start Game</button>
         </div>
       </section>
@@ -31,13 +32,16 @@
           <p class="eyebrow" id="resultEyebrow">Result</p>
           <h1 id="resultTitle">You Win!</h1>
           <p id="resultText">Both players made it across.</p>
+          <div id="finalStats" class="final-stats"></div>
           <button id="restartButton">Play Again</button>
         </div>
       </section>
 
       <div id="hud">
         <div class="pill">⏱ <span id="timeText">90</span></div>
-        <div class="pill">Bridge Stress <span id="stressText">0%</span></div>
+        <div class="pill">Stress <span id="stressText">0%</span></div>
+        <div class="pill">Falls <span id="fallText">0</span></div>
+        <div class="pill">Hold <span id="holdText">0%</span></div>
       </div>
 
       <div id="touchLabels" aria-hidden="true">
