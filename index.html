@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#101827" />
-    <title>Two Player Games - Balance Board v1.0</title>
-    <link rel="stylesheet" href="style.css?v=7" />
+    <title>Two Player Games - Balance Board v1.1</title>
+    <link rel="stylesheet" href="style.css?v=8" />
   </head>
   <body>
     <main id="app">
@@ -18,24 +18,24 @@
 
       <section id="startOverlay" class="overlay">
         <div class="panel">
-          <p class="eyebrow">Two Player Games · Balance Board v1.0</p>
+          <p class="eyebrow">Two Player Games · Balance Board v1.1</p>
           <h1>Balance Board</h1>
-          <p>Stay on your side, dodge falling objects, and keep the board from tipping over.</p>
+          <p>Use left and right buttons to dodge falling objects while keeping the board balanced.</p>
 
           <div class="instructions">
             <div>
-              <strong>Left Player</strong>
-              <span>Hold left side to move.</span>
+              <strong>Top Player</strong>
+              <span>Use the top left/right buttons.</span>
             </div>
 
             <div>
-              <strong>Right Player</strong>
-              <span>Hold right side to move.</span>
+              <strong>Bottom Player</strong>
+              <span>Use the bottom left/right buttons.</span>
             </div>
           </div>
 
           <p class="tip">
-            Moving changes the board balance. Survive as long as possible.
+            The board is now longer, more stable, and easier to balance.
           </p>
 
           <button id="startButton">Start Game</button>
@@ -58,13 +58,8 @@
         <div class="pill">Dodged <span id="fallText">0</span></div>
         <div class="pill">Speed <span id="holdText">1.0x</span></div>
       </div>
-
-      <div id="touchLabels">
-        <div>LEFT PLAYER</div>
-        <div>RIGHT PLAYER</div>
-      </div>
     </main>
 
-    <script src="game.js?v=7"></script>
+    <script src="game.js?v=8"></script>
   </body>
 </html>
