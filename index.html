@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#101827" />
-    <title>Two Player Games - Rope Bridge v0.3</title>
-    <link rel="stylesheet" href="style.css?v=3" />
+    <title>Two Player Games - Rope Bridge v0.5</title>
+    <link rel="stylesheet" href="style.css?v=5" />
   </head>
   <body>
     <main id="app">
@@ -18,14 +18,14 @@
 
       <section id="startOverlay" class="overlay">
         <div class="panel">
-          <p class="eyebrow">Two Player Games · v0.3 Long Bridge</p>
+          <p class="eyebrow">Two Player Games · v0.5 Locked Screen</p>
           <h1>Rope Bridge</h1>
-          <p>Hold the phone sideways. Both players must travel across a long unstable bridge and reach their glowing exits together.</p>
+          <p>Both players always stay visible on-screen while surviving escalating bridge stages together.</p>
           <div class="instructions">
             <div><strong>Left Player</strong><span>Hold the left half to move left. Swipe up to jump.</span></div>
             <div><strong>Right Player</strong><span>Hold the right half to move right. Swipe up to jump.</span></div>
           </div>
-          <p class="tip">Tip: this version has a longer bridge, scrolling camera, checkpoints, and harder edge instability.</p>
+          <p class="tip">This version hard-locks both players inside visible screen bounds on every stage.</p>
           <button id="startButton">Start Game</button>
         </div>
       </section>
@@ -41,7 +41,7 @@
       </section>
 
       <div id="hud">
-        <div class="pill">⏱ <span id="timeText">165</span></div>
+        <div class="pill">⏱ <span id="timeText">150</span></div>
         <div class="pill">Stress <span id="stressText">0%</span></div>
         <div class="pill">Falls <span id="fallText">0</span></div>
         <div class="pill">Hold <span id="holdText">0%</span></div>
@@ -52,6 +52,6 @@
         <div>RIGHT PLAYER</div>
       </div>
     </main>
-    <script src="game.js?v=3"></script>
+    <script src="game.js?v=5"></script>
   </body>
 </html>
