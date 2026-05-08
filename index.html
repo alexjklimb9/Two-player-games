@@ -3,11 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#101827" />
-    <title>Two Player Games - Rope Bridge</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Two Player Games - Rope Bridge v0.3</title>
+    <link rel="stylesheet" href="style.css?v=3" />
   </head>
   <body>
     <main id="app">
@@ -15,14 +18,14 @@
 
       <section id="startOverlay" class="overlay">
         <div class="panel">
-          <p class="eyebrow">Two Player Games</p>
+          <p class="eyebrow">Two Player Games · v0.3 Long Bridge</p>
           <h1>Rope Bridge</h1>
-          <p>Hold the phone sideways. Both players must reach their glowing exits and stay there together.</p>
+          <p>Hold the phone sideways. Both players must travel across a long unstable bridge and reach their glowing exits together.</p>
           <div class="instructions">
             <div><strong>Left Player</strong><span>Hold the left half to move left. Swipe up to jump.</span></div>
             <div><strong>Right Player</strong><span>Hold the right half to move right. Swipe up to jump.</span></div>
           </div>
-          <p class="tip">Tip: jumping together shakes the whole bridge. Falling costs time, not the whole round.</p>
+          <p class="tip">Tip: this version has a longer bridge, scrolling camera, checkpoints, and harder edge instability.</p>
           <button id="startButton">Start Game</button>
         </div>
       </section>
@@ -38,7 +41,7 @@
       </section>
 
       <div id="hud">
-        <div class="pill">⏱ <span id="timeText">90</span></div>
+        <div class="pill">⏱ <span id="timeText">165</span></div>
         <div class="pill">Stress <span id="stressText">0%</span></div>
         <div class="pill">Falls <span id="fallText">0</span></div>
         <div class="pill">Hold <span id="holdText">0%</span></div>
@@ -49,6 +52,6 @@
         <div>RIGHT PLAYER</div>
       </div>
     </main>
-    <script src="game.js"></script>
+    <script src="game.js?v=3"></script>
   </body>
 </html>
