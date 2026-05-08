@@ -16,16 +16,19 @@ const holdText = document.getElementById('holdText');
 function resize() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  if (game?.players?.length) {
+    game.players.forEach(player => keepPlayerVisible(player, true));
+  }
 }
 
 window.addEventListener('resize', resize);
-resize();
 
 const LEVEL = {
   timeLimit: 150,
   holdRequired: 3,
   bridgeBaseYRatio: 0.58,
-  stagesToWin: 4
+  stagesToWin: 4,
+  safePadding: 42
 };
 
 const game = {
@@ -47,42 +50,81 @@ const game = {
   players: []
 };
 
+resize();
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function safeMinX() {
+  return LEVEL.safePadding;
+}
+
+function safeMaxX() {
+  return canvas.width - LEVEL.safePadding;
+}
+
+function safeMinY() {
+  return 88;
+}
+
+function safeMaxY() {
+  return canvas.height - 70;
+}
+
 function bridgeLeft() {
-  return 70;
+  return safeMinX();
 }
 
 function bridgeRight() {
-  return canvas.width - 70;
+  return safeMaxX();
 }
 
 function bridgeWidth() {
-  return bridgeRight() - bridgeLeft();
-}
-
-function bridgeYAt(x) {
-  const t = (x - bridgeLeft()) / bridgeWidth();
-  const base = canvas.height * LEVEL.bridgeBaseYRatio;
-  const stageAmp = 25 + game.stage * 9;
-  const longWave = Math.sin(game.sway + t * Math.PI * (3.8 + game.stage * 0.5)) * stageAmp;
-  const shortWave = Math.sin(game.sway * 1.8 + t * Math.PI * (9 + game.stage * 2)) * (8 + game.stage * 3);
-  const sag = Math.sin(t * Math.PI) * (18 + game.stage * 8);
-  return base + longWave + shortWave + sag;
-}
-
-function leftGoalX() {
-  return 118;
-}
-
-function rightGoalX() {
-  return canvas.width - 118;
+  return Math.max(1, bridgeRight() - bridgeLeft());
 }
 
 function centerX() {
   return canvas.width / 2;
+}
+
+function bridgeYAt(x) {
+  const t = clamp((x - bridgeLeft()) / bridgeWidth(), 0, 1);
+  const base = canvas.height * LEVEL.bridgeBaseYRatio;
+  const stageAmp = 22 + game.stage * 8;
+  const longWave = Math.sin(game.sway + t * Math.PI * (3.2 + game.stage * 0.45)) * stageAmp;
+  const shortWave = Math.sin(game.sway * 1.7 + t * Math.PI * (8 + game.stage * 1.7)) * (6 + game.stage * 2.5);
+  const sag = Math.sin(t * Math.PI) * (14 + game.stage * 6);
+  return clamp(base + longWave + shortWave + sag, safeMinY() + 80, safeMaxY());
+}
+
+function leftGoalX() {
+  return safeMinX() + 55;
+}
+
+function rightGoalX() {
+  return safeMaxX() - 55;
+}
+
+function keepPlayerVisible(player, resetVelocity = false) {
+  const minX = safeMinX() + player.radius;
+  const maxX = safeMaxX() - player.radius;
+  const minY = safeMinY() + player.radius;
+  const maxY = safeMaxY();
+
+  const oldX = player.x;
+  const oldY = player.y;
+
+  player.x = clamp(player.x, minX, maxX);
+  player.y = clamp(player.y, minY, maxY);
+
+  if (resetVelocity || player.x !== oldX) {
+    player.vx = 0;
+  }
+
+  if (resetVelocity || player.y !== oldY) {
+    player.vy = Math.min(0, player.vy);
+  }
 }
 
 function createPlayer(side) {
@@ -113,6 +155,7 @@ function resetGame() {
   game.wind = 0;
   game.running = true;
   game.players = [createPlayer('left'), createPlayer('right')];
+  game.players.forEach(player => keepPlayerVisible(player, true));
   endOverlay.classList.add('hidden');
 }
 
@@ -128,16 +171,15 @@ function endGame(win) {
     resultText.textContent = game.timer <= 0 ? 'Time ran out before the final stage.' : 'Too much chaos destroyed the bridge.';
   }
 
-  finalStats.innerHTML = `Stage Reached: ${game.stage}/${LEVEL.stagesToWin}<br>Falls: ${game.totalFalls}<br>Time Left: ${Math.ceil(Math.max(0, game.timer))}s`;
+  finalStats.innerHTML = `Stage Reached: ${Math.min(game.stage, LEVEL.stagesToWin)}/${LEVEL.stagesToWin}<br>Falls: ${game.totalFalls}<br>Time Left: ${Math.ceil(Math.max(0, game.timer))}s`;
 }
 
 function stageTargets() {
-  const padding = 105;
   const center = centerX();
   const patterns = [
     { left: leftGoalX(), right: rightGoalX(), label: 'Split to both ends' },
-    { left: center - 160, right: center + 160, label: 'Meet near the middle' },
-    { left: padding + 180, right: canvas.width - padding - 180, label: 'Hold the outer marks' },
+    { left: center - Math.min(145, canvas.width * 0.22), right: center + Math.min(145, canvas.width * 0.22), label: 'Meet near the middle' },
+    { left: safeMinX() + bridgeWidth() * 0.3, right: safeMinX() + bridgeWidth() * 0.7, label: 'Hold the outer marks' },
     { left: leftGoalX(), right: rightGoalX(), label: 'Final crossing' }
   ];
   return patterns[Math.min(game.stage - 1, patterns.length - 1)];
@@ -149,11 +191,13 @@ function advanceStage() {
   game.stageTimer = 0;
   game.timer += 12;
   game.bridgeStress = Math.max(0, game.bridgeStress - 25);
+
   game.players.forEach(player => {
     player.x = centerX() + (player.side === 'left' ? 58 : -58);
     player.y = canvas.height * 0.43;
     player.vx = 0;
     player.vy = 0;
+    keepPlayerVisible(player, true);
   });
 
   if (game.stage > LEVEL.stagesToWin) {
@@ -171,17 +215,19 @@ function respawnPlayer(player) {
   game.timer = Math.max(0, game.timer - 7);
   game.bridgeStress += 12;
   game.holdProgress = 0;
+  keepPlayerVisible(player, true);
 }
 
 function handleMovement(player) {
   if (player.respawnTimer > 0) {
     player.respawnTimer -= 1;
+    keepPlayerVisible(player, true);
     return;
   }
 
   const moveDirection = player.side === 'left' ? -1 : 1;
   const held = player.side === 'left' ? game.leftTouch : game.rightTouch;
-  const sideLoad = (player.x - centerX()) / (canvas.width / 2);
+  const sideLoad = (player.x - centerX()) / Math.max(1, canvas.width / 2);
   const edgeRisk = Math.abs(sideLoad);
 
   if (held) {
@@ -190,7 +236,7 @@ function handleMovement(player) {
     game.bridgeStress += 0.032 + edgeRisk * 0.055 + game.stage * 0.006;
   }
 
-  player.vx += game.wind * 0.015;
+  player.vx += game.wind * 0.012;
   player.vx *= player.grounded ? 0.895 : 0.965;
   player.vy += game.gravity;
 
@@ -213,12 +259,12 @@ function handleMovement(player) {
     player.grounded = false;
   }
 
-  player.x = clamp(player.x, bridgeLeft() + 5, bridgeRight() - 5);
+  keepPlayerVisible(player);
 
   const jumpReady = player.side === 'left' ? game.leftSwipeReady : game.rightSwipeReady;
 
   if (jumpReady && player.grounded) {
-    player.vy = -14.5;
+    player.vy = -13.5;
     game.bridgeStress += 8 + edgeRisk * 8 + game.stage;
     game.swayVelocity += player.side === 'left' ? -0.06 : 0.06;
 
@@ -229,9 +275,7 @@ function handleMovement(player) {
     }
   }
 
-  if (player.y > canvas.height + 120) {
-    respawnPlayer(player);
-  }
+  keepPlayerVisible(player);
 
   const targets = stageTargets();
   const targetX = player.side === 'left' ? targets.left : targets.right;
@@ -250,7 +294,7 @@ function update(delta) {
   }
 
   const windPulse = Math.sin(game.stageTimer * (0.8 + game.stage * 0.2));
-  game.wind = windPulse * Math.max(0, game.stage - 1) * 0.38;
+  game.wind = windPulse * Math.max(0, game.stage - 1) * 0.34;
 
   game.bridgeStress *= 0.9965;
   game.bridgeStress += delta * (0.18 + game.stage * 0.14);
@@ -330,6 +374,10 @@ function drawBridge() {
     ctx.lineTo(x, y + 18);
     ctx.stroke();
   }
+
+  ctx.strokeStyle = 'rgba(248,250,252,0.18)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(safeMinX(), safeMinY(), safeMaxX() - safeMinX(), safeMaxY() - safeMinY());
 
   const targets = stageTargets();
   drawGoal(targets.left, 'LEFT');
