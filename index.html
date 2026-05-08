@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#101827" />
+    <title>Two Player Games - Rope Bridge</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="gameCanvas" aria-label="Two player rope bridge game"></canvas>
+
+      <section id="startOverlay" class="overlay">
+        <div class="panel">
+          <p class="eyebrow">Two Player Games</p>
+          <h1>Rope Bridge</h1>
+          <p>Hold the phone sideways. One player uses the left half, the other uses the right half.</p>
+          <div class="instructions">
+            <div><strong>Left Player</strong><span>Hold left side to walk left. Swipe up to jump.</span></div>
+            <div><strong>Right Player</strong><span>Hold right side to walk right. Swipe up to jump.</span></div>
+          </div>
+          <button id="startButton">Start Game</button>
+        </div>
+      </section>
+
+      <section id="endOverlay" class="overlay hidden">
+        <div class="panel">
+          <p class="eyebrow" id="resultEyebrow">Result</p>
+          <h1 id="resultTitle">You Win!</h1>
+          <p id="resultText">Both players made it across.</p>
+          <button id="restartButton">Play Again</button>
+        </div>
+      </section>
+
+      <div id="hud">
+        <div class="pill">⏱ <span id="timeText">90</span></div>
+        <div class="pill">Bridge Stress <span id="stressText">0%</span></div>
+      </div>
+
+      <div id="touchLabels" aria-hidden="true">
+        <div>LEFT PLAYER</div>
+        <div>RIGHT PLAYER</div>
+      </div>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
