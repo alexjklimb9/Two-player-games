@@ -313,41 +313,49 @@ function setInputFromTouch(touch, isDown) {
   }
 }
 
-function shouldIgnoreGameTouch(event) {
-  return !game.running || event.target.closest('button') || event.target.closest('.overlay');
+function overlayVisible() {
+  return !startOverlay.classList.contains('hidden') || !endOverlay.classList.contains('hidden');
 }
 
-window.addEventListener('touchstart', event => {
-  if (shouldIgnoreGameTouch(event)) return;
+function startFromOverlay(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  resetGame();
+}
+
+startOverlay.addEventListener('touchstart', startFromOverlay, { passive: false });
+startOverlay.addEventListener('pointerdown', startFromOverlay);
+startOverlay.addEventListener('click', startFromOverlay);
+endOverlay.addEventListener('touchstart', startFromOverlay, { passive: false });
+endOverlay.addEventListener('pointerdown', startFromOverlay);
+endOverlay.addEventListener('click', startFromOverlay);
+startButton.addEventListener('touchstart', startFromOverlay, { passive: false });
+startButton.addEventListener('pointerdown', startFromOverlay);
+startButton.addEventListener('click', startFromOverlay);
+restartButton.addEventListener('touchstart', startFromOverlay, { passive: false });
+restartButton.addEventListener('pointerdown', startFromOverlay);
+restartButton.addEventListener('click', startFromOverlay);
+
+document.addEventListener('touchstart', event => {
+  if (overlayVisible()) return;
   event.preventDefault();
   for (const touch of event.changedTouches) setInputFromTouch(touch, true);
 }, { passive: false });
-window.addEventListener('touchmove', event => { if (!shouldIgnoreGameTouch(event)) event.preventDefault(); }, { passive: false });
-window.addEventListener('touchend', event => {
-  if (shouldIgnoreGameTouch(event)) return;
-  event.preventDefault();
-  for (const touch of event.changedTouches) setInputFromTouch(touch, false);
+
+document.addEventListener('touchmove', event => {
+  if (!overlayVisible()) event.preventDefault();
 }, { passive: false });
-window.addEventListener('touchcancel', event => {
-  if (shouldIgnoreGameTouch(event)) return;
+
+document.addEventListener('touchend', event => {
+  if (overlayVisible()) return;
   event.preventDefault();
   for (const touch of event.changedTouches) setInputFromTouch(touch, false);
 }, { passive: false });
 
-function bindButton(button, action) {
-  button.addEventListener('click', action);
-  button.addEventListener('touchstart', event => {
-    event.stopPropagation();
-    event.preventDefault();
-    action();
-  }, { passive: false });
-  button.addEventListener('pointerdown', event => {
-    event.stopPropagation();
-    action();
-  });
-}
-
-bindButton(startButton, resetGame);
-bindButton(restartButton, resetGame);
+document.addEventListener('touchcancel', event => {
+  if (overlayVisible()) return;
+  event.preventDefault();
+  for (const touch of event.changedTouches) setInputFromTouch(touch, false);
+}, { passive: false });
 
 render();
