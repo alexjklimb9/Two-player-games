@@ -22,8 +22,12 @@ const game = {
   score: 0,
   spawnTimer: 0,
   particles: [],
-  leftTouch: false,
-  rightTouch: false,
+  input: {
+    topLeft: false,
+    topRight: false,
+    bottomLeft: false,
+    bottomRight: false
+  },
   players: []
 };
 
@@ -39,14 +43,30 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
+function boardCenterY() {
+  return canvas.height * 0.68;
+}
+
+function boardHalfWidth() {
+  return canvas.width * 0.43;
+}
+
+function boardLeft() {
+  return canvas.width / 2 - boardHalfWidth();
+}
+
+function boardRight() {
+  return canvas.width / 2 + boardHalfWidth();
+}
+
 function createPlayer(side) {
   return {
     side,
-    x: side === 'left' ? canvas.width * 0.25 : canvas.width * 0.75,
-    y: canvas.height * 0.63,
+    x: side === 'top' ? canvas.width * 0.28 : canvas.width * 0.72,
+    y: canvas.height * 0.58,
     vx: 0,
-    radius: 26,
-    color: side === 'left' ? '#38bdf8' : '#fb7185'
+    radius: 22,
+    color: side === 'top' ? '#38bdf8' : '#fb7185'
   };
 }
 
@@ -59,7 +79,11 @@ function resetGame() {
   game.score = 0;
   game.spawnTimer = 0;
   game.particles = [];
-  game.players = [createPlayer('left'), createPlayer('right')];
+  game.input.topLeft = false;
+  game.input.topRight = false;
+  game.input.bottomLeft = false;
+  game.input.bottomRight = false;
+  game.players = [createPlayer('top'), createPlayer('bottom')];
   endOverlay.classList.add('hidden');
 }
 
@@ -73,54 +97,65 @@ function endGame(reason) {
 }
 
 function spawnObject() {
-  const side = Math.random() < 0.5 ? 'left' : 'right';
-  const minX = side === 'left' ? 70 : canvas.width / 2 + 30;
-  const maxX = side === 'left' ? canvas.width / 2 - 30 : canvas.width - 70;
+  const lane = Math.random() < 0.5 ? 'top' : 'bottom';
+  const minX = lane === 'top' ? boardLeft() + 25 : canvas.width / 2 + 25;
+  const maxX = lane === 'top' ? canvas.width / 2 - 25 : boardRight() - 25;
 
   game.particles.push({
-    x: minX + Math.random() * (maxX - minX),
+    x: minX + Math.random() * Math.max(1, maxX - minX),
     y: -40,
-    vy: 6 + Math.random() * 4 + game.difficulty,
-    radius: 18 + Math.random() * 20,
+    vy: 3.6 + Math.random() * 2.1 + game.difficulty * 0.55,
+    radius: 14 + Math.random() * 15,
     rotation: Math.random() * Math.PI * 2
   });
 }
 
+function directionForPlayer(player) {
+  if (player.side === 'top') {
+    return (game.input.topRight ? 1 : 0) - (game.input.topLeft ? 1 : 0);
+  }
+
+  return (game.input.bottomRight ? 1 : 0) - (game.input.bottomLeft ? 1 : 0);
+}
+
 function updatePlayers() {
   game.players.forEach(player => {
-    const held = player.side === 'left' ? game.leftTouch : game.rightTouch;
-    const moveDir = player.side === 'left' ? -1 : 1;
+    const dir = directionForPlayer(player);
 
-    if (held) {
-      player.vx += moveDir * 0.9;
+    if (dir !== 0) {
+      player.vx += dir * 0.42;
     }
 
-    player.vx *= 0.82;
+    player.vx *= 0.84;
     player.x += player.vx;
 
-    const minX = player.side === 'left'
-      ? 50
-      : canvas.width / 2 + 20;
+    const minX = player.side === 'top'
+      ? boardLeft() + 28
+      : canvas.width / 2 + 18;
 
-    const maxX = player.side === 'left'
-      ? canvas.width / 2 - 20
-      : canvas.width - 50;
+    const maxX = player.side === 'top'
+      ? canvas.width / 2 - 18
+      : boardRight() - 28;
 
     player.x = clamp(player.x, minX, maxX);
   });
 }
 
 function updateTilt(delta) {
-  const leftWeight = (canvas.width * 0.5 - game.players[0].x) * 0.02;
-  const rightWeight = (game.players[1].x - canvas.width * 0.5) * 0.02;
+  const center = canvas.width / 2;
+  const leftPlayer = game.players[0];
+  const rightPlayer = game.players[1];
 
-  game.tiltVelocity += (rightWeight - leftWeight) * 0.0012;
-  game.tiltVelocity *= 0.96;
+  const leftWeight = (center - leftPlayer.x) / Math.max(1, boardHalfWidth());
+  const rightWeight = (rightPlayer.x - center) / Math.max(1, boardHalfWidth());
+  const targetTilt = (rightWeight - leftWeight) * 0.18;
+
+  game.tiltVelocity += (targetTilt - game.tilt) * 0.012;
+  game.tiltVelocity *= 0.93;
   game.tilt += game.tiltVelocity;
+  game.tilt += Math.sin(game.timer * 0.65) * 0.00008 * game.difficulty;
 
-  game.tilt += Math.sin(game.timer * 0.8) * 0.0003 * game.difficulty;
-
-  if (Math.abs(game.tilt) > 0.34) {
+  if (Math.abs(game.tilt) > 0.55) {
     endGame('The board tipped too far.');
   }
 }
@@ -128,7 +163,7 @@ function updateTilt(delta) {
 function updateObjects(delta) {
   game.spawnTimer += delta;
 
-  const spawnRate = Math.max(0.35, 1.2 - game.difficulty * 0.08);
+  const spawnRate = Math.max(0.5, 1.45 - game.difficulty * 0.07);
 
   if (game.spawnTimer >= spawnRate) {
     game.spawnTimer = 0;
@@ -147,7 +182,7 @@ function updateObjects(delta) {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < obj.radius + player.radius - 8) {
-        endGame(`${player.side === 'left' ? 'Left' : 'Right'} player got hit.`);
+        endGame(`${player.side === 'top' ? 'Top' : 'Bottom'} player got hit.`);
         return;
       }
     }
@@ -163,14 +198,14 @@ function update(delta) {
   if (!game.running) return;
 
   game.timer += delta;
-  game.difficulty += delta * 0.035;
+  game.difficulty += delta * 0.025;
 
   updatePlayers();
   updateTilt(delta);
   updateObjects(delta);
 
   timeText.textContent = `${Math.floor(game.timer)}s`;
-  stressText.textContent = `${Math.floor(Math.abs(game.tilt) * 290)}%`;
+  stressText.textContent = `${Math.floor(Math.abs(game.tilt) * 180)}%`;
   fallText.textContent = game.score;
   holdText.textContent = `${game.difficulty.toFixed(1)}x`;
 }
@@ -193,48 +228,59 @@ function drawBackground() {
 
 function drawBoard() {
   const centerX = canvas.width / 2;
-  const centerY = canvas.height * 0.72;
+  const centerY = boardCenterY();
 
   ctx.save();
   ctx.translate(centerX, centerY);
   ctx.rotate(game.tilt);
 
   ctx.fillStyle = '#8b5e34';
-  ctx.fillRect(-canvas.width * 0.35, -16, canvas.width * 0.7, 32);
+  ctx.fillRect(-boardHalfWidth(), -14, boardHalfWidth() * 2, 28);
 
   ctx.fillStyle = '#713f12';
-
-  for (let i = -5; i <= 5; i++) {
-    ctx.fillRect(i * 55 - 6, -16, 12, 32);
+  const plankCount = 15;
+  for (let i = -plankCount; i <= plankCount; i++) {
+    ctx.fillRect(i * 42 - 4, -14, 8, 28);
   }
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -22);
+  ctx.lineTo(0, 22);
+  ctx.stroke();
 
   ctx.restore();
 
   ctx.fillStyle = '#475569';
   ctx.beginPath();
-  ctx.moveTo(centerX, centerY + 16);
-  ctx.lineTo(centerX - 50, canvas.height);
-  ctx.lineTo(centerX + 50, canvas.height);
+  ctx.moveTo(centerX, centerY + 14);
+  ctx.lineTo(centerX - 45, canvas.height);
+  ctx.lineTo(centerX + 45, canvas.height);
   ctx.closePath();
   ctx.fill();
 }
 
 function drawPlayers() {
-  const boardY = canvas.height * 0.72;
+  const bY = boardCenterY();
 
   game.players.forEach(player => {
     const localX = player.x - canvas.width / 2;
     const rotatedY = Math.sin(game.tilt) * localX;
 
-    player.y = boardY + rotatedY - 28;
+    player.y = bY + rotatedY - 30;
 
     ctx.fillStyle = player.color;
-
     ctx.beginPath();
     ctx.arc(player.x, player.y - 20, player.radius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillRect(player.x - 15, player.y, 30, 38);
 
-    ctx.fillRect(player.x - 18, player.y, 36, 44);
+    ctx.fillStyle = '#020617';
+    ctx.beginPath();
+    ctx.arc(player.x - 7, player.y - 23, 3, 0, Math.PI * 2);
+    ctx.arc(player.x + 7, player.y - 23, 3, 0, Math.PI * 2);
+    ctx.fill();
   });
 }
 
@@ -251,11 +297,55 @@ function drawObjects() {
   });
 }
 
+function drawControls() {
+  const buttonW = Math.min(120, canvas.width * 0.18);
+  const buttonH = 58;
+  const topY = 78;
+  const bottomY = canvas.height - 92;
+  const gap = 18;
+
+  drawButton(canvas.width * 0.25 - buttonW - gap / 2, topY, buttonW, buttonH, '◀', game.input.topLeft, '#38bdf8');
+  drawButton(canvas.width * 0.25 + gap / 2, topY, buttonW, buttonH, '▶', game.input.topRight, '#38bdf8');
+
+  drawButton(canvas.width * 0.75 - buttonW - gap / 2, bottomY, buttonW, buttonH, '◀', game.input.bottomLeft, '#fb7185');
+  drawButton(canvas.width * 0.75 + gap / 2, bottomY, buttonW, buttonH, '▶', game.input.bottomRight, '#fb7185');
+}
+
+function drawButton(x, y, w, h, label, active, color) {
+  ctx.fillStyle = active ? color : 'rgba(15,23,42,0.75)';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  roundRect(x, y, w, h, 18, true, true);
+
+  ctx.fillStyle = active ? '#020617' : '#f8fafc';
+  ctx.font = '900 28px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x + w / 2, y + h / 2 + 1);
+}
+
+function roundRect(x, y, w, h, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
+}
+
 function render() {
   drawBackground();
+  drawObjects();
   drawBoard();
   drawPlayers();
-  drawObjects();
+  drawControls();
 }
 
 let lastTime = performance.now();
@@ -272,14 +362,25 @@ function loop(now) {
 
 requestAnimationFrame(loop);
 
-window.addEventListener('touchstart', event => {
-  for (const touch of event.changedTouches) {
-    if (touch.clientX < window.innerWidth / 2) {
-      game.leftTouch = true;
-    } else {
-      game.rightTouch = true;
-    }
+function setInputFromTouch(touch, isDown) {
+  const x = touch.clientX;
+  const y = touch.clientY;
+
+  const topZone = y < canvas.height / 2;
+  const leftButton = x < canvas.width / 2;
+
+  if (topZone) {
+    if (leftButton) game.input.topLeft = isDown;
+    else game.input.topRight = isDown;
+  } else {
+    if (leftButton) game.input.bottomLeft = isDown;
+    else game.input.bottomRight = isDown;
   }
+}
+
+window.addEventListener('touchstart', event => {
+  event.preventDefault();
+  for (const touch of event.changedTouches) setInputFromTouch(touch, true);
 }, { passive: false });
 
 window.addEventListener('touchmove', event => {
@@ -287,13 +388,13 @@ window.addEventListener('touchmove', event => {
 }, { passive: false });
 
 window.addEventListener('touchend', event => {
-  for (const touch of event.changedTouches) {
-    if (touch.clientX < window.innerWidth / 2) {
-      game.leftTouch = false;
-    } else {
-      game.rightTouch = false;
-    }
-  }
+  event.preventDefault();
+  for (const touch of event.changedTouches) setInputFromTouch(touch, false);
+}, { passive: false });
+
+window.addEventListener('touchcancel', event => {
+  event.preventDefault();
+  for (const touch of event.changedTouches) setInputFromTouch(touch, false);
 }, { passive: false });
 
 startButton.addEventListener('click', () => {
