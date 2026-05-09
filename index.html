@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=24" />
+    <link rel="stylesheet" href="style.css?v=30" />
   </head>
   <body>
     <main id="app">
@@ -21,7 +21,7 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="?game=balance&v=24">
+            <a class="game-card balance-card" href="?game=balance&v=30">
               <div class="card-art">
                 <div class="mini-head cyan-head"></div>
                 <div class="mini-board"></div>
@@ -35,16 +35,19 @@
               <span class="play-chip">Play</span>
             </a>
 
-            <a class="game-card tower-card" href="?game=seesaw&v=24">
-              <div class="card-art tower-art">
-                <div class="mini-platform"></div>
-                <div class="mini-platform offset"></div>
-                <div class="mini-platform"></div>
+            <a class="game-card trampoline-card" href="?game=seesaw&v=30">
+              <div class="card-art trampoline-art">
+                <div class="mini-trampoline mini-low"></div>
+                <div class="mini-trampoline mini-high"></div>
+                <div class="mini-trampoline mini-mid"></div>
+                <div class="mini-trampoline mini-super"></div>
+                <div class="mini-head cyan-head bounce-blue"></div>
+                <div class="mini-head rose-head bounce-rose"></div>
               </div>
               <div>
                 <p class="card-kicker">Prototype 2</p>
-                <h2>Seesaw Tower</h2>
-                <p>Auto-bounce, land hard, and launch each other up through the tower.</p>
+                <h2>Trampoline Climb</h2>
+                <p>Bounce on colored platforms, launch higher, and keep climbing before they disappear.</p>
               </div>
               <span class="play-chip">Play</span>
             </a>
@@ -86,7 +89,7 @@
             <div id="finalStats" class="final-stats"></div>
             <div class="end-actions">
               <button id="restartButton">Play Again</button>
-              <a id="homeButton" class="secondary-button" href="./?v=24">Games</a>
+              <a id="homeButton" class="secondary-button" href="./?v=30">Games</a>
             </div>
           </div>
         </section>
@@ -105,7 +108,7 @@
       const selectedGame = params.get('game');
       const games = {
         balance: {
-          script: 'modern-game.js?v=24',
+          script: 'modern-game.js?v=30',
           eyebrow: 'Two Player Games · Prototype 1',
           title: 'Balance Board',
           description: 'Move, dodge, and keep the platform balanced together.',
@@ -114,12 +117,12 @@
           score: 'Dodged'
         },
         seesaw: {
-          script: 'seesaw-tower.js?v=24',
+          script: 'seesaw-tower.js?v=30',
           eyebrow: 'Two Player Games · Prototype 2',
-          title: 'Seesaw Tower',
-          description: 'Bouncing is automatic. Use left and right to aim your landings.',
-          tip: 'Land on one side to launch the other player upward. Time it well or send them into the spikes.',
-          stress: 'Tilt',
+          title: 'Trampoline Climb',
+          description: 'Bounce on colored platforms. Each color launches you a different height.',
+          tip: 'Platforms disappear after one bounce. Keep both players climbing and avoid flying hazards.',
+          stress: 'Pads',
           score: 'Height'
         }
       };
