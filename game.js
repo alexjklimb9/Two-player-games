@@ -18,6 +18,7 @@ const game = {
   timer: 0,
   tilt: 0,
   tiltVelocity: 0,
+  imbalance: 0,
   difficulty: 1,
   score: 0,
   spawnTimer: 0,
@@ -34,18 +35,19 @@ window.addEventListener('resize', resize);
 resize();
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
-function boardCenterY() { return canvas.height * 0.64; }
-function boardHalfWidth() { return canvas.width * 0.48; }
-function boardLeft() { return canvas.width / 2 - boardHalfWidth(); }
-function boardRight() { return canvas.width / 2 + boardHalfWidth(); }
+function boardCenterY() { return canvas.height * 0.61; }
+function boardHalfWidth() { return canvas.width * 0.54; }
+function visibleBoardHalfWidth() { return canvas.width * 0.49; }
+function boardLeft() { return canvas.width / 2 - visibleBoardHalfWidth(); }
+function boardRight() { return canvas.width / 2 + visibleBoardHalfWidth(); }
 
 function createPlayer(side) {
   return {
     side,
-    x: side === 'top' ? canvas.width * 0.28 : canvas.width * 0.72,
-    y: canvas.height * 0.54,
+    x: side === 'top' ? canvas.width * 0.26 : canvas.width * 0.74,
+    y: canvas.height * 0.52,
     vx: 0,
-    radius: 20,
+    radius: 19,
     color: side === 'top' ? '#38bdf8' : '#fb7185'
   };
 }
@@ -62,6 +64,7 @@ function resetGame() {
   game.timer = 0;
   game.tilt = 0;
   game.tiltVelocity = 0;
+  game.imbalance = 0;
   game.difficulty = 1;
   game.score = 0;
   game.spawnTimer = 0;
@@ -83,12 +86,12 @@ function endGame(reason) {
 
 function spawnObject() {
   const lane = Math.random() < 0.5 ? 'top' : 'bottom';
-  const minX = lane === 'top' ? boardLeft() + 35 : canvas.width / 2 + 25;
-  const maxX = lane === 'top' ? canvas.width / 2 - 25 : boardRight() - 35;
+  const minX = lane === 'top' ? boardLeft() + 42 : canvas.width / 2 + 28;
+  const maxX = lane === 'top' ? canvas.width / 2 - 28 : boardRight() - 42;
   game.particles.push({
     x: minX + Math.random() * Math.max(1, maxX - minX),
     y: -40,
-    vy: 3.6 + Math.random() * 2.1 + game.difficulty * 0.55,
+    vy: 3.4 + Math.random() * 2 + game.difficulty * 0.55,
     radius: 13 + Math.random() * 14,
     rotation: Math.random() * Math.PI * 2
   });
@@ -106,24 +109,33 @@ function updatePlayers() {
     player.vx *= 0.84;
     player.x += player.vx;
 
-    const minX = player.side === 'top' ? boardLeft() + 35 : canvas.width / 2 + 18;
-    const maxX = player.side === 'top' ? canvas.width / 2 - 18 : boardRight() - 35;
+    const minX = player.side === 'top' ? boardLeft() + 42 : canvas.width / 2 + 20;
+    const maxX = player.side === 'top' ? canvas.width / 2 - 20 : boardRight() - 42;
     player.x = clamp(player.x, minX, maxX);
   });
 }
 
-function updateTilt() {
+function updateTilt(delta) {
   const center = canvas.width / 2;
   const topPlayer = game.players[0];
   const bottomPlayer = game.players[1];
-  const leftWeight = (center - topPlayer.x) / Math.max(1, boardHalfWidth());
-  const rightWeight = (bottomPlayer.x - center) / Math.max(1, boardHalfWidth());
-  const targetTilt = (rightWeight - leftWeight) * 0.33;
-  game.tiltVelocity += (targetTilt - game.tilt) * 0.02;
-  game.tiltVelocity *= 0.935;
+  const leftWeight = (center - topPlayer.x) / Math.max(1, visibleBoardHalfWidth());
+  const rightWeight = (bottomPlayer.x - center) / Math.max(1, visibleBoardHalfWidth());
+  const balanceDelta = rightWeight - leftWeight;
+  const targetTilt = balanceDelta * 0.72;
+
+  game.tiltVelocity += (targetTilt - game.tilt) * 0.045;
+  game.tiltVelocity *= 0.94;
   game.tilt += game.tiltVelocity;
-  game.tilt += Math.sin(game.timer * 0.72) * 0.00014 * game.difficulty;
-  if (Math.abs(game.tilt) > 0.48) endGame('The board tipped too far.');
+  game.tilt += Math.sin(game.timer * 0.8) * 0.00018 * game.difficulty;
+
+  const danger = Math.max(0, Math.abs(game.tilt) - 0.23);
+  game.imbalance += danger * delta * 3.8;
+  game.imbalance = Math.max(0, game.imbalance - delta * 0.48);
+
+  if (Math.abs(game.tilt) > 0.42 || game.imbalance > 1) {
+    endGame('The board tipped too far.');
+  }
 }
 
 function updateObjects(delta) {
@@ -161,10 +173,10 @@ function update(delta) {
   game.timer += delta;
   game.difficulty += delta * 0.026;
   updatePlayers();
-  updateTilt();
+  updateTilt(delta);
   updateObjects(delta);
   timeText.textContent = `${Math.floor(game.timer)}s`;
-  stressText.textContent = `${Math.floor(Math.abs(game.tilt) * 208)}%`;
+  stressText.textContent = `${Math.min(100, Math.floor(Math.max(Math.abs(game.tilt) / 0.42, game.imbalance) * 100))}%`;
   fallText.textContent = game.score;
   holdText.textContent = `${game.difficulty.toFixed(1)}x`;
 }
@@ -190,22 +202,22 @@ function drawBoard() {
   ctx.translate(centerX, centerY);
   ctx.rotate(game.tilt);
   ctx.fillStyle = '#8b5e34';
-  ctx.fillRect(-boardHalfWidth(), -12, boardHalfWidth() * 2, 24);
+  ctx.fillRect(-boardHalfWidth(), -10, boardHalfWidth() * 2, 20);
   ctx.fillStyle = '#713f12';
-  for (let i = -18; i <= 18; i++) ctx.fillRect(i * 40 - 4, -12, 8, 24);
+  for (let i = -22; i <= 22; i++) ctx.fillRect(i * 34 - 3, -10, 6, 20);
   ctx.strokeStyle = 'rgba(255,255,255,0.35)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(0, -20);
-  ctx.lineTo(0, 20);
+  ctx.moveTo(0, -18);
+  ctx.lineTo(0, 18);
   ctx.stroke();
   ctx.restore();
 
   ctx.fillStyle = '#475569';
   ctx.beginPath();
-  ctx.moveTo(centerX, centerY + 12);
-  ctx.lineTo(centerX - 42, canvas.height);
-  ctx.lineTo(centerX + 42, canvas.height);
+  ctx.moveTo(centerX, centerY + 10);
+  ctx.lineTo(centerX - 30, centerY + 86);
+  ctx.lineTo(centerX + 30, centerY + 86);
   ctx.closePath();
   ctx.fill();
 }
@@ -215,16 +227,16 @@ function drawPlayers() {
   game.players.forEach(player => {
     const localX = player.x - canvas.width / 2;
     const rotatedY = Math.sin(game.tilt) * localX;
-    player.y = bY + rotatedY - 28;
+    player.y = bY + rotatedY - 27;
     ctx.fillStyle = player.color;
     ctx.beginPath();
-    ctx.arc(player.x, player.y - 18, player.radius, 0, Math.PI * 2);
+    ctx.arc(player.x, player.y - 17, player.radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillRect(player.x - 14, player.y, 28, 34);
+    ctx.fillRect(player.x - 13, player.y, 26, 31);
     ctx.fillStyle = '#020617';
     ctx.beginPath();
-    ctx.arc(player.x - 6, player.y - 21, 3, 0, Math.PI * 2);
-    ctx.arc(player.x + 6, player.y - 21, 3, 0, Math.PI * 2);
+    ctx.arc(player.x - 6, player.y - 20, 3, 0, Math.PI * 2);
+    ctx.arc(player.x + 6, player.y - 20, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 }
