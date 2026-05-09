@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=30" />
+    <link rel="stylesheet" href="style.css?v=31" />
   </head>
   <body>
     <main id="app">
@@ -21,7 +21,7 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="?game=balance&v=30">
+            <a class="game-card balance-card" href="?game=balance&v=31">
               <div class="card-art">
                 <div class="mini-head cyan-head"></div>
                 <div class="mini-board"></div>
@@ -35,7 +35,7 @@
               <span class="play-chip">Play</span>
             </a>
 
-            <a class="game-card trampoline-card" href="?game=seesaw&v=30">
+            <a class="game-card trampoline-card" href="?game=seesaw&v=31">
               <div class="card-art trampoline-art">
                 <div class="mini-trampoline mini-low"></div>
                 <div class="mini-trampoline mini-high"></div>
@@ -48,6 +48,22 @@
                 <p class="card-kicker">Prototype 2</p>
                 <h2>Trampoline Climb</h2>
                 <p>Bounce on colored platforms, launch higher, and keep climbing before they disappear.</p>
+              </div>
+              <span class="play-chip">Play</span>
+            </a>
+
+            <a class="game-card asteroid-card" href="?game=asteroids&v=31">
+              <div class="card-art asteroid-art">
+                <div class="mini-ship"></div>
+                <div class="mini-rock rock-one"></div>
+                <div class="mini-rock rock-two"></div>
+                <div class="mini-shot shot-one"></div>
+                <div class="mini-shot shot-two"></div>
+              </div>
+              <div>
+                <p class="card-kicker">Prototype 3</p>
+                <h2>Asteroid Crew</h2>
+                <p>One player pilots and selects weapons. The other aims and fires.</p>
               </div>
               <span class="play-chip">Play</span>
             </a>
@@ -66,13 +82,13 @@
 
             <div class="instructions">
               <div>
-                <strong>Top Player</strong>
-                <span>Use the top edge buttons.</span>
+                <strong id="topPlayerLabel">Top Player</strong>
+                <span id="topPlayerInstructions">Use the top edge buttons.</span>
               </div>
 
               <div>
-                <strong>Bottom Player</strong>
-                <span>Use the bottom edge buttons.</span>
+                <strong id="bottomPlayerLabel">Bottom Player</strong>
+                <span id="bottomPlayerInstructions">Use the bottom edge buttons.</span>
               </div>
             </div>
 
@@ -89,7 +105,7 @@
             <div id="finalStats" class="final-stats"></div>
             <div class="end-actions">
               <button id="restartButton">Play Again</button>
-              <a id="homeButton" class="secondary-button" href="./?v=30">Games</a>
+              <a id="homeButton" class="secondary-button" href="./?v=31">Games</a>
             </div>
           </div>
         </section>
@@ -98,7 +114,7 @@
           <div class="pill">⏱ <span id="timeText">0s</span></div>
           <div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div>
           <div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div>
-          <div class="pill">Speed <span id="holdText">1.0x</span></div>
+          <div class="pill"><span id="speedLabel">Speed</span> <span id="holdText">1.0x</span></div>
         </div>
       </section>
     </main>
@@ -108,22 +124,46 @@
       const selectedGame = params.get('game');
       const games = {
         balance: {
-          script: 'modern-game.js?v=30',
+          script: 'modern-game.js?v=31',
           eyebrow: 'Two Player Games · Prototype 1',
           title: 'Balance Board',
           description: 'Move, dodge, and keep the platform balanced together.',
           tip: 'Dodge falling objects while managing shared balance.',
           stress: 'Tilt',
-          score: 'Dodged'
+          score: 'Dodged',
+          speed: 'Speed',
+          topLabel: 'Top Player',
+          topInstructions: 'Use the top edge buttons.',
+          bottomLabel: 'Bottom Player',
+          bottomInstructions: 'Use the bottom edge buttons.'
         },
         seesaw: {
-          script: 'seesaw-tower.js?v=30',
+          script: 'seesaw-tower.js?v=31',
           eyebrow: 'Two Player Games · Prototype 2',
           title: 'Trampoline Climb',
           description: 'Bounce on colored platforms. Each color launches you a different height.',
           tip: 'Platforms disappear after one bounce. Keep both players climbing and avoid flying hazards.',
           stress: 'Pads',
-          score: 'Height'
+          score: 'Height',
+          speed: 'Chain',
+          topLabel: 'Top Player',
+          topInstructions: 'Use the top edge buttons.',
+          bottomLabel: 'Bottom Player',
+          bottomInstructions: 'Use the bottom edge buttons.'
+        },
+        asteroids: {
+          script: 'asteroids-crew.js?v=31',
+          eyebrow: 'Two Player Games · Prototype 3',
+          title: 'Asteroid Crew',
+          description: 'A center-locked asteroid survival game with split ship controls.',
+          tip: 'Top player controls thrust and weapon selection. Bottom player rotates and fires.',
+          stress: 'Hull',
+          score: 'Rocks',
+          speed: 'Weapon',
+          topLabel: 'Pilot / Weapons',
+          topInstructions: 'Left changes weapon. Right controls thrust.',
+          bottomLabel: 'Gunner / Aim',
+          bottomInstructions: 'Left turns the ship. Right fires the weapon.'
         }
       };
 
@@ -137,6 +177,11 @@
         document.getElementById('gameTip').textContent = game.tip;
         document.getElementById('stressLabel').textContent = game.stress;
         document.getElementById('scoreLabel').textContent = game.score;
+        document.getElementById('speedLabel').textContent = game.speed;
+        document.getElementById('topPlayerLabel').textContent = game.topLabel;
+        document.getElementById('topPlayerInstructions').textContent = game.topInstructions;
+        document.getElementById('bottomPlayerLabel').textContent = game.bottomLabel;
+        document.getElementById('bottomPlayerInstructions').textContent = game.bottomInstructions;
         const script = document.createElement('script');
         script.src = game.script;
         document.body.appendChild(script);
