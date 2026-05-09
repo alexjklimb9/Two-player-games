@@ -9,54 +9,134 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
-    <title>Two Player Games - Seesaw Tower</title>
-    <link rel="stylesheet" href="style.css?v=19" />
+    <title>Two Player Games</title>
+    <link rel="stylesheet" href="style.css?v=20" />
   </head>
   <body>
     <main id="app">
-      <canvas id="gameCanvas"></canvas>
+      <section id="homeScreen" class="home-screen">
+        <div class="home-inner">
+          <p class="eyebrow">Two Player Games</p>
+          <h1>Pick a Game</h1>
+          <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
-      <section id="startOverlay" class="overlay">
-        <div class="panel">
-          <p class="eyebrow">Two Player Games · Prototype 2</p>
-          <h1>Seesaw Tower</h1>
-          <p>Climb unstable platforms together. Move carefully or the tower tips.</p>
+          <div class="game-grid">
+            <a class="game-card balance-card" href="?game=balance&v=20">
+              <div class="card-art">
+                <div class="mini-head cyan-head"></div>
+                <div class="mini-board"></div>
+                <div class="mini-head rose-head"></div>
+              </div>
+              <div>
+                <p class="card-kicker">Prototype 1</p>
+                <h2>Balance Board</h2>
+                <p>Dodge falling objects while keeping one shared platform balanced.</p>
+              </div>
+              <span class="play-chip">Play</span>
+            </a>
 
-          <div class="instructions">
-            <div>
-              <strong>Top Player</strong>
-              <span>Use the top edge buttons.</span>
-            </div>
-
-            <div>
-              <strong>Bottom Player</strong>
-              <span>Use the bottom edge buttons.</span>
-            </div>
+            <a class="game-card tower-card" href="?game=seesaw&v=20">
+              <div class="card-art tower-art">
+                <div class="mini-platform"></div>
+                <div class="mini-platform offset"></div>
+                <div class="mini-platform"></div>
+              </div>
+              <div>
+                <p class="card-kicker">Prototype 2</p>
+                <h2>Seesaw Tower</h2>
+                <p>Climb unstable platforms together without tipping the tower.</p>
+              </div>
+              <span class="play-chip">Play</span>
+            </a>
           </div>
-
-          <p class="tip">Reach higher platforms, avoid falling hazards, and keep each seesaw balanced.</p>
-          <button id="startButton">Start Game</button>
         </div>
       </section>
 
-      <section id="endOverlay" class="overlay hidden">
-        <div class="panel">
-          <p class="eyebrow">Game Over</p>
-          <h1 id="resultTitle">Game Over</h1>
-          <p id="resultText"></p>
-          <div id="finalStats" class="final-stats"></div>
-          <button id="restartButton">Play Again</button>
+      <section id="gameScreen" class="hidden">
+        <canvas id="gameCanvas"></canvas>
+
+        <a id="homeButton" href="./?v=20">← Games</a>
+
+        <section id="startOverlay" class="overlay">
+          <div class="panel">
+            <p id="gameEyebrow" class="eyebrow">Two Player Games</p>
+            <h1 id="gameTitle">Game</h1>
+            <p id="gameDescription">Choose a game from the homepage.</p>
+
+            <div class="instructions">
+              <div>
+                <strong>Top Player</strong>
+                <span>Use the top edge buttons.</span>
+              </div>
+
+              <div>
+                <strong>Bottom Player</strong>
+                <span>Use the bottom edge buttons.</span>
+              </div>
+            </div>
+
+            <p id="gameTip" class="tip"></p>
+            <button id="startButton">Start Game</button>
+          </div>
+        </section>
+
+        <section id="endOverlay" class="overlay hidden">
+          <div class="panel">
+            <p class="eyebrow">Game Over</p>
+            <h1 id="resultTitle">Game Over</h1>
+            <p id="resultText"></p>
+            <div id="finalStats" class="final-stats"></div>
+            <button id="restartButton">Play Again</button>
+          </div>
+        </section>
+
+        <div id="hud">
+          <div class="pill">⏱ <span id="timeText">0s</span></div>
+          <div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div>
+          <div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div>
+          <div class="pill">Speed <span id="holdText">1.0x</span></div>
         </div>
       </section>
-
-      <div id="hud">
-        <div class="pill">⏱ <span id="timeText">0s</span></div>
-        <div class="pill">Slip <span id="stressText">0%</span></div>
-        <div class="pill">Height <span id="fallText">0</span></div>
-        <div class="pill">Speed <span id="holdText">1.0x</span></div>
-      </div>
     </main>
 
-    <script src="seesaw-tower.js?v=19"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const selectedGame = params.get('game');
+      const games = {
+        balance: {
+          script: 'modern-game.js?v=20',
+          eyebrow: 'Two Player Games · Prototype 1',
+          title: 'Balance Board',
+          description: 'Move, dodge, and keep the platform balanced together.',
+          tip: 'Dodge falling objects while managing shared balance.',
+          stress: 'Tilt',
+          score: 'Dodged'
+        },
+        seesaw: {
+          script: 'seesaw-tower.js?v=20',
+          eyebrow: 'Two Player Games · Prototype 2',
+          title: 'Seesaw Tower',
+          description: 'Climb unstable platforms together. Move carefully or the tower tips.',
+          tip: 'Reach higher platforms, avoid falling hazards, and keep each seesaw balanced.',
+          stress: 'Slip',
+          score: 'Height'
+        }
+      };
+
+      if (selectedGame && games[selectedGame]) {
+        const game = games[selectedGame];
+        document.getElementById('homeScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        document.getElementById('gameEyebrow').textContent = game.eyebrow;
+        document.getElementById('gameTitle').textContent = game.title;
+        document.getElementById('gameDescription').textContent = game.description;
+        document.getElementById('gameTip').textContent = game.tip;
+        document.getElementById('stressLabel').textContent = game.stress;
+        document.getElementById('scoreLabel').textContent = game.score;
+        const script = document.createElement('script');
+        script.src = game.script;
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 </html>
