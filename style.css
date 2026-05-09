@@ -184,7 +184,8 @@ canvas {
   width: 62%;
 }
 
-.trampoline-art {
+.trampoline-art,
+.asteroid-art {
   display: block;
 }
 
@@ -207,51 +208,65 @@ canvas {
   border-radius: 999px;
 }
 
-.mini-low {
-  width: 82px;
-  left: 10%;
-  top: 78px;
-  transform: rotate(-4deg);
-}
-
+.mini-low { width: 82px; left: 10%; top: 78px; transform: rotate(-4deg); }
 .mini-low::after { background: #8bd3a7; }
-
-.mini-mid {
-  width: 94px;
-  right: 8%;
-  top: 64px;
-  transform: rotate(4deg);
-}
-
+.mini-mid { width: 94px; right: 8%; top: 64px; transform: rotate(4deg); }
 .mini-mid::after { background: #d7dde5; }
-
-.mini-high {
-  width: 74px;
-  left: 40%;
-  top: 42px;
-  transform: rotate(-7deg);
-}
-
+.mini-high { width: 74px; left: 40%; top: 42px; transform: rotate(-7deg); }
 .mini-high::after { background: #f0b86e; }
-
-.mini-super {
-  width: 68px;
-  right: 20%;
-  top: 18px;
-  transform: rotate(7deg);
-}
-
+.mini-super { width: 68px; right: 20%; top: 18px; transform: rotate(7deg); }
 .mini-super::after { background: #b78cff; }
+.bounce-blue { left: 20%; top: 32px; }
+.bounce-rose { right: 30%; top: 6px; }
 
-.bounce-blue {
-  left: 20%;
-  top: 32px;
+.mini-ship {
+  position: absolute;
+  left: 50%;
+  top: 48px;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%) rotate(-90deg);
+  border-top: 18px solid transparent;
+  border-bottom: 18px solid transparent;
+  border-left: 42px solid #f8fafc;
+  filter: drop-shadow(0 12px 22px rgba(0,0,0,0.28));
 }
 
-.bounce-rose {
-  right: 30%;
-  top: 6px;
+.mini-ship::after {
+  content: "";
+  position: absolute;
+  left: -34px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4fb8d8;
 }
+
+.mini-rock {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 42% 58% 47% 53%;
+  background: #a8a29e;
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24);
+}
+
+.rock-one { left: 14%; top: 16px; transform: rotate(18deg); }
+.rock-two { right: 16%; top: 72px; transform: rotate(-20deg); width: 28px; height: 28px; }
+
+.mini-shot {
+  position: absolute;
+  width: 28px;
+  height: 5px;
+  border-radius: 999px;
+  background: #f0b86e;
+  box-shadow: 0 0 16px rgba(240,184,110,0.55);
+}
+
+.shot-one { left: 57%; top: 30px; transform: rotate(-24deg); }
+.shot-two { left: 34%; top: 78px; transform: rotate(28deg); background: #4fb8d8; }
 
 .overlay {
   position: absolute;
