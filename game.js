@@ -23,8 +23,8 @@ const game = {
   score: 0,
   spawnTimer: 0,
   shake: 0,
-  particles: [],
-  burstParticles: [],
+  hazards: [],
+  sparks: [],
   input: { topLeft: false, topRight: false, bottomLeft: false, bottomRight: false },
   players: []
 };
@@ -49,11 +49,11 @@ function createPlayer(side) {
     x: side === 'top' ? canvas.width * 0.26 : canvas.width * 0.74,
     y: canvas.height * 0.52,
     vx: 0,
-    radius: 19,
+    radius: 22,
     wobble: Math.random() * Math.PI * 2,
     blink: Math.random() * 4,
-    color: side === 'top' ? '#38bdf8' : '#fb7185',
-    accent: side === 'top' ? '#bae6fd' : '#fecdd3'
+    color: side === 'top' ? '#22d3ee' : '#fb7185',
+    glow: side === 'top' ? 'rgba(34, 211, 238, 0.65)' : 'rgba(251, 113, 133, 0.65)'
   };
 }
 
@@ -74,34 +74,35 @@ function resetGame() {
   game.score = 0;
   game.spawnTimer = 0;
   game.shake = 0;
-  game.particles = [];
-  game.burstParticles = [];
+  game.hazards = [];
+  game.sparks = [];
   clearInputs();
   game.players = [createPlayer('top'), createPlayer('bottom')];
   startOverlay.classList.add('hidden');
   endOverlay.classList.add('hidden');
 }
 
-function addBurst(x, y, color, count = 12) {
+function addSparks(x, y, color, count = 10) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 1 + Math.random() * 4;
-    game.burstParticles.push({
+    const speed = 40 + Math.random() * 170;
+    game.sparks.push({
       x, y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       life: 1,
       color,
-      size: 3 + Math.random() * 5
+      size: 2 + Math.random() * 4
     });
   }
 }
 
 function endGame(reason) {
+  if (!game.running) return;
   game.running = false;
   clearInputs();
   game.shake = 14;
-  addBurst(canvas.width / 2, boardCenterY(), '#facc15', 24);
+  addSparks(canvas.width / 2, boardCenterY(), '#f8fafc', 28);
   endOverlay.classList.remove('hidden');
   resultTitle.textContent = 'Game Over';
   resultText.textContent = reason;
@@ -112,15 +113,17 @@ function spawnObject() {
   const lane = Math.random() < 0.5 ? 'top' : 'bottom';
   const minX = lane === 'top' ? boardLeft() + 42 : canvas.width / 2 + 28;
   const maxX = lane === 'top' ? canvas.width / 2 - 28 : boardRight() - 42;
-  const types = ['ball', 'pot', 'anvil', 'fruit'];
-  game.particles.push({
+  const types = ['orb', 'capsule', 'diamond', 'bar'];
+  const color = ['#a78bfa', '#facc15', '#34d399', '#f472b6'][Math.floor(Math.random() * 4)];
+  game.hazards.push({
     type: types[Math.floor(Math.random() * types.length)],
+    color,
     x: minX + Math.random() * Math.max(1, maxX - minX),
-    y: -40,
+    y: -44,
     vy: 3.4 + Math.random() * 2 + game.difficulty * 0.55,
-    radius: 13 + Math.random() * 14,
+    radius: 14 + Math.random() * 12,
     rotation: Math.random() * Math.PI * 2,
-    spin: -0.05 + Math.random() * 0.1
+    spin: -0.045 + Math.random() * 0.09
   });
 }
 
@@ -129,14 +132,14 @@ function directionForPlayer(player) {
   return (game.input.bottomRight ? 1 : 0) - (game.input.bottomLeft ? 1 : 0);
 }
 
-function updatePlayers() {
+function updatePlayers(delta) {
   game.players.forEach(player => {
     const dir = directionForPlayer(player);
-    if (dir !== 0) player.vx += dir * 0.43;
-    player.vx *= 0.84;
-    player.x += player.vx;
-    player.wobble += 0.1 + Math.abs(player.vx) * 0.025;
-    player.blink += 0.018;
+    if (dir !== 0) player.vx += dir * 26 * delta;
+    player.vx *= Math.pow(0.84, delta * 60);
+    player.x += player.vx * delta * 60;
+    player.wobble += (3.4 + Math.abs(player.vx) * 0.08) * delta;
+    player.blink += delta;
 
     const minX = player.side === 'top' ? boardLeft() + 42 : canvas.width / 2 + 20;
     const maxX = player.side === 'top' ? canvas.width / 2 - 20 : boardRight() - 42;
@@ -153,9 +156,9 @@ function updateTilt(delta) {
   const balanceDelta = rightWeight - leftWeight;
   const targetTilt = balanceDelta * 0.72;
 
-  game.tiltVelocity += (targetTilt - game.tilt) * 0.045;
-  game.tiltVelocity *= 0.94;
-  game.tilt += game.tiltVelocity;
+  game.tiltVelocity += (targetTilt - game.tilt) * 2.7 * delta;
+  game.tiltVelocity *= Math.pow(0.94, delta * 60);
+  game.tilt += game.tiltVelocity * delta * 60;
   game.tilt += Math.sin(game.timer * 0.8) * 0.00018 * game.difficulty;
 
   const danger = Math.max(0, Math.abs(game.tilt) - 0.23);
@@ -164,9 +167,7 @@ function updateTilt(delta) {
 
   if (danger > 0.05) game.shake = Math.max(game.shake, danger * 14);
 
-  if (Math.abs(game.tilt) > 0.42 || game.imbalance > 1) {
-    endGame('The board tipped too far.');
-  }
+  if (Math.abs(game.tilt) > 0.42 || game.imbalance > 1) endGame('The platform lost balance.');
 }
 
 function updateObjects(delta) {
@@ -177,38 +178,38 @@ function updateObjects(delta) {
     spawnObject();
   }
 
-  for (let i = game.particles.length - 1; i >= 0; i--) {
-    const obj = game.particles[i];
-    obj.y += obj.vy;
-    obj.rotation += obj.spin;
+  for (let i = game.hazards.length - 1; i >= 0; i--) {
+    const obj = game.hazards[i];
+    obj.y += obj.vy * delta * 60;
+    obj.rotation += obj.spin * delta * 60;
 
     for (const player of game.players) {
       const dx = obj.x - player.x;
       const dy = obj.y - player.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < obj.radius + player.radius - 8) {
-        addBurst(player.x, player.y, player.color, 18);
-        endGame(`${player.side === 'top' ? 'Top' : 'Bottom'} player got bonked.`);
+      if (dist < obj.radius + player.radius - 7) {
+        addSparks(player.x, player.y, player.color, 22);
+        endGame(`${player.side === 'top' ? 'Top' : 'Bottom'} player was hit.`);
         return;
       }
     }
 
-    if (obj.y > canvas.height + 60) {
-      addBurst(obj.x, canvas.height - 12, '#fde68a', 4);
-      game.particles.splice(i, 1);
+    if (obj.y > canvas.height + 70) {
+      addSparks(obj.x, canvas.height - 20, obj.color, 4);
+      game.hazards.splice(i, 1);
       game.score += 1;
     }
   }
 }
 
-function updateBursts(delta) {
-  for (let i = game.burstParticles.length - 1; i >= 0; i--) {
-    const p = game.burstParticles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vy += 0.08;
-    p.life -= delta * 1.8;
-    if (p.life <= 0) game.burstParticles.splice(i, 1);
+function updateSparks(delta) {
+  for (let i = game.sparks.length - 1; i >= 0; i--) {
+    const p = game.sparks[i];
+    p.x += p.vx * delta;
+    p.y += p.vy * delta;
+    p.vy += 180 * delta;
+    p.life -= delta * 1.9;
+    if (p.life <= 0) game.sparks.splice(i, 1);
   }
 }
 
@@ -216,7 +217,7 @@ function update(delta) {
   if (game.running) {
     game.timer += delta;
     game.difficulty += delta * 0.026;
-    updatePlayers();
+    updatePlayers(delta);
     updateTilt(delta);
     updateObjects(delta);
     timeText.textContent = `${Math.floor(game.timer)}s`;
@@ -224,29 +225,36 @@ function update(delta) {
     fallText.textContent = game.score;
     holdText.textContent = `${game.difficulty.toFixed(1)}x`;
   }
-  updateBursts(delta);
+  updateSparks(delta);
   game.shake = Math.max(0, game.shake - delta * 18);
 }
 
 function drawBackground() {
-  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  sky.addColorStop(0, '#172554');
-  sky.addColorStop(0.55, '#0f172a');
-  sky.addColorStop(1, '#020617');
-  ctx.fillStyle = sky;
+  const bg = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  bg.addColorStop(0, '#020617');
+  bg.addColorStop(0.5, '#08111f');
+  bg.addColorStop(1, '#020617');
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.07)';
-  for (let i = 0; i < 22; i++) {
-    const x = (i * 131 + Math.sin(game.timer * 0.2 + i) * 12) % canvas.width;
-    const y = 46 + (i % 5) * 34;
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.08)';
+  ctx.lineWidth = 1;
+  const grid = 48;
+  for (let x = (game.timer * 8) % grid; x < canvas.width; x += grid) {
     ctx.beginPath();
-    ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < canvas.height; y += grid) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
   }
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(canvas.width / 2, 0);
   ctx.lineTo(canvas.width / 2, canvas.height);
@@ -256,162 +264,126 @@ function drawBackground() {
 function drawBoard() {
   const centerX = canvas.width / 2;
   const centerY = boardCenterY();
-  const flex = Math.sin(game.timer * 5) * Math.min(9, Math.abs(game.tiltVelocity) * 80 + game.imbalance * 5);
 
   ctx.save();
   ctx.translate(centerX, centerY);
   ctx.rotate(game.tilt);
 
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = 16;
-  ctx.shadowOffsetY = 10;
+  ctx.shadowColor = Math.abs(game.tilt) > 0.26 ? 'rgba(248, 113, 113, 0.65)' : 'rgba(34, 211, 238, 0.45)';
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#0f172a';
+  roundRect(-boardHalfWidth(), -8, boardHalfWidth() * 2, 16, 8, true, false);
 
-  ctx.fillStyle = '#92400e';
-  roundRect(-boardHalfWidth(), -13 + flex * 0.05, boardHalfWidth() * 2, 26, 13, true, false);
+  const line = ctx.createLinearGradient(-boardHalfWidth(), 0, boardHalfWidth(), 0);
+  line.addColorStop(0, '#22d3ee');
+  line.addColorStop(0.5, '#f8fafc');
+  line.addColorStop(1, '#fb7185');
+  ctx.fillStyle = line;
+  roundRect(-boardHalfWidth(), -3, boardHalfWidth() * 2, 6, 3, true, false);
 
   ctx.shadowBlur = 0;
-  ctx.fillStyle = '#b45309';
-  roundRect(-boardHalfWidth() + 7, -9, boardHalfWidth() * 2 - 14, 15, 8, true, false);
-
-  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-  ctx.lineWidth = 2;
-  for (let i = -22; i <= 22; i++) {
-    const x = i * 34;
-    ctx.beginPath();
-    ctx.moveTo(x, -10);
-    ctx.lineTo(x + Math.sin(i) * 3, 10);
-    ctx.stroke();
-  }
-
-  ctx.strokeStyle = '#facc15';
-  ctx.lineWidth = 3;
+  ctx.fillStyle = 'rgba(248,250,252,0.8)';
   ctx.beginPath();
-  ctx.arc(-boardHalfWidth() + 18, 0, 8, 0, Math.PI * 2);
-  ctx.arc(boardHalfWidth() - 18, 0, 8, 0, Math.PI * 2);
-  ctx.stroke();
-
+  ctx.arc(0, 0, 5, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 
-  ctx.fillStyle = '#475569';
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.55)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(centerX, centerY + 10);
-  ctx.lineTo(centerX - 30, centerY + 86);
-  ctx.quadraticCurveTo(centerX, centerY + 108, centerX + 30, centerY + 86);
+  ctx.moveTo(centerX, centerY + 8);
+  ctx.lineTo(centerX - 24, centerY + 74);
+  ctx.lineTo(centerX + 24, centerY + 74);
   ctx.closePath();
-  ctx.fill();
+  ctx.stroke();
 }
 
 function drawPlayer(player) {
   const bY = boardCenterY();
   const localX = player.x - canvas.width / 2;
   const rotatedY = Math.sin(game.tilt) * localX;
-  player.y = bY + rotatedY - 27;
+  player.y = bY + rotatedY - 30;
 
-  const squash = 1 + Math.min(0.18, Math.abs(player.vx) * 0.025);
-  const wobble = Math.sin(player.wobble) * 3;
+  const pulse = 1 + Math.sin(player.wobble) * 0.035;
   const panic = Math.min(1, game.imbalance + Math.max(0, Math.abs(game.tilt) - 0.2) * 3);
+  const eyeScale = Math.sin(player.blink * 3) > 0.985 ? 0.15 : 1;
 
   ctx.save();
-  ctx.translate(player.x, player.y + wobble * 0.25);
+  ctx.translate(player.x, player.y + Math.sin(player.wobble) * 1.2);
 
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
-  ctx.beginPath();
-  ctx.ellipse(0, 36, 22, 7, 0, 0, Math.PI * 2);
-  ctx.fill();
-
+  ctx.shadowColor = player.glow;
+  ctx.shadowBlur = 22;
   ctx.fillStyle = player.color;
   ctx.beginPath();
-  ctx.ellipse(0, 8, 20 * squash, 25 / squash, 0, 0, Math.PI * 2);
+  ctx.arc(0, 0, player.radius * pulse, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = player.accent;
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
   ctx.beginPath();
-  ctx.ellipse(0, -23, 24 / squash, 22 * squash, 0, 0, Math.PI * 2);
+  ctx.arc(-7, -8, 6, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = player.color;
-  ctx.beginPath();
-  ctx.ellipse(-14, 28, 7, 11, -0.25, 0, Math.PI * 2);
-  ctx.ellipse(14, 28, 7, 11, 0.25, 0, Math.PI * 2);
-  ctx.fill();
-
-  const eyeY = -26;
-  const eyeScale = Math.sin(player.blink) > 0.985 ? 0.18 : 1;
   ctx.fillStyle = '#020617';
   ctx.beginPath();
-  ctx.ellipse(-8, eyeY, 4 + panic * 2, 5 * eyeScale + panic * 2, 0, 0, Math.PI * 2);
-  ctx.ellipse(8, eyeY, 4 + panic * 2, 5 * eyeScale + panic * 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(-7, 0, 3 + panic * 1.5, 5 * eyeScale + panic * 2, 0, 0, Math.PI * 2);
+  ctx.ellipse(7, 0, 3 + panic * 1.5, 5 * eyeScale + panic * 2, 0, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.strokeStyle = '#020617';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  if (panic > 0.35) {
-    ctx.arc(0, -14, 5, 0, Math.PI * 2);
-  } else {
-    ctx.arc(0, -16, 7, 0.15, Math.PI - 0.15);
-  }
+  if (panic > 0.4) ctx.arc(0, 9, 4, 0, Math.PI * 2);
+  else ctx.arc(0, 6, 7, 0.15, Math.PI - 0.15);
   ctx.stroke();
 
   ctx.restore();
 }
 
-function drawPlayers() {
-  game.players.forEach(drawPlayer);
-}
+function drawPlayers() { game.players.forEach(drawPlayer); }
 
 function drawObjects() {
-  game.particles.forEach(obj => {
+  game.hazards.forEach(obj => {
     ctx.save();
     ctx.translate(obj.x, obj.y);
     ctx.rotate(obj.rotation);
-    ctx.shadowColor = 'rgba(0,0,0,0.25)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 5;
+    ctx.shadowColor = obj.color;
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = obj.color;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.lineWidth = 3;
 
-    if (obj.type === 'ball') {
-      ctx.fillStyle = '#facc15';
+    if (obj.type === 'orb') {
       ctx.beginPath();
       ctx.arc(0, 0, obj.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ca8a04';
-      ctx.lineWidth = 3;
+      ctx.fill(); ctx.stroke();
+    } else if (obj.type === 'capsule') {
+      roundRect(-obj.radius * 0.7, -obj.radius * 1.15, obj.radius * 1.4, obj.radius * 2.3, obj.radius * 0.7, true, true);
+    } else if (obj.type === 'diamond') {
       ctx.beginPath();
-      ctx.arc(0, 0, obj.radius * 0.55, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (obj.type === 'pot') {
-      ctx.fillStyle = '#fb923c';
-      roundRect(-obj.radius, -obj.radius * 0.8, obj.radius * 2, obj.radius * 1.6, 6, true, false);
-      ctx.fillStyle = '#22c55e';
-      ctx.beginPath();
-      ctx.ellipse(0, -obj.radius, obj.radius * 0.8, obj.radius * 0.35, 0, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (obj.type === 'anvil') {
-      ctx.fillStyle = '#94a3b8';
-      roundRect(-obj.radius * 1.2, -obj.radius * 0.5, obj.radius * 2.4, obj.radius, 5, true, false);
-      ctx.fillRect(-obj.radius * 0.6, -obj.radius, obj.radius * 1.2, obj.radius * 0.7);
+      ctx.moveTo(0, -obj.radius * 1.25);
+      ctx.lineTo(obj.radius * 1.25, 0);
+      ctx.lineTo(0, obj.radius * 1.25);
+      ctx.lineTo(-obj.radius * 1.25, 0);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
     } else {
-      ctx.fillStyle = '#fb7185';
-      ctx.beginPath();
-      ctx.arc(0, 0, obj.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#22c55e';
-      ctx.beginPath();
-      ctx.ellipse(0, -obj.radius, obj.radius * 0.45, obj.radius * 0.25, -0.5, 0, Math.PI * 2);
-      ctx.fill();
+      roundRect(-obj.radius * 1.25, -obj.radius * 0.45, obj.radius * 2.5, obj.radius * 0.9, 5, true, true);
     }
-
     ctx.restore();
   });
 }
 
-function drawBursts() {
-  game.burstParticles.forEach(p => {
+function drawSparks() {
+  game.sparks.forEach(p => {
     ctx.globalAlpha = Math.max(0, p.life);
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 12;
     ctx.fillStyle = p.color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
   });
 }
@@ -423,19 +395,19 @@ function drawControls() {
   const edge = 12;
   const topY = 76;
   const bottomY = canvas.height - 90;
-  drawButton(edge, topY, buttonW, buttonH, '◀', game.input.topLeft, '#38bdf8');
-  drawButton(canvas.width - buttonW - edge, topY, buttonW, buttonH, '▶', game.input.topRight, '#38bdf8');
+  drawButton(edge, topY, buttonW, buttonH, '◀', game.input.topLeft, '#22d3ee');
+  drawButton(canvas.width - buttonW - edge, topY, buttonW, buttonH, '▶', game.input.topRight, '#22d3ee');
   drawButton(edge, bottomY, buttonW, buttonH, '◀', game.input.bottomLeft, '#fb7185');
   drawButton(canvas.width - buttonW - edge, bottomY, buttonW, buttonH, '▶', game.input.bottomRight, '#fb7185');
 }
 
 function drawButton(x, y, w, h, label, active, color) {
-  ctx.fillStyle = active ? color : 'rgba(15,23,42,0.76)';
+  ctx.fillStyle = active ? color : 'rgba(15,23,42,0.72)';
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
   ctx.shadowColor = active ? color : 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = active ? 18 : 8;
-  roundRect(x, y, w, h, 20, true, true);
+  ctx.shadowBlur = active ? 22 : 8;
+  roundRect(x, y, w, h, 18, true, true);
   ctx.shadowBlur = 0;
   ctx.fillStyle = active ? '#020617' : '#f8fafc';
   ctx.font = '900 28px Arial';
@@ -469,7 +441,7 @@ function render() {
   drawObjects();
   drawBoard();
   drawPlayers();
-  drawBursts();
+  drawSparks();
   drawControls();
   ctx.restore();
 }
