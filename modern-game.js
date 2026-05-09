@@ -50,7 +50,7 @@ function render(){ctx.save();const sx=game.shake?(Math.random()-.5)*game.shake:0
 let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
 function visibleOverlay(){return!startOverlay.classList.contains('hidden')||!endOverlay.classList.contains('hidden')}
 function start(e){e.preventDefault();e.stopPropagation();resetGame()}
-[startOverlay,endOverlay,startButton,restartButton].forEach(el=>{el.addEventListener('touchstart',start,{passive:false});el.addEventListener('pointerdown',start);el.addEventListener('click',start)});
+[startOverlay,startButton,restartButton].forEach(el=>{el.addEventListener('touchstart',start,{passive:false});el.addEventListener('pointerdown',start);el.addEventListener('click',start)});
 function setTouch(t,on){const top=t.clientY<canvas.height/2,left=t.clientX<canvas.width/2;if(top){if(left)game.input.topLeft=on;else game.input.topRight=on}else{if(left)game.input.bottomLeft=on;else game.input.bottomRight=on}}
 document.addEventListener('touchstart',e=>{if(visibleOverlay())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,true)},{passive:false});
 document.addEventListener('touchmove',e=>{if(!visibleOverlay())e.preventDefault()},{passive:false});
