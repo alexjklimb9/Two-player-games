@@ -19,15 +19,15 @@ const WEAPONS=[
   {name:'Rail',color:C.gold,ammoMax:3,ammo:3,reload:1.45,timer:0,cooldown:0.62,cd:0,speed:900,damage:3,spread:0,count:1,label:'pierce'},
   {name:'Shield',color:C.green,ammoMax:2,ammo:2,reload:2.4,timer:0,cooldown:0.75,cd:0,speed:0,damage:0,spread:0,count:0,label:'bubble'}
 ];
-const game={running:false,timer:0,score:0,hits:0,shake:0,spawn:0,angle:-Math.PI/2,shipV:0,weapon:0,shield:0,stars:[],rocks:[],shots:[],sparks:[],input:{topLeft:false,topRight:false,bottomLeft:false,bottomRight:false}};
+const game={running:false,timer:0,score:0,hits:0,shake:0,spawn:0,angle:-Math.PI/2,shipV:0,weapon:0,shield:0,stars:[],rocks:[],shots:[],sparks:[],domControls:null,input:{topLeft:false,topRight:false,bottomLeft:false,bottomRight:false}};
 
 function resize(){canvas.width=innerWidth;canvas.height=innerHeight;makeStars()}addEventListener('resize',resize);resize();
 function makeStars(){game.stars=[];for(let i=0;i<80;i++)game.stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.8+.4,a:.25+Math.random()*.55})}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function clearInput(){Object.keys(game.input).forEach(k=>game.input[k]=false)}
+function clearInput(){Object.keys(game.input).forEach(k=>game.input[k]=false);updateDomButtons()}
 function resetWeapons(){WEAPONS.forEach(w=>{w.ammo=w.ammoMax;w.timer=0;w.cd=0})}
-function resetGame(){Object.assign(game,{running:true,timer:0,score:0,hits:0,shake:0,spawn:.85,angle:-Math.PI/2,shipV:0,weapon:0,shield:0,rocks:[],shots:[],sparks:[]});clearInput();resetWeapons();makeStars();startOverlay.classList.add('hidden');endOverlay.classList.add('hidden');spawnRock();setTimeout(()=>{if(game.running)spawnRock()},450)}
-function endGame(msg){if(!game.running)return;game.running=false;clearInput();game.shake=12;spark(canvas.width/2,canvas.height/2,C.danger,34);resultTitle.textContent='Game Over';resultText.textContent=msg;finalStats.innerHTML=`Survival Time: ${Math.floor(game.timer)}s<br>Asteroids Broken: ${game.score}<br>Hull Hits: ${game.hits}/3`;endOverlay.classList.remove('hidden')}
+function resetGame(){Object.assign(game,{running:true,timer:0,score:0,hits:0,shake:0,spawn:.85,angle:-Math.PI/2,shipV:0,weapon:0,shield:0,rocks:[],shots:[],sparks:[]});clearInput();resetWeapons();makeStars();startOverlay.classList.add('hidden');endOverlay.classList.add('hidden');showDomControls(true);spawnRock();setTimeout(()=>{if(game.running)spawnRock()},450)}
+function endGame(msg){if(!game.running)return;game.running=false;clearInput();showDomControls(false);game.shake=12;spark(canvas.width/2,canvas.height/2,C.danger,34);resultTitle.textContent='Game Over';resultText.textContent=msg;finalStats.innerHTML=`Survival Time: ${Math.floor(game.timer)}s<br>Asteroids Broken: ${game.score}<br>Hull Hits: ${game.hits}/3`;endOverlay.classList.remove('hidden')}
 function spark(x,y,color,n=10){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=50+Math.random()*190;game.sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:1.5+Math.random()*3.8,color})}}
 function cx(){return canvas.width/2}function cy(){return canvas.height/2}
 function spawnRock(){const side=Math.floor(Math.random()*4);let x,y;if(side===0){x=-40;y=Math.random()*canvas.height}else if(side===1){x=canvas.width+40;y=Math.random()*canvas.height}else if(side===2){x=Math.random()*canvas.width;y=-40}else{x=Math.random()*canvas.width;y=canvas.height+40}const dx=cx()-x,dy=cy()-y,a=Math.atan2(dy,dx)+(-.45+Math.random()*.9);const sp=42+Math.random()*38+game.timer*1.2;const r=18+Math.random()*22;game.rocks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r,hp:Math.ceil(r/17),rot:Math.random()*6.28,spin:-1+Math.random()*2})}
@@ -46,20 +46,15 @@ function drawRocks(){for(const r of game.rocks){ctx.save();ctx.translate(r.x,r.y
 function drawShots(){for(const s of game.shots){ctx.fillStyle=s.color;ctx.shadowColor=s.color;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();ctx.shadowBlur=0}}
 function drawSparks(){for(const p of game.sparks){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,6.28);ctx.fill();ctx.globalAlpha=1}}
 function drawUI(){if(!game.running)return;const w=WEAPONS[game.weapon];ctx.fillStyle='rgba(17,24,39,.8)';ctx.strokeStyle='rgba(255,255,255,.14)';ctx.lineWidth=1.5;rr(cx()-82,canvas.height-154,164,48,18,true,true);ctx.fillStyle=w.color;ctx.font='900 14px Arial';ctx.textAlign='center';ctx.fillText(`${w.name} · ${w.label}`,cx(),canvas.height-134);ctx.fillStyle=C.white;ctx.font='800 12px Arial';ctx.fillText(`Ammo ${w.ammo}/${w.ammoMax}`,cx(),canvas.height-116)}
-function drawButton(x,y,w,h,label,on,color){ctx.fillStyle=on?color:'rgba(17,24,39,.78)';ctx.strokeStyle=on?'rgba(255,255,255,.45)':'rgba(255,255,255,.18)';ctx.lineWidth=1.7;rr(x,y,w,h,18,true,true);ctx.fillStyle=on?'#0b0f14':C.white;ctx.font='800 20px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2+1)}
-function controls(){if(!game.running)return;const w=Math.min(112,canvas.width*.25),h=56,e=12,ty=76,by=canvas.height-90;drawButton(e,ty,w,h,'WEAPON',game.input.topLeft,C.blue);drawButton(canvas.width-w-e,ty,w,h,'THRUST',game.input.topRight,C.blue);drawButton(e,by,w,h,'TURN',game.input.bottomLeft,C.rose);drawButton(canvas.width-w-e,by,w,h,'FIRE',game.input.bottomRight,C.rose)}
-function render(){ctx.save();const sx=game.shake?(Math.random()-.5)*game.shake:0,sy=game.shake?(Math.random()-.5)*game.shake:0;ctx.translate(sx,sy);bg();drawShots();drawRocks();drawShip();drawSparks();drawUI();controls();ctx.restore()}
+function render(){ctx.save();const sx=game.shake?(Math.random()-.5)*game.shake:0,sy=game.shake?(Math.random()-.5)*game.shake:0;ctx.translate(sx,sy);bg();drawShots();drawRocks();drawShip();drawSparks();drawUI();ctx.restore()}
+
+function makeDomControls(){if(game.domControls)return;const wrap=document.createElement('div');wrap.id='asteroidControls';wrap.innerHTML=`<button data-k="topLeft" class="asteroid-btn blue">WEAPON</button><button data-k="topRight" class="asteroid-btn blue right">THRUST</button><button data-k="bottomLeft" class="asteroid-btn rose bottom">TURN</button><button data-k="bottomRight" class="asteroid-btn rose bottom right">FIRE</button>`;document.getElementById('gameScreen').appendChild(wrap);game.domControls=wrap;wrap.querySelectorAll('button').forEach(btn=>{const key=btn.dataset.k;const down=e=>{e.preventDefault();e.stopPropagation();if(key==='topLeft'&&!game.input.topLeft)selectWeapon(1);if(key==='bottomRight')fire();game.input[key]=true;updateDomButtons()};const up=e=>{e.preventDefault();e.stopPropagation();game.input[key]=false;updateDomButtons()};btn.addEventListener('touchstart',down,{passive:false});btn.addEventListener('pointerdown',down);btn.addEventListener('touchend',up,{passive:false});btn.addEventListener('touchcancel',up,{passive:false});btn.addEventListener('pointerup',up);btn.addEventListener('pointercancel',up)})}
+function showDomControls(show){makeDomControls();game.domControls.classList.toggle('visible',!!show)}
+function updateDomButtons(){if(!game.domControls)return;game.domControls.querySelectorAll('button').forEach(btn=>btn.classList.toggle('active',!!game.input[btn.dataset.k]))}
+
 let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-function overlayVisible(){return!startOverlay.classList.contains('hidden')||!endOverlay.classList.contains('hidden')}
 function start(e){if(e){e.preventDefault();e.stopPropagation()}resetGame()}
 [startOverlay,startButton,restartButton].forEach(el=>{el.addEventListener('touchstart',start,{passive:false});el.addEventListener('pointerdown',start);el.addEventListener('click',start)});
-function setZone(x,y,on){const top=y<canvas.height/2,left=x<canvas.width/2;if(top){if(left&&on&&!game.input.topLeft)selectWeapon(1);if(left)game.input.topLeft=on;else game.input.topRight=on}else{if(left)game.input.bottomLeft=on;else{game.input.bottomRight=on;if(on)fire()}}}
-function setTouch(t,on){setZone(t.clientX,t.clientY,on)}
-document.addEventListener('touchstart',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,true)},{passive:false});
-document.addEventListener('touchmove',e=>{if(!overlayVisible())e.preventDefault()},{passive:false});
-document.addEventListener('touchend',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,false)},{passive:false});
-document.addEventListener('touchcancel',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,false)},{passive:false});
-document.addEventListener('pointerdown',e=>{if(overlayVisible()||e.pointerType==='touch')return;setZone(e.clientX,e.clientY,true)});
-document.addEventListener('pointerup',e=>{if(overlayVisible()||e.pointerType==='touch')return;setZone(e.clientX,e.clientY,false)});
+makeDomControls();showDomControls(false);
 setTimeout(()=>{if(!game.running&&!endOverlay.classList.contains('hidden'))return;if(!game.running)resetGame()},250);
 render();
