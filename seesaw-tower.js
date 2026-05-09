@@ -1,0 +1,59 @@
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const startOverlay=document.getElementById('startOverlay');
+const endOverlay=document.getElementById('endOverlay');
+const startButton=document.getElementById('startButton');
+const restartButton=document.getElementById('restartButton');
+const resultTitle=document.getElementById('resultTitle');
+const resultText=document.getElementById('resultText');
+const finalStats=document.getElementById('finalStats');
+const timeText=document.getElementById('timeText');
+const stressText=document.getElementById('stressText');
+const fallText=document.getElementById('fallText');
+const holdText=document.getElementById('holdText');
+
+const C={bg:'#0b0f14',bg2:'#151b23',line:'rgba(235,240,245,.075)',line2:'rgba(235,240,245,.14)',top:'#4fb8d8',bottom:'#e06f8f',board:'#d7dde5',boardDark:'#2b333d',danger:'#d97757',white:'#f8fafc',haz:'#b8b0a8'};
+const game={running:false,timer:0,score:0,level:0,shake:0,spawn:0,slip:0,camY:0,platforms:[],hazards:[],sparks:[],players:[],input:{topLeft:false,topRight:false,bottomLeft:false,bottomRight:false}};
+
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener('resize',resize);resize();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rr(x,y,w,h,r,fill=true,stroke=false){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();if(fill)ctx.fill();if(stroke)ctx.stroke()}
+function worldToScreenY(y){return y-game.camY}
+
+function makePlatforms(){const arr=[];const gap=Math.max(82,canvas.height*.14);for(let i=0;i<18;i++){arr.push({x:canvas.width/2,y:canvas.height*.72-i*gap,w:canvas.width*.76,h:14,tilt:0,tiltV:0,seed:Math.random()*9,passed:false})}return arr}
+function makePlayer(side){return{side,x:side==='top'?canvas.width*.38:canvas.width*.62,y:canvas.height*.72-35,vx:0,vy:0,r:21,on:0,wobble:Math.random()*6.28,blink:Math.random()*4,color:side==='top'?C.top:C.bottom}}
+function clearInput(){Object.keys(game.input).forEach(k=>game.input[k]=false)}
+function resetGame(){Object.assign(game,{running:true,timer:0,score:0,level:0,shake:0,spawn:0,slip:0,camY:0,hazards:[],sparks:[]});clearInput();game.platforms=makePlatforms();game.players=[makePlayer('top'),makePlayer('bottom')];startOverlay.classList.add('hidden');endOverlay.classList.add('hidden')}
+function spark(x,y,color,n=8){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=35+Math.random()*125;game.sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:1.5+Math.random()*3,color})}}
+function endGame(msg){if(!game.running)return;game.running=false;clearInput();game.shake=9;spark(canvas.width/2,canvas.height*.55,C.board,22);resultTitle.textContent='Game Over';resultText.textContent=msg;finalStats.innerHTML=`Height Reached: ${game.score}<br>Survival Time: ${Math.floor(game.timer)}s`;endOverlay.classList.remove('hidden')}
+function dir(p){return p.side==='top'?(game.input.topRight?1:0)-(game.input.topLeft?1:0):(game.input.bottomRight?1:0)-(game.input.bottomLeft?1:0)}
+function platformY(p){return p.y+Math.sin(p.tilt)*(0)}
+function platformAt(i){return game.platforms[Math.max(0,Math.min(game.platforms.length-1,i))]}
+function playerPlatform(p){let best=0,dist=1e9;for(let i=0;i<game.platforms.length;i++){const pf=game.platforms[i],dy=Math.abs(p.y-(pf.y-28));if(dy<dist){dist=dy;best=i}}return best}
+function spawnHazard(){const pf=platformAt(Math.min(game.platforms.length-1,game.level+2+Math.floor(Math.random()*3)));game.hazards.push({x:pf.x-pf.w*.42+Math.random()*pf.w*.84,y:pf.y-300,r:13+Math.random()*9,vy:2.2+game.level*.07+Math.random()*1.1,type:Math.random()<.5?'disc':'pill',rot:Math.random()*6.28,spin:-.05+Math.random()*.1})}
+
+function updatePlatforms(dt){let maxDanger=0;game.platforms.forEach((pf,i)=>{let left=0,right=0;game.players.forEach(pl=>{if(pl.on===i){const rel=(pl.x-pf.x)/(pf.w/2);if(rel<0)left+=Math.abs(rel);else right+=rel}});const target=(right-left)*.34+Math.sin(game.timer*.7+pf.seed)*.012;pf.tiltV+=(target-pf.tilt)*2.6*dt;pf.tiltV*=Math.pow(.9,dt*60);pf.tilt+=pf.tiltV*dt*60;const danger=Math.max(0,Math.abs(pf.tilt)-.22);maxDanger=Math.max(maxDanger,danger);if(danger>.02)game.slip+=danger*dt*.8});game.slip=Math.max(0,game.slip-dt*.18);if(maxDanger>.08)game.shake=Math.max(game.shake,maxDanger*10);if(game.slip>1.15)endGame('The tower tipped too far.')}
+function updatePlayers(dt){game.players.forEach(p=>{const d=dir(p);if(d)p.vx+=d*28*dt;p.vx*=Math.pow(.84,dt*60);p.x+=p.vx*dt*60;p.vy+=900*dt;p.y+=p.vy*dt;p.wobble+=(2.6+Math.abs(p.vx)*.05)*dt;p.blink+=dt;p.on=playerPlatform(p);const pf=game.platforms[p.on];const local=clamp((p.x-pf.x)/(pf.w/2),-1,1);const surfaceY=pf.y+Math.sin(pf.tilt)*local*(pf.w/2)-28;const within=Math.abs(p.x-pf.x)<pf.w/2-20;if(p.vy>=0&&Math.abs(p.y-surfaceY)<35&&within){p.y=surfaceY;p.vy=0;p.x+=Math.sin(pf.tilt)*game.slip*1.8;p.x=clamp(p.x,pf.x-pf.w/2+24,pf.x+pf.w/2-24)}if(!within||p.y-game.camY>canvas.height+70)endGame(`${p.side==='top'?'Top':'Bottom'} player fell.`)});const avgY=(game.players[0].y+game.players[1].y)/2;game.camY+=(avgY-canvas.height*.58-game.camY)*.045;let highest=0;game.players.forEach(p=>{highest=Math.max(highest,Math.max(0,Math.floor((canvas.height*.72-p.y)/85)))});game.score=Math.max(game.score,highest);game.level=game.score}
+function updateHazards(dt){game.spawn+=dt;const rate=Math.max(.85,2.2-game.level*.045);if(game.spawn>rate){game.spawn=0;spawnHazard()}for(let i=game.hazards.length-1;i>=0;i--){const h=game.hazards[i];h.y+=h.vy*dt*60;h.rot+=h.spin*dt*60;for(const p of game.players){if(Math.hypot(h.x-p.x,h.y-p.y)<h.r+p.r-5){spark(p.x,p.y,p.color,18);endGame(`${p.side==='top'?'Top':'Bottom'} player was hit.`);return}}if(worldToScreenY(h.y)>canvas.height+80)game.hazards.splice(i,1)}}
+function updateSparks(dt){for(let i=game.sparks.length-1;i>=0;i--){const s=game.sparks[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=160*dt;s.life-=dt*2;if(s.life<=0)game.sparks.splice(i,1)}}
+function update(dt){if(game.running){game.timer+=dt;updatePlayers(dt);updatePlatforms(dt);updateHazards(dt);timeText.textContent=`${Math.floor(game.timer)}s`;stressText.textContent=`${Math.min(100,Math.floor(game.slip*100))}%`;fallText.textContent=game.score;holdText.textContent=`${(1+game.level*.04).toFixed(1)}x`}updateSparks(dt);game.shake=Math.max(0,game.shake-dt*18)}
+
+function bg(){const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);g.addColorStop(0,C.bg);g.addColorStop(.55,C.bg2);g.addColorStop(1,'#080b10');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle=C.line;ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=64){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=(-game.camY*.18)%64;y<canvas.height;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.strokeStyle=C.line2;ctx.beginPath();ctx.moveTo(canvas.width/2,0);ctx.lineTo(canvas.width/2,canvas.height);ctx.stroke()}
+function drawPlatform(p,i){const y=worldToScreenY(p.y);if(y<-60||y>canvas.height+90)return;ctx.save();ctx.translate(p.x,y);ctx.rotate(p.tilt);ctx.shadowColor='rgba(0,0,0,.32)';ctx.shadowBlur=15;ctx.shadowOffsetY=8;ctx.fillStyle=C.boardDark;rr(-p.w/2,-7,p.w,14,7);const danger=Math.min(1,Math.max(0,Math.abs(p.tilt)-.18)*5);const gr=ctx.createLinearGradient(-p.w/2,0,p.w/2,0);gr.addColorStop(0,C.top);gr.addColorStop(.5,danger>.45?C.danger:C.board);gr.addColorStop(1,C.bottom);ctx.fillStyle=gr;rr(-p.w/2,-2.5,p.w,5,2.5);ctx.shadowBlur=0;ctx.fillStyle='rgba(255,255,255,.68)';ctx.beginPath();ctx.arc(0,0,3.5,0,6.28);ctx.fill();ctx.restore();ctx.strokeStyle='rgba(203,213,225,.24)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(p.x,y+7);ctx.lineTo(p.x-16,y+58);ctx.lineTo(p.x+16,y+58);ctx.closePath();ctx.stroke()}
+function drawPlayer(p){const y=worldToScreenY(p.y);const pulse=1+Math.sin(p.wobble)*.025,panic=Math.min(1,game.slip),eyeScale=Math.sin(p.blink*3)>.985?.15:1;ctx.save();ctx.translate(p.x,y+Math.sin(p.wobble)*.7);ctx.fillStyle='rgba(0,0,0,.22)';ctx.beginPath();ctx.ellipse(0,p.r+9,p.r*.78,5,0,0,6.28);ctx.fill();ctx.shadowColor=p.color;ctx.shadowBlur=8;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(0,0,p.r*pulse,0,6.28);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='rgba(255,255,255,.32)';ctx.lineWidth=1.7;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.34)';ctx.beginPath();ctx.arc(-7,-8,5,0,6.28);ctx.fill();ctx.fillStyle='#0b0f14';ctx.beginPath();ctx.ellipse(-7,1,3+panic*1.4,4.7*eyeScale+panic*1.7,0,0,6.28);ctx.ellipse(7,1,3+panic*1.4,4.7*eyeScale+panic*1.7,0,0,6.28);ctx.fill();ctx.strokeStyle='#0b0f14';ctx.lineWidth=2;ctx.beginPath();if(panic>.45)ctx.arc(0,9,3.8,0,6.28);else ctx.arc(0,6,6.5,.2,Math.PI-.2);ctx.stroke();ctx.restore()}
+function drawHazards(){game.hazards.forEach(h=>{const y=worldToScreenY(h.y);ctx.save();ctx.translate(h.x,y);ctx.rotate(h.rot);ctx.fillStyle=C.haz;ctx.strokeStyle='rgba(255,255,255,.22)';ctx.lineWidth=1.5;ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=12;ctx.shadowOffsetY=6;if(h.type==='disc'){ctx.beginPath();ctx.arc(0,0,h.r,0,6.28);ctx.fill();ctx.stroke()}else rr(-h.r*.6,-h.r*1.1,h.r*1.2,h.r*2.2,h.r*.6,true,true);ctx.restore()})}
+function drawSparks(){game.sparks.forEach(s=>{ctx.globalAlpha=Math.max(0,s.life*.85);ctx.fillStyle=s.color;ctx.beginPath();ctx.arc(s.x,worldToScreenY(s.y),s.size*s.life,0,6.28);ctx.fill();ctx.globalAlpha=1})}
+function drawButton(x,y,w,h,label,on,color){ctx.fillStyle=on?color:'rgba(17,24,39,.78)';ctx.strokeStyle=on?'rgba(255,255,255,.45)':'rgba(255,255,255,.18)';ctx.lineWidth=1.7;rr(x,y,w,h,18,true,true);ctx.fillStyle=on?'#0b0f14':C.white;ctx.font='800 28px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2+1)}
+function controls(){if(!game.running)return;const w=Math.min(100,canvas.width*.15),h=56,e=12,ty=76,by=canvas.height-90;drawButton(e,ty,w,h,'◀',game.input.topLeft,C.top);drawButton(canvas.width-w-e,ty,w,h,'▶',game.input.topRight,C.top);drawButton(e,by,w,h,'◀',game.input.bottomLeft,C.bottom);drawButton(canvas.width-w-e,by,w,h,'▶',game.input.bottomRight,C.bottom)}
+function render(){ctx.save();const sx=game.shake?(Math.random()-.5)*game.shake:0,sy=game.shake?(Math.random()-.5)*game.shake:0;ctx.translate(sx,sy);bg();game.platforms.forEach(drawPlatform);drawHazards();game.players.forEach(drawPlayer);drawSparks();controls();ctx.restore()}
+
+let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+function overlayVisible(){return!startOverlay.classList.contains('hidden')||!endOverlay.classList.contains('hidden')}
+function start(e){e.preventDefault();e.stopPropagation();resetGame()}
+[startOverlay,endOverlay,startButton,restartButton].forEach(el=>{el.addEventListener('touchstart',start,{passive:false});el.addEventListener('pointerdown',start);el.addEventListener('click',start)});
+function setTouch(t,on){const top=t.clientY<canvas.height/2,left=t.clientX<canvas.width/2;if(top){if(left)game.input.topLeft=on;else game.input.topRight=on}else{if(left)game.input.bottomLeft=on;else game.input.bottomRight=on}}
+document.addEventListener('touchstart',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,true)},{passive:false});
+document.addEventListener('touchmove',e=>{if(!overlayVisible())e.preventDefault()},{passive:false});
+document.addEventListener('touchend',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,false)},{passive:false});
+document.addEventListener('touchcancel',e=>{if(overlayVisible())return;e.preventDefault();for(const t of e.changedTouches)setTouch(t,false)},{passive:false});
+render();
