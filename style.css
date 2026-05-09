@@ -240,7 +240,8 @@ h1 {
   font-size: 0.95rem;
 }
 
-button {
+button,
+.secondary-button {
   border: none;
   border-radius: 999px;
   padding: 16px 30px;
@@ -250,21 +251,24 @@ button {
   background: #f8fafc;
   color: #0b0f14;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-#homeButton {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  z-index: 7;
+.secondary-button {
+  background: rgba(255,255,255,0.08);
   color: #f8fafc;
-  text-decoration: none;
-  font-weight: 900;
-  background: rgba(17,24,39,.78);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 999px;
-  padding: 10px 14px;
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: none;
+}
+
+.end-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 #hud {
@@ -277,7 +281,7 @@ button {
   flex-wrap: wrap;
   justify-content: center;
   z-index: 5;
-  width: calc(100% - 120px);
+  width: calc(100% - 24px);
 }
 
 .pill {
@@ -305,7 +309,7 @@ button {
   }
 
   #hud {
-    top: 64px;
+    top: 14px;
     width: calc(100% - 24px);
   }
 }
