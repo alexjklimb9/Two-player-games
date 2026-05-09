@@ -162,7 +162,8 @@ canvas {
   transform: rotate(-5deg);
 }
 
-.tower-art {
+.tower-art,
+.trampoline-art {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -181,6 +182,75 @@ canvas {
 .mini-platform.offset {
   transform: rotate(-7deg);
   width: 62%;
+}
+
+.trampoline-art {
+  display: block;
+}
+
+.mini-trampoline {
+  position: absolute;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(248,250,252,0.92);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24);
+}
+
+.mini-trampoline::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 4px;
+  height: 4px;
+  border-radius: 999px;
+}
+
+.mini-low {
+  width: 82px;
+  left: 10%;
+  top: 78px;
+  transform: rotate(-4deg);
+}
+
+.mini-low::after { background: #8bd3a7; }
+
+.mini-mid {
+  width: 94px;
+  right: 8%;
+  top: 64px;
+  transform: rotate(4deg);
+}
+
+.mini-mid::after { background: #d7dde5; }
+
+.mini-high {
+  width: 74px;
+  left: 40%;
+  top: 42px;
+  transform: rotate(-7deg);
+}
+
+.mini-high::after { background: #f0b86e; }
+
+.mini-super {
+  width: 68px;
+  right: 20%;
+  top: 18px;
+  transform: rotate(7deg);
+}
+
+.mini-super::after { background: #b78cff; }
+
+.bounce-blue {
+  left: 20%;
+  top: 32px;
+}
+
+.bounce-rose {
+  right: 30%;
+  top: 6px;
 }
 
 .overlay {
