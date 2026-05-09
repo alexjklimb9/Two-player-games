@@ -383,6 +383,42 @@ button,
   opacity: 0.82;
 }
 
+#asteroidControls {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+#asteroidControls.visible {
+  display: block;
+}
+
+.asteroid-btn {
+  position: absolute;
+  min-width: 112px;
+  height: 56px;
+  border-radius: 18px;
+  padding: 0 14px;
+  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(17,24,39,.82);
+  color: #f8fafc;
+  font-size: .86rem;
+  letter-spacing: .04em;
+  box-shadow: 0 12px 30px rgba(0,0,0,.28);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  user-select: none;
+  touch-action: none;
+}
+
+.asteroid-btn.blue { left: 12px; top: 78px; color: #4fb8d8; }
+.asteroid-btn.blue.right { left: auto; right: 12px; }
+.asteroid-btn.rose { left: 12px; bottom: max(26px, env(safe-area-inset-bottom)); color: #e06f8f; }
+.asteroid-btn.rose.right { left: auto; right: 12px; }
+.asteroid-btn.active { background: currentColor; color: #0b0f14; transform: scale(.97); }
+
 @media (max-width: 720px) {
   .game-grid,
   .instructions {
