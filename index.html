@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=38" />
+    <link rel="stylesheet" href="style.css?v=40" />
   </head>
   <body>
     <main id="app">
@@ -21,7 +21,7 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="?game=balance&v=38">
+            <a class="game-card balance-card" href="?game=balance&v=40">
               <div class="card-art">
                 <div class="mini-head cyan-head"></div>
                 <div class="mini-board"></div>
@@ -35,7 +35,7 @@
               <span class="play-chip">Play</span>
             </a>
 
-            <a class="game-card trampoline-card" href="?game=seesaw&v=38">
+            <a class="game-card trampoline-card" href="?game=seesaw&v=40">
               <div class="card-art trampoline-art">
                 <div class="mini-trampoline mini-low"></div>
                 <div class="mini-trampoline mini-high"></div>
@@ -52,7 +52,7 @@
               <span class="play-chip">Play</span>
             </a>
 
-            <a class="game-card asteroid-card" href="?game=asteroids&v=38">
+            <a class="game-card asteroid-card" href="?game=asteroids&v=40">
               <div class="card-art asteroid-art">
                 <div class="mini-ship"></div>
                 <div class="mini-rock rock-one"></div>
@@ -105,7 +105,7 @@
             <div id="finalStats" class="final-stats"></div>
             <div class="end-actions">
               <button id="restartButton">Play Again</button>
-              <a id="homeButton" class="secondary-button" href="./?v=38">Games</a>
+              <a id="homeButton" class="secondary-button" href="./?v=40">Games</a>
             </div>
           </div>
         </section>
@@ -124,7 +124,7 @@
       const selectedGame = params.get('game');
       const games = {
         balance: {
-          script: 'modern-game.js?v=38',
+          script: 'modern-game.js?v=40',
           eyebrow: 'Two Player Games · Prototype 1',
           title: 'Balance Board',
           description: 'Move, dodge, and keep the platform balanced together.',
@@ -138,7 +138,7 @@
           bottomInstructions: 'Use the bottom edge buttons.'
         },
         seesaw: {
-          script: 'seesaw-tower.js?v=38',
+          script: 'seesaw-tower.js?v=40',
           eyebrow: 'Two Player Games · Prototype 2',
           title: 'Trampoline Climb',
           description: 'Bounce on colored platforms. Each color launches you a different height.',
@@ -152,11 +152,11 @@
           bottomInstructions: 'Use the bottom edge buttons.'
         },
         asteroids: {
-          script: 'asteroids-crew.js?v=38',
+          script: 'asteroids-crew.js?v=40',
           eyebrow: 'Two Player Games · Prototype 3',
           title: 'Asteroid Crew',
           description: 'A center-locked asteroid survival game with split ship controls.',
-          tip: 'Top player: back, weapon, forward. Bottom player: turn left, fire, turn right.',
+          tip: 'Asteroids spawn randomly and wrap around the screen edges. Top player flies and switches weapons. Bottom player aims and fires.',
           stress: 'Hull',
           score: 'Rocks',
           speed: 'Weapon',
