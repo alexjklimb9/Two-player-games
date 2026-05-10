@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=51" />
+    <link rel="stylesheet" href="style.css?v=52" />
   </head>
   <body>
     <main id="app">
@@ -21,20 +21,20 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="?game=balance&v=51">
+            <a class="game-card balance-card" href="levels.html?game=balance&v=52">
               <div class="card-art"><div class="mini-head cyan-head"></div><div class="mini-board"></div><div class="mini-head rose-head"></div></div>
-              <div><p class="card-kicker">Prototype 1</p><h2>Balance Board</h2><p>Dodge 25 falling objects without getting hit or tipping over.</p></div>
-              <span class="play-chip">Play</span>
+              <div><p class="card-kicker">Prototype 1</p><h2>Balance Board</h2><p>Dodge falling objects without getting hit or tipping over.</p></div>
+              <span class="play-chip">Levels</span>
             </a>
-            <a class="game-card trampoline-card" href="?game=seesaw&v=51">
+            <a class="game-card trampoline-card" href="levels.html?game=seesaw&v=52">
               <div class="card-art trampoline-art"><div class="mini-trampoline mini-low"></div><div class="mini-trampoline mini-high"></div><div class="mini-trampoline mini-mid"></div><div class="mini-trampoline mini-super"></div><div class="mini-head cyan-head bounce-blue"></div><div class="mini-head rose-head bounce-rose"></div></div>
-              <div><p class="card-kicker">Prototype 2</p><h2>Trampoline Climb</h2><p>Climb to height 100 while trampolines get rarer higher up.</p></div>
-              <span class="play-chip">Play</span>
+              <div><p class="card-kicker">Prototype 2</p><h2>Trampoline Climb</h2><p>Climb higher while trampolines get rarer.</p></div>
+              <span class="play-chip">Levels</span>
             </a>
-            <a class="game-card asteroid-card" href="?game=asteroids&v=51">
+            <a class="game-card asteroid-card" href="levels.html?game=asteroids&v=52">
               <div class="card-art asteroid-art"><div class="mini-ship"></div><div class="mini-rock rock-one"></div><div class="mini-rock rock-two"></div><div class="mini-shot shot-one"></div><div class="mini-shot shot-two"></div></div>
               <div><p class="card-kicker">Prototype 3</p><h2>Asteroid Crew</h2><p>Start on a countdown, then survive while asteroids keep spawning.</p></div>
-              <span class="play-chip">Play</span>
+              <span class="play-chip">Levels</span>
             </a>
           </div>
         </div>
@@ -61,7 +61,7 @@
             <h1 id="resultTitle">Game Over</h1>
             <p id="resultText"></p>
             <div id="finalStats" class="final-stats"></div>
-            <div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=51">Games</a></div>
+            <div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=52">Games</a></div>
           </div>
         </section>
         <div id="hud"><div class="pill">⏱ <span id="timeText">60s left</span></div><div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div><div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div><div class="pill"><span id="speedLabel">Speed</span> <span id="holdText">1.0x</span></div></div>
@@ -71,20 +71,27 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const selectedGame = params.get('game');
+      const selectedLevel = parseInt(params.get('level') || '2', 10);
+      const levelTargets = {
+        balance: {1:15, 2:25, 3:40},
+        seesaw: {1:50, 2:100, 3:150},
+        asteroids: {1:45, 2:60, 3:90}
+      };
+      const levelNames = {1:'Level 1',2:'Level 2',3:'Level 3'};
       const games = {
-        balance: {script:'modern-game.js?v=51',extraScript:'start-countdown-v51.js?v=51',eyebrow:'Two Player Games · Prototype 1',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:'After Start Game, a 3-second countdown begins. Then dodge 25 objects without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:25},
-        seesaw: {script:'seesaw-tower.js?v=51',extraScript:'trampoline-difficulty-v46.js?v=51|start-countdown-v51.js?v=51',eyebrow:'Two Player Games · Prototype 2',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:'After Start Game, a 3-second countdown begins. Climb to height 100 while trampolines become rarer.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:100},
-        asteroids: {script:'asteroids-crew-v2.js?v=51',extraScript:'asteroid-mode-v50.js?v=51',eyebrow:'Two Player Games · Prototype 3',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:'After Start Game, a 3-second countdown begins. Survive 60 seconds while asteroids keep spawning faster.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:60}
+        balance: {script:'modern-game.js?v=52',extraScript:'start-countdown-v51.js?v=52',eyebrow:'Two Player Games · Balance Board',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:'After Start Game, a 3-second countdown begins. Complete the level target without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.balance[selectedLevel] || 25},
+        seesaw: {script:'seesaw-tower.js?v=52',extraScript:'trampoline-difficulty-v46.js?v=52|start-countdown-v51.js?v=52',eyebrow:'Two Player Games · Trampoline Climb',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:'After Start Game, a 3-second countdown begins. Climb to the level height target.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.seesaw[selectedLevel] || 100},
+        asteroids: {script:'asteroids-crew-v2.js?v=52',extraScript:'asteroid-mode-v50.js?v=52',eyebrow:'Two Player Games · Asteroid Crew',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:'After Start Game, a 3-second countdown begins. Survive until the level timer reaches zero.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:levelTargets.asteroids[selectedLevel] || 60}
       };
 
       let winWatch=null, playStart=0, hasWon=false;
       function numberFromText(id){const text=document.getElementById(id)?.textContent||'0';const match=text.match(/-?\d+/);return match?parseInt(match[0],10):0;}
       function overlayHidden(id){return document.getElementById(id).classList.contains('hidden');}
-      function showWinOverlay(message,stats){if(hasWon)return;hasWon=true;document.getElementById('endEyebrow').textContent='Level Complete';document.getElementById('resultTitle').textContent='You Win';document.getElementById('resultText').textContent=message;document.getElementById('finalStats').innerHTML=stats;document.getElementById('endOverlay').classList.remove('hidden');const asteroidControls=document.getElementById('asteroidControls');if(asteroidControls)asteroidControls.style.display='none';}
-      function startWinMonitor(gameKey,config){clearInterval(winWatch);hasWon=false;playStart=performance.now();winWatch=setInterval(()=>{if(!overlayHidden('startOverlay'))return;if(!overlayHidden('endOverlay'))return;if(gameKey==='balance'){const dodged=numberFromText('fallText');if(dodged>=config.winTarget)showWinOverlay('You kept the board balanced and dodged enough objects.',`Objects Dodged: ${dodged}/${config.winTarget}`);}else if(gameKey==='seesaw'){const height=numberFromText('fallText');if(height>=config.winTarget)showWinOverlay('You climbed high enough to clear the stage.',`Height: ${height}/${config.winTarget}`);}else if(gameKey==='asteroids'){const elapsed=Math.floor((performance.now()-playStart)/1000);const remaining=Math.max(0,config.winTarget-elapsed);const timePill=document.querySelector('#hud .pill');if(timePill)timePill.style.display='inline-flex';const tt=document.getElementById('timeText');if(tt)tt.textContent=`${remaining}s left`;if(elapsed>=config.winTarget)showWinOverlay('You survived the asteroid field.',`Survival Time: ${elapsed}s/${config.winTarget}s`);}},250);}
+      function showWinOverlay(message,stats){if(hasWon)return;hasWon=true;document.getElementById('endEyebrow').textContent='Level Complete';document.getElementById('resultTitle').textContent='You Win';document.getElementById('resultText').textContent=message;document.getElementById('finalStats').innerHTML=stats;document.getElementById('endOverlay').classList.remove('hidden');}
+      function startWinMonitor(gameKey,config){clearInterval(winWatch);hasWon=false;playStart=performance.now();winWatch=setInterval(()=>{if(!overlayHidden('startOverlay'))return;if(!overlayHidden('endOverlay'))return;if(gameKey==='balance'){const dodged=numberFromText('fallText');if(dodged>=config.winTarget)showWinOverlay('You completed the balance challenge.',`${levelNames[selectedLevel] || 'Level'}<br>Objects Dodged: ${dodged}/${config.winTarget}`);}else if(gameKey==='seesaw'){const height=numberFromText('fallText');if(height>=config.winTarget)showWinOverlay('You climbed high enough to clear the stage.',`${levelNames[selectedLevel] || 'Level'}<br>Height: ${height}/${config.winTarget}`);}else if(gameKey==='asteroids'){const elapsed=Math.floor((performance.now()-playStart)/1000);const remaining=Math.max(0,config.winTarget-elapsed);const tt=document.getElementById('timeText');if(tt)tt.textContent=`${remaining}s left`;if(elapsed>=config.winTarget)showWinOverlay('You survived the asteroid field.',`${levelNames[selectedLevel] || 'Level'}<br>Survival Time: ${elapsed}s/${config.winTarget}s`);}},250);}
       function loadExtraScripts(extraScript){if(!extraScript)return;extraScript.split('|').forEach(src=>{const extra=document.createElement('script');extra.src=src;document.body.appendChild(extra);});}
 
-      if(selectedGame&&games[selectedGame]){const game=games[selectedGame];document.getElementById('homeScreen').classList.add('hidden');document.getElementById('gameScreen').classList.remove('hidden');document.getElementById('gameEyebrow').textContent=game.eyebrow;document.getElementById('gameTitle').textContent=game.title;document.getElementById('gameDescription').textContent=game.description;document.getElementById('gameTip').textContent=game.tip;document.getElementById('stressLabel').textContent=game.stress;document.getElementById('scoreLabel').textContent=game.score;document.getElementById('speedLabel').textContent=game.speed;document.getElementById('topPlayerLabel').textContent=game.topLabel;document.getElementById('topPlayerInstructions').textContent=game.topInstructions;document.getElementById('bottomPlayerLabel').textContent=game.bottomLabel;document.getElementById('bottomPlayerInstructions').textContent=game.bottomInstructions;['pointerdown','touchstart','click'].forEach(ev=>{document.getElementById('startButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});document.getElementById('restartButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});});const script=document.createElement('script');script.src=game.script;script.onload=()=>loadExtraScripts(game.extraScript);document.body.appendChild(script);}
+      if(selectedGame&&games[selectedGame]){const game=games[selectedGame];window.ACTIVE_LEVEL={number:selectedLevel,winTarget:game.winTarget};document.getElementById('homeScreen').classList.add('hidden');document.getElementById('gameScreen').classList.remove('hidden');document.getElementById('gameEyebrow').textContent=game.eyebrow + ' · ' + (levelNames[selectedLevel] || 'Level');document.getElementById('gameTitle').textContent=game.title;document.getElementById('gameDescription').textContent=game.description;document.getElementById('gameTip').textContent=game.tip;document.getElementById('stressLabel').textContent=game.stress;document.getElementById('scoreLabel').textContent=game.score;document.getElementById('speedLabel').textContent=game.speed;document.getElementById('topPlayerLabel').textContent=game.topLabel;document.getElementById('topPlayerInstructions').textContent=game.topInstructions;document.getElementById('bottomPlayerLabel').textContent=game.bottomLabel;document.getElementById('bottomPlayerInstructions').textContent=game.bottomInstructions;document.getElementById('homeButton').href=`levels.html?game=${selectedGame}&v=52`;['pointerdown','touchstart','click'].forEach(ev=>{document.getElementById('startButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});document.getElementById('restartButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});});const script=document.createElement('script');script.src=game.script;script.onload=()=>loadExtraScripts(game.extraScript);document.body.appendChild(script);}
     </script>
   </body>
 </html>
