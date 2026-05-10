@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=48" />
+    <link rel="stylesheet" href="style.css?v=50" />
   </head>
   <body>
     <main id="app">
@@ -21,19 +21,19 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="?game=balance&v=48">
+            <a class="game-card balance-card" href="?game=balance&v=50">
               <div class="card-art"><div class="mini-head cyan-head"></div><div class="mini-board"></div><div class="mini-head rose-head"></div></div>
               <div><p class="card-kicker">Prototype 1</p><h2>Balance Board</h2><p>Dodge 25 falling objects without getting hit or tipping over.</p></div>
               <span class="play-chip">Play</span>
             </a>
-            <a class="game-card trampoline-card" href="?game=seesaw&v=48">
+            <a class="game-card trampoline-card" href="?game=seesaw&v=50">
               <div class="card-art trampoline-art"><div class="mini-trampoline mini-low"></div><div class="mini-trampoline mini-high"></div><div class="mini-trampoline mini-mid"></div><div class="mini-trampoline mini-super"></div><div class="mini-head cyan-head bounce-blue"></div><div class="mini-head rose-head bounce-rose"></div></div>
               <div><p class="card-kicker">Prototype 2</p><h2>Trampoline Climb</h2><p>Climb to height 100 while trampolines get rarer higher up.</p></div>
               <span class="play-chip">Play</span>
             </a>
-            <a class="game-card asteroid-card" href="?game=asteroids&v=48">
+            <a class="game-card asteroid-card" href="?game=asteroids&v=50">
               <div class="card-art asteroid-art"><div class="mini-ship"></div><div class="mini-rock rock-one"></div><div class="mini-rock rock-two"></div><div class="mini-shot shot-one"></div><div class="mini-shot shot-two"></div></div>
-              <div><p class="card-kicker">Prototype 3</p><h2>Asteroid Crew</h2><p>Survive for 60 seconds while asteroid pressure ramps up.</p></div>
+              <div><p class="card-kicker">Prototype 3</p><h2>Asteroid Crew</h2><p>Start on a countdown, then survive while asteroids keep spawning.</p></div>
               <span class="play-chip">Play</span>
             </a>
           </div>
@@ -61,7 +61,7 @@
             <h1 id="resultTitle">Game Over</h1>
             <p id="resultText"></p>
             <div id="finalStats" class="final-stats"></div>
-            <div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=48">Games</a></div>
+            <div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=50">Games</a></div>
           </div>
         </section>
         <div id="hud"><div class="pill">⏱ <span id="timeText">60s left</span></div><div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div><div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div><div class="pill"><span id="speedLabel">Speed</span> <span id="holdText">1.0x</span></div></div>
@@ -72,9 +72,9 @@
       const params = new URLSearchParams(window.location.search);
       const selectedGame = params.get('game');
       const games = {
-        balance: {script:'modern-game.js?v=48',eyebrow:'Two Player Games · Prototype 1',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:'Win condition: dodge 25 objects without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:25},
-        seesaw: {script:'seesaw-tower.js?v=48',extraScript:'trampoline-difficulty-v46.js?v=48',eyebrow:'Two Player Games · Prototype 2',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:'Win condition: climb to height 100. Trampolines become rarer the higher you climb.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:100},
-        asteroids: {script:'asteroids-crew-v2.js?v=48',extraScript:'asteroid-wrap-v48.js?v=48',eyebrow:'Two Player Games · Prototype 3',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:'Win condition: survive for 60 seconds. Asteroids spawn faster and move faster as time passes.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:60}
+        balance: {script:'modern-game.js?v=50',eyebrow:'Two Player Games · Prototype 1',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:'Win condition: dodge 25 objects without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:25},
+        seesaw: {script:'seesaw-tower.js?v=50',extraScript:'trampoline-difficulty-v46.js?v=50',eyebrow:'Two Player Games · Prototype 2',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:'Win condition: climb to height 100. Trampolines become rarer the higher you climb.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:100},
+        asteroids: {script:'asteroids-crew-v2.js?v=50',extraScript:'asteroid-mode-v50.js?v=50',eyebrow:'Two Player Games · Prototype 3',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:'After Start Game, a 3-second countdown begins. Survive 60 seconds while asteroids keep spawning faster.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:60}
       };
 
       let winWatch=null, playStart=0, hasWon=false;
