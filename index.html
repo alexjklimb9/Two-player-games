@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0b0f14" />
     <title>Two Player Games</title>
-    <link rel="stylesheet" href="style.css?v=53" />
+    <link rel="stylesheet" href="style.css?v=54" />
   </head>
   <body>
     <main id="app">
@@ -21,21 +21,10 @@
           <p class="home-subtitle">Two players. One phone. Modern co-op chaos.</p>
 
           <div class="game-grid">
-            <a class="game-card balance-card" href="levels.html?game=balance&v=53">
-              <div class="card-art"><div class="mini-head cyan-head"></div><div class="mini-board"></div><div class="mini-head rose-head"></div></div>
-              <div><p class="card-kicker">Prototype 1</p><h2>Balance Board</h2><p>Dodge falling objects without getting hit or tipping over.</p></div>
-              <span class="play-chip">Levels</span>
-            </a>
-            <a class="game-card trampoline-card" href="levels.html?game=seesaw&v=53">
-              <div class="card-art trampoline-art"><div class="mini-trampoline mini-low"></div><div class="mini-trampoline mini-high"></div><div class="mini-trampoline mini-mid"></div><div class="mini-trampoline mini-super"></div><div class="mini-head cyan-head bounce-blue"></div><div class="mini-head rose-head bounce-rose"></div></div>
-              <div><p class="card-kicker">Prototype 2</p><h2>Trampoline Climb</h2><p>Climb higher while trampolines get rarer.</p></div>
-              <span class="play-chip">Levels</span>
-            </a>
-            <a class="game-card asteroid-card" href="levels.html?game=asteroids&v=53">
-              <div class="card-art asteroid-art"><div class="mini-ship"></div><div class="mini-rock rock-one"></div><div class="mini-rock rock-two"></div><div class="mini-shot shot-one"></div><div class="mini-shot shot-two"></div></div>
-              <div><p class="card-kicker">Prototype 3</p><h2>Asteroid Crew</h2><p>Start on a countdown, then survive while asteroids keep spawning.</p></div>
-              <span class="play-chip">Levels</span>
-            </a>
+            <a class="game-card balance-card" href="levels.html?game=balance&v=54"><div class="card-art"><div class="mini-head cyan-head"></div><div class="mini-board"></div><div class="mini-head rose-head"></div></div><div><p class="card-kicker">Prototype 1</p><h2>Balance Board</h2><p>Dodge falling objects without getting hit or tipping over.</p></div><span class="play-chip">Levels</span></a>
+            <a class="game-card trampoline-card" href="levels.html?game=seesaw&v=54"><div class="card-art trampoline-art"><div class="mini-trampoline mini-low"></div><div class="mini-trampoline mini-high"></div><div class="mini-trampoline mini-mid"></div><div class="mini-trampoline mini-super"></div><div class="mini-head cyan-head bounce-blue"></div><div class="mini-head rose-head bounce-rose"></div></div><div><p class="card-kicker">Prototype 2</p><h2>Trampoline Climb</h2><p>Climb higher while trampolines get rarer.</p></div><span class="play-chip">Levels</span></a>
+            <a class="game-card asteroid-card" href="levels.html?game=asteroids&v=54"><div class="card-art asteroid-art"><div class="mini-ship"></div><div class="mini-rock rock-one"></div><div class="mini-rock rock-two"></div><div class="mini-shot shot-one"></div><div class="mini-shot shot-two"></div></div><div><p class="card-kicker">Prototype 3</p><h2>Asteroid Crew</h2><p>Start on a countdown, then survive while asteroids keep spawning.</p></div><span class="play-chip">Levels</span></a>
+            <a class="game-card asteroid-card" href="levels.html?game=core&v=54"><div class="card-art asteroid-art"><div class="mini-ship"></div><div class="mini-rock rock-one"></div><div class="mini-shot shot-one"></div><div class="mini-rock rock-two"></div><div class="mini-shot shot-two"></div></div><div><p class="card-kicker">Prototype 4</p><h2>Core Defense</h2><p>Build towers, rotate the ring, and protect the shared core.</p></div><span class="play-chip">Levels</span></a>
           </div>
         </div>
       </section>
@@ -47,52 +36,36 @@
             <p id="gameEyebrow" class="eyebrow">Two Player Games</p>
             <h1 id="gameTitle">Game</h1>
             <p id="gameDescription">Choose a game from the homepage.</p>
-            <div class="instructions">
-              <div><strong id="topPlayerLabel">Top Player</strong><span id="topPlayerInstructions">Use the top edge buttons.</span></div>
-              <div><strong id="bottomPlayerLabel">Bottom Player</strong><span id="bottomPlayerInstructions">Use the bottom edge buttons.</span></div>
-            </div>
+            <div class="instructions"><div><strong id="topPlayerLabel">Top Player</strong><span id="topPlayerInstructions">Use the top edge buttons.</span></div><div><strong id="bottomPlayerLabel">Bottom Player</strong><span id="bottomPlayerInstructions">Use the bottom edge buttons.</span></div></div>
             <p id="gameTip" class="tip"></p>
             <button id="startButton">Start Game</button>
           </div>
         </section>
-        <section id="endOverlay" class="overlay hidden">
-          <div class="panel">
-            <p id="endEyebrow" class="eyebrow">Game Over</p>
-            <h1 id="resultTitle">Game Over</h1>
-            <p id="resultText"></p>
-            <div id="finalStats" class="final-stats"></div>
-            <div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=53">Games</a></div>
-          </div>
-        </section>
-        <div id="hud"><div class="pill">⏱ <span id="timeText">60s left</span></div><div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div><div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div><div class="pill"><span id="speedLabel">Speed</span> <span id="holdText">1.0x</span></div></div>
+        <section id="endOverlay" class="overlay hidden"><div class="panel"><p id="endEyebrow" class="eyebrow">Game Over</p><h1 id="resultTitle">Game Over</h1><p id="resultText"></p><div id="finalStats" class="final-stats"></div><div class="end-actions"><button id="restartButton">Play Again</button><a id="homeButton" class="secondary-button" href="./?v=54">Games</a></div></div></section>
+        <div id="hud"><div class="pill">⏱ <span id="timeText">0s</span></div><div class="pill"><span id="stressLabel">Tilt</span> <span id="stressText">0%</span></div><div class="pill"><span id="scoreLabel">Score</span> <span id="fallText">0</span></div><div class="pill"><span id="speedLabel">Speed</span> <span id="holdText">1.0x</span></div></div>
       </section>
     </main>
 
     <script>
-      const params = new URLSearchParams(window.location.search);
-      const selectedGame = params.get('game');
-      const selectedLevel = parseInt(params.get('level') || '2', 10);
-      const isEndless = selectedLevel === 5;
-      const levelTargets = {
-        balance: {1:15, 2:25, 3:40, 4:60, 5:999999},
-        seesaw: {1:50, 2:100, 3:150, 4:220, 5:999999},
-        asteroids: {1:45, 2:60, 3:90, 4:120, 5:999999}
+      const params=new URLSearchParams(window.location.search);
+      const selectedGame=params.get('game');
+      const selectedLevel=parseInt(params.get('level')||'2',10);
+      const isEndless=selectedLevel===5;
+      const levelTargets={balance:{1:15,2:25,3:40,4:60,5:999999},seesaw:{1:50,2:100,3:150,4:220,5:999999},asteroids:{1:45,2:60,3:90,4:120,5:999999},core:{1:5,2:8,3:12,4:15,5:999999}};
+      const levelNames={1:'Easy',2:'Normal',3:'Hard',4:'Expert',5:'Endless'};
+      const games={
+        balance:{script:'modern-game.js?v=54',extraScript:'start-countdown-v51.js?v=54',eyebrow:'Two Player Games · Balance Board',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:isEndless?'Endless Mode: survive and dodge as many objects as possible.':'After Start Game, a 3-second countdown begins. Complete the level target without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.balance[selectedLevel]||25},
+        seesaw:{script:'seesaw-tower.js?v=54',extraScript:'trampoline-difficulty-v46.js?v=54|start-countdown-v51.js?v=54',eyebrow:'Two Player Games · Trampoline Climb',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:isEndless?'Endless Mode: climb as high as possible.':'After Start Game, a 3-second countdown begins. Climb to the level height target.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.seesaw[selectedLevel]||100},
+        asteroids:{script:'asteroids-crew-v2.js?v=54',extraScript:'asteroid-mode-v50.js?v=54',eyebrow:'Two Player Games · Asteroid Crew',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:isEndless?'Endless Mode: survive as long as possible while asteroids keep spawning.':'After Start Game, a 3-second countdown begins. Survive until the level timer reaches zero.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:levelTargets.asteroids[selectedLevel]||60},
+        core:{script:'core-defense.js?v=54',extraScript:'start-countdown-v51.js?v=54',eyebrow:'Two Player Games · Core Defense',title:'Core Defense',description:'Build towers, rotate the defense ring, and protect the shared core.',tip:isEndless?'Endless Mode: defend the core as long as possible.':'After Start Game, a 3-second countdown begins. Survive every wave to clear the level.',stress:'Core',score:'Kills',speed:'Special',topLabel:'Builder',topInstructions:'Select slots, build or upgrade towers, and repair the core.',bottomLabel:'Operator',bottomInstructions:'Rotate the defense ring and trigger the special shockwave.',winTarget:levelTargets.core[selectedLevel]||8}
       };
-      const levelNames = {1:'Easy',2:'Normal',3:'Hard',4:'Expert',5:'Endless'};
-      const games = {
-        balance: {script:'modern-game.js?v=53',extraScript:'start-countdown-v51.js?v=53',eyebrow:'Two Player Games · Balance Board',title:'Balance Board',description:'Move, dodge, and keep the platform balanced together.',tip:isEndless?'Endless Mode: survive and dodge as many objects as possible.':'After Start Game, a 3-second countdown begins. Complete the level target without getting hit or tipping over.',stress:'Tilt',score:'Dodged',speed:'Speed',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.balance[selectedLevel] || 25},
-        seesaw: {script:'seesaw-tower.js?v=53',extraScript:'trampoline-difficulty-v46.js?v=53|start-countdown-v51.js?v=53',eyebrow:'Two Player Games · Trampoline Climb',title:'Trampoline Climb',description:'Bounce on colored platforms. Each color launches you a different height.',tip:isEndless?'Endless Mode: climb as high as possible.':'After Start Game, a 3-second countdown begins. Climb to the level height target.',stress:'Pads',score:'Height',speed:'Chain',topLabel:'Top Player',topInstructions:'Use the top edge buttons.',bottomLabel:'Bottom Player',bottomInstructions:'Use the bottom edge buttons.',winTarget:levelTargets.seesaw[selectedLevel] || 100},
-        asteroids: {script:'asteroids-crew-v2.js?v=53',extraScript:'asteroid-mode-v50.js?v=53',eyebrow:'Two Player Games · Asteroid Crew',title:'Asteroid Crew',description:'A center-locked asteroid survival game with split ship controls.',tip:isEndless?'Endless Mode: survive as long as possible while asteroids keep spawning.':'After Start Game, a 3-second countdown begins. Survive until the level timer reaches zero.',stress:'Hull',score:'Rocks',speed:'Weapon',topLabel:'Pilot / Weapons',topInstructions:'Back, switch weapon, and forward.',bottomLabel:'Gunner / Aim',bottomInstructions:'Turn left, fire, and turn right.',winTarget:levelTargets.asteroids[selectedLevel] || 60}
-      };
-
-      let winWatch=null, playStart=0, hasWon=false;
-      function numberFromText(id){const text=document.getElementById(id)?.textContent||'0';const match=text.match(/-?\d+/);return match?parseInt(match[0],10):0;}
-      function overlayHidden(id){return document.getElementById(id).classList.contains('hidden');}
-      function showWinOverlay(message,stats){if(hasWon)return;hasWon=true;document.getElementById('endEyebrow').textContent='Level Complete';document.getElementById('resultTitle').textContent='You Win';document.getElementById('resultText').textContent=message;document.getElementById('finalStats').innerHTML=stats;document.getElementById('endOverlay').classList.remove('hidden');}
-      function startWinMonitor(gameKey,config){clearInterval(winWatch);hasWon=false;playStart=performance.now();winWatch=setInterval(()=>{if(!overlayHidden('startOverlay'))return;if(!overlayHidden('endOverlay'))return;if(isEndless)return;if(gameKey==='balance'){const dodged=numberFromText('fallText');if(dodged>=config.winTarget)showWinOverlay('You completed the balance challenge.',`${levelNames[selectedLevel] || 'Level'}<br>Objects Dodged: ${dodged}/${config.winTarget}`);}else if(gameKey==='seesaw'){const height=numberFromText('fallText');if(height>=config.winTarget)showWinOverlay('You climbed high enough to clear the stage.',`${levelNames[selectedLevel] || 'Level'}<br>Height: ${height}/${config.winTarget}`);}else if(gameKey==='asteroids'){const elapsed=Math.floor((performance.now()-playStart)/1000);const remaining=Math.max(0,config.winTarget-elapsed);const tt=document.getElementById('timeText');if(tt)tt.textContent=`${remaining}s left`;if(elapsed>=config.winTarget)showWinOverlay('You survived the asteroid field.',`${levelNames[selectedLevel] || 'Level'}<br>Survival Time: ${elapsed}s/${config.winTarget}s`);}},250);}
-      function loadExtraScripts(extraScript){if(!extraScript)return;extraScript.split('|').forEach(src=>{const extra=document.createElement('script');extra.src=src;document.body.appendChild(extra);});}
-
-      if(selectedGame&&games[selectedGame]){const game=games[selectedGame];window.ACTIVE_LEVEL={number:selectedLevel,winTarget:game.winTarget,endless:isEndless};document.getElementById('homeScreen').classList.add('hidden');document.getElementById('gameScreen').classList.remove('hidden');document.getElementById('gameEyebrow').textContent=game.eyebrow + ' · ' + (levelNames[selectedLevel] || 'Level');document.getElementById('gameTitle').textContent=game.title;document.getElementById('gameDescription').textContent=game.description;document.getElementById('gameTip').textContent=game.tip;document.getElementById('stressLabel').textContent=game.stress;document.getElementById('scoreLabel').textContent=game.score;document.getElementById('speedLabel').textContent=game.speed;document.getElementById('topPlayerLabel').textContent=game.topLabel;document.getElementById('topPlayerInstructions').textContent=game.topInstructions;document.getElementById('bottomPlayerLabel').textContent=game.bottomLabel;document.getElementById('bottomPlayerInstructions').textContent=game.bottomInstructions;document.getElementById('homeButton').href=`levels.html?game=${selectedGame}&v=53`;['pointerdown','touchstart','click'].forEach(ev=>{document.getElementById('startButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});document.getElementById('restartButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});});const script=document.createElement('script');script.src=game.script;script.onload=()=>loadExtraScripts(game.extraScript);document.body.appendChild(script);}
+      let winWatch=null,playStart=0,hasWon=false;
+      function numberFromText(id){const text=document.getElementById(id)?.textContent||'0';const match=text.match(/-?\d+/);return match?parseInt(match[0],10):0}
+      function overlayHidden(id){return document.getElementById(id).classList.contains('hidden')}
+      function showWinOverlay(message,stats){if(hasWon)return;hasWon=true;document.getElementById('endEyebrow').textContent='Level Complete';document.getElementById('resultTitle').textContent='You Win';document.getElementById('resultText').textContent=message;document.getElementById('finalStats').innerHTML=stats;document.getElementById('endOverlay').classList.remove('hidden')}
+      function startWinMonitor(gameKey,config){clearInterval(winWatch);hasWon=false;playStart=performance.now();winWatch=setInterval(()=>{if(!overlayHidden('startOverlay'))return;if(!overlayHidden('endOverlay'))return;if(isEndless||gameKey==='core')return;if(gameKey==='balance'){const dodged=numberFromText('fallText');if(dodged>=config.winTarget)showWinOverlay('You completed the balance challenge.',`${levelNames[selectedLevel]||'Level'}<br>Objects Dodged: ${dodged}/${config.winTarget}`)}else if(gameKey==='seesaw'){const height=numberFromText('fallText');if(height>=config.winTarget)showWinOverlay('You climbed high enough to clear the stage.',`${levelNames[selectedLevel]||'Level'}<br>Height: ${height}/${config.winTarget}`)}else if(gameKey==='asteroids'){const elapsed=Math.floor((performance.now()-playStart)/1000);const remaining=Math.max(0,config.winTarget-elapsed);const tt=document.getElementById('timeText');if(tt)tt.textContent=`${remaining}s left`;if(elapsed>=config.winTarget)showWinOverlay('You survived the asteroid field.',`${levelNames[selectedLevel]||'Level'}<br>Survival Time: ${elapsed}s/${config.winTarget}s`)}},250)}
+      function loadExtraScripts(extraScript){if(!extraScript)return;extraScript.split('|').forEach(src=>{const extra=document.createElement('script');extra.src=src;document.body.appendChild(extra)})}
+      if(selectedGame&&games[selectedGame]){const game=games[selectedGame];window.ACTIVE_LEVEL={number:selectedLevel,winTarget:game.winTarget,endless:isEndless};document.getElementById('homeScreen').classList.add('hidden');document.getElementById('gameScreen').classList.remove('hidden');document.getElementById('gameEyebrow').textContent=game.eyebrow+' · '+(levelNames[selectedLevel]||'Level');document.getElementById('gameTitle').textContent=game.title;document.getElementById('gameDescription').textContent=game.description;document.getElementById('gameTip').textContent=game.tip;document.getElementById('stressLabel').textContent=game.stress;document.getElementById('scoreLabel').textContent=game.score;document.getElementById('speedLabel').textContent=game.speed;document.getElementById('topPlayerLabel').textContent=game.topLabel;document.getElementById('topPlayerInstructions').textContent=game.topInstructions;document.getElementById('bottomPlayerLabel').textContent=game.bottomLabel;document.getElementById('bottomPlayerInstructions').textContent=game.bottomInstructions;document.getElementById('homeButton').href=`levels.html?game=${selectedGame}&v=54`;['pointerdown','touchstart','click'].forEach(ev=>{document.getElementById('startButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true});document.getElementById('restartButton').addEventListener(ev,()=>startWinMonitor(selectedGame,game),{passive:true})});const script=document.createElement('script');script.src=game.script;script.onload=()=>loadExtraScripts(game.extraScript);document.body.appendChild(script)}
     </script>
   </body>
 </html>
