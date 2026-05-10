@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=53" />
+    <link rel="stylesheet" href="style.css?v=54" />
   </head>
   <body>
     <main id="app">
@@ -14,7 +14,7 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=53">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=54">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -55,6 +55,17 @@
             ['Expert', 'Survive 120 seconds.', 4],
             ['Endless', 'Survive as long as possible.', 5]
           ]
+        },
+        core: {
+          title: 'Core Defense',
+          subtitle: 'Build, rotate, and repair a shared defense ring.',
+          levels: [
+            ['Easy', 'Survive 5 waves.', 1],
+            ['Normal', 'Survive 8 waves.', 2],
+            ['Hard', 'Survive 12 waves.', 3],
+            ['Expert', 'Survive 15 waves.', 4],
+            ['Endless', 'Defend as long as possible.', 5]
+          ]
         }
       };
 
@@ -65,7 +76,7 @@
       cfg.levels.forEach(level => {
         const a = document.createElement('a');
         a.className = 'game-card';
-        a.href = `./?game=${game}&level=${level[2]}&v=53`;
+        a.href = `./?game=${game}&level=${level[2]}&v=54`;
         const kicker = level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`;
         a.innerHTML = `<div><p class="card-kicker">${kicker}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
         grid.appendChild(a);
