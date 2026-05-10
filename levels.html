@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=52" />
+    <link rel="stylesheet" href="style.css?v=53" />
   </head>
   <body>
     <main id="app">
@@ -14,7 +14,7 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=52">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=53">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -27,27 +27,33 @@
           title: 'Balance Board',
           subtitle: 'Dodge falling objects and keep the shared board steady.',
           levels: [
-            ['Warmup', 'Dodge 15 objects.', 1],
-            ['Standard', 'Dodge 25 objects.', 2],
-            ['Pressure', 'Dodge 40 objects.', 3]
+            ['Easy', 'Dodge 15 objects.', 1],
+            ['Normal', 'Dodge 25 objects.', 2],
+            ['Hard', 'Dodge 40 objects.', 3],
+            ['Expert', 'Dodge 60 objects.', 4],
+            ['Endless', 'Survive as long as possible.', 5]
           ]
         },
         seesaw: {
           title: 'Trampoline Climb',
           subtitle: 'Bounce higher while platforms become harder to chain.',
           levels: [
-            ['Climb', 'Reach height 50.', 1],
-            ['High Climb', 'Reach height 100.', 2],
-            ['Sky Run', 'Reach height 150.', 3]
+            ['Easy', 'Reach height 50.', 1],
+            ['Normal', 'Reach height 100.', 2],
+            ['Hard', 'Reach height 150.', 3],
+            ['Expert', 'Reach height 220.', 4],
+            ['Endless', 'Climb as high as possible.', 5]
           ]
         },
         asteroids: {
           title: 'Asteroid Crew',
           subtitle: 'Survive together while asteroids keep entering the field.',
           levels: [
-            ['Patrol', 'Survive 45 seconds.', 1],
-            ['Field Run', 'Survive 60 seconds.', 2],
-            ['Deep Space', 'Survive 90 seconds.', 3]
+            ['Easy', 'Survive 45 seconds.', 1],
+            ['Normal', 'Survive 60 seconds.', 2],
+            ['Hard', 'Survive 90 seconds.', 3],
+            ['Expert', 'Survive 120 seconds.', 4],
+            ['Endless', 'Survive as long as possible.', 5]
           ]
         }
       };
@@ -59,8 +65,9 @@
       cfg.levels.forEach(level => {
         const a = document.createElement('a');
         a.className = 'game-card';
-        a.href = `./?game=${game}&level=${level[2]}&v=52`;
-        a.innerHTML = `<div><p class="card-kicker">Level ${level[2]}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
+        a.href = `./?game=${game}&level=${level[2]}&v=53`;
+        const kicker = level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`;
+        a.innerHTML = `<div><p class="card-kicker">${kicker}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
         grid.appendChild(a);
       });
     </script>
