@@ -1,4 +1,4 @@
-// Core Defense v60: show selected tower type and boost countdown on buttons.
+// Core Defense v62: show tower type, active boost, and boost cooldown on buttons.
 (function(){
   controls = function(){
     if(!game.running) return;
@@ -7,7 +7,13 @@
     const s = game.slots && game.slots[game.selected];
     const currentType = TYPES[game.buildType] ? TYPES[game.buildType].name : 'Tower';
     const typeLabel = 'TYPE ' + currentType;
-    const boostLabel = s && s.boost > 0 ? 'BOOST ' + Math.ceil(s.boost) + 's' : 'BOOST';
+
+    let boostLabel = 'BOOST';
+    if(s && s.boost > 0){
+      boostLabel = 'BOOST ' + Math.ceil(s.boost) + 's';
+    } else if(game.specialCd && game.specialCd > 0){
+      boostLabel = 'WAIT ' + Math.ceil(game.specialCd) + 's';
+    }
 
     let buildLabel = 'BUILD $6';
     if(s){
