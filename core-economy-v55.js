@@ -1,4 +1,4 @@
-// Core Defense v55: economy, tower choice, tougher enemies, harder aiming.
+// Core Defense v56: economy, tower choice, balanced enemy health, harder aiming.
 (function(){
   game.money = 0;
   game.buildType = 0;
@@ -17,9 +17,9 @@
     const e = game.enemies[game.enemies.length - 1];
     if(e && game.enemies.length > before){
       const lvl = LEVEL.number || 2;
-      e.hp = e.maxHp = Math.ceil(e.maxHp * 2.2 + game.wave * 1.4 + lvl * 2.2);
-      e.reward = 2 + Math.floor(e.maxHp / 8);
-      e.speed *= .92;
+      e.hp = e.maxHp = Math.ceil(e.maxHp * 1.15 + game.wave * .65 + lvl * .85);
+      e.reward = 2 + Math.floor(e.maxHp / 7);
+      e.speed *= .88;
     }
   };
 
@@ -70,7 +70,7 @@
   nearestEnemy = function(x,y,range,aimAngle){
     let best = null;
     let bestDist = range;
-    const cone = .82;
+    const cone = .95;
     for(const e of game.enemies){
       const dx = e.x - x;
       const dy = e.y - y;
@@ -93,9 +93,9 @@
       const pos = slotPos(i);
       const t = TYPES[s.type];
       if(s.cd <= 0){
-        const target = nearestEnemy(pos.x, pos.y, t.range + s.level * 18, pos.a);
+        const target = nearestEnemy(pos.x, pos.y, t.range + s.level * 22, pos.a);
         if(target){
-          s.cd = Math.max(.18, t.rate - s.level * .06);
+          s.cd = Math.max(.16, t.rate - s.level * .075);
           if(t.kind === 'slow') target.slow = 1.3 + s.level * .2;
           target.hp -= t.damage * s.level;
           game.shots.push({x:pos.x,y:pos.y,tx:target.x,ty:target.y,life:.18,color:t.color,beam:t.kind==='beam'});
