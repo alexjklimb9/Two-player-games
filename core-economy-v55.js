@@ -1,4 +1,4 @@
-// Core Defense v56: economy, tower choice, balanced enemy health, harder aiming.
+// Core Defense v58: economy, tower choice, selected-tower boost, visible costs.
 (function(){
   game.money = 0;
   game.buildType = 0;
@@ -25,12 +25,25 @@
 
   function buildCost(s){
     if(!s.type && s.type !== 0) return 6;
+    if(s.level >= 3) return 0;
     return 5 + s.level * 5;
+  }
+
+  function actionLabel(){
+    const s = game.slots[game.selected];
+    const cost = buildCost(s);
+    if(!s.type && s.type !== 0) return 'BUILD $' + cost;
+    if(s.level >= 3) return 'MAX';
+    return 'UP $' + cost;
   }
 
   buildUpgrade = function(){
     const s = game.slots[game.selected];
     const cost = buildCost(s);
+    if(s.level >= 3){
+      spark(slotPos(game.selected).x, slotPos(game.selected).y, C.white, 6);
+      return;
+    }
     if(game.money < cost){
       spark(slotPos(game.selected).x, slotPos(game.selected).y, C.danger, 8);
       return;
@@ -42,15 +55,13 @@
       s.type = game.buildType;
       s.level = 1;
       s.cd = 0;
+      s.boost = 0;
       s.flash = 1;
       spark(slotPos(game.selected).x, slotPos(game.selected).y, TYPES[s.type].color, 14);
-    } else if(s.level < 3){
+    } else {
       s.level++;
       s.flash = 1;
       spark(slotPos(game.selected).x, slotPos(game.selected).y, TYPES[s.type].color, 16);
-    } else {
-      game.money += cost;
-      spark(slotPos(game.selected).x, slotPos(game.selected).y, C.white, 6);
     }
   };
 
@@ -61,6 +72,21 @@
       game.coreHp++;
       spark(cx(), cy(), C.green, 18);
     }
+  };
+
+  special = function(){
+    if(game.specialCd > 0) return;
+    const s = game.slots[game.selected];
+    const p = slotPos(game.selected);
+    if(!s || (s.type !== 0 && !s.type)){
+      spark(p.x, p.y, C.danger, 10);
+      game.specialCd = 1.2;
+      return;
+    }
+    s.boost = 4.5;
+    s.flash = 1.4;
+    game.specialCd = 7;
+    spark(p.x, p.y, TYPES[s.type].color, 30);
   };
 
   function angleDiff(a,b){
@@ -88,18 +114,20 @@
     for(let i=0;i<game.slots.length;i++){
       const s = game.slots[i];
       if(s.flash > 0) s.flash -= dt * 3;
+      if(s.boost > 0) s.boost -= dt;
       if(!s.type && s.type !== 0) continue;
       s.cd -= dt;
       const pos = slotPos(i);
       const t = TYPES[s.type];
+      const boosted = s.boost > 0;
       if(s.cd <= 0){
-        const target = nearestEnemy(pos.x, pos.y, t.range + s.level * 22, pos.a);
+        const target = nearestEnemy(pos.x, pos.y, t.range + s.level * 22 + (boosted ? 30 : 0), pos.a);
         if(target){
-          s.cd = Math.max(.16, t.rate - s.level * .075);
-          if(t.kind === 'slow') target.slow = 1.3 + s.level * .2;
-          target.hp -= t.damage * s.level;
+          s.cd = Math.max(.12, (t.rate - s.level * .075) * (boosted ? .48 : 1));
+          if(t.kind === 'slow') target.slow = (boosted ? 2.2 : 1.3) + s.level * .2;
+          target.hp -= t.damage * s.level * (boosted ? 1.85 : 1);
           game.shots.push({x:pos.x,y:pos.y,tx:target.x,ty:target.y,life:.18,color:t.color,beam:t.kind==='beam'});
-          s.flash = 1;
+          s.flash = boosted ? 1.3 : 1;
         }
       }
     }
@@ -146,8 +174,9 @@
     oldUpdate(dt);
     if(game.running){
       const t = TYPES[game.buildType];
+      const s = game.slots[game.selected];
       fallText.textContent = '$' + game.money;
-      holdText.textContent = t.name;
+      holdText.textContent = s && s.boost > 0 ? 'BOOST ' + Math.ceil(s.boost) : t.name;
     }
   };
 
@@ -155,11 +184,11 @@
     if(!game.running) return;
     const w = canvas.width * .31, h = 56;
     drawButton(canvas.width*.02,76,w,h,'TYPE',game.input.topLeft,C.blue);
-    drawButton(canvas.width*.345,76,w,h,'BUILD',game.input.topMid,C.blue);
+    drawButton(canvas.width*.345,76,w,h,actionLabel(),game.input.topMid,C.blue);
     drawButton(canvas.width*.67,76,w,h,'SLOT',game.input.topRight,C.blue);
     const y = canvas.height - 90;
     drawButton(canvas.width*.02,y,w,h,'ROT ◀',game.input.bottomLeft,C.rose);
-    drawButton(canvas.width*.345,y,w,h,'SPECIAL',game.input.bottomMid,C.rose);
+    drawButton(canvas.width*.345,y,w,h,'BOOST',game.input.bottomMid,C.rose);
     drawButton(canvas.width*.67,y,w,h,'ROT ▶',game.input.bottomRight,C.rose);
   };
 })();
