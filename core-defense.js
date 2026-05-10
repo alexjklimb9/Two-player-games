@@ -1,0 +1,62 @@
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const startOverlay=document.getElementById('startOverlay');
+const endOverlay=document.getElementById('endOverlay');
+const startButton=document.getElementById('startButton');
+const restartButton=document.getElementById('restartButton');
+const resultTitle=document.getElementById('resultTitle');
+const resultText=document.getElementById('resultText');
+const finalStats=document.getElementById('finalStats');
+const timeText=document.getElementById('timeText');
+const stressText=document.getElementById('stressText');
+const fallText=document.getElementById('fallText');
+const holdText=document.getElementById('holdText');
+
+const C={bg:'#0b0f14',bg2:'#151b23',line:'rgba(235,240,245,.075)',blue:'#4fb8d8',rose:'#e06f8f',white:'#f8fafc',core:'#d7dde5',danger:'#d97757',green:'#8bd3a7',gold:'#f0b86e',purple:'#b78cff',rock:'#a8a29e'};
+const LEVEL=window.ACTIVE_LEVEL||{number:2,winTarget:8,endless:false};
+const WIN_WAVES=LEVEL.winTarget||8;
+const TYPES=[
+  {name:'Pulse',color:C.blue,range:185,rate:.46,damage:1,kind:'bullet'},
+  {name:'Beam',color:C.gold,range:230,rate:.92,damage:2,kind:'beam'},
+  {name:'Freeze',color:C.purple,range:165,rate:1.1,damage:.5,kind:'slow'}
+];
+const game={running:false,timer:0,wave:0,waveTimer:0,waveActive:false,spawnLeft:0,spawnClock:0,kills:0,coreHp:6,maxHp:6,ring:0,selected:0,special:1,specialCd:0,slots:[],enemies:[],shots:[],sparks:[],input:{topLeft:false,topMid:false,topRight:false,bottomLeft:false,bottomMid:false,bottomRight:false}};
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}addEventListener('resize',resize);resize();
+const cx=()=>canvas.width/2,cy=()=>canvas.height/2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();ctx.stroke()}
+function clearInput(){Object.keys(game.input).forEach(k=>game.input[k]=false)}
+function makeSlots(){game.slots=[];for(let i=0;i<6;i++)game.slots.push({type:null,level:0,cd:0,flash:0})}
+function spark(x,y,color,n=8){for(let i=0;i<n;i++){const a=Math.random()*6.283,s=35+Math.random()*150;game.sparks.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,size:1.5+Math.random()*3,color})}}
+function startGame(e){if(e){e.preventDefault();e.stopPropagation()}Object.assign(game,{running:true,timer:0,wave:0,waveTimer:1.2,waveActive:false,spawnLeft:0,spawnClock:0,kills:0,coreHp:6,maxHp:6,ring:0,selected:0,special:1,specialCd:0,enemies:[],shots:[],sparks:[]});clearInput();makeSlots();startOverlay.classList.add('hidden');endOverlay.classList.add('hidden');}
+function endGame(msg,win=false){if(!game.running)return;game.running=false;clearInput();resultTitle.textContent=win?'You Win':'Game Over';resultText.textContent=msg;finalStats.innerHTML=`Waves Cleared: ${Math.max(0,game.wave-1)}${LEVEL.endless?'':'/'+WIN_WAVES}<br>Enemies Destroyed: ${game.kills}<br>Core Health: ${game.coreHp}/${game.maxHp}`;endOverlay.classList.remove('hidden')}
+function beginWave(){game.wave++;game.waveActive=true;const lvl=LEVEL.number||2;game.spawnLeft=5+game.wave*2+lvl;game.spawnClock=.2;}
+function spawnEnemy(){const side=Math.floor(Math.random()*4);let x,y;if(side===0){x=-25;y=Math.random()*canvas.height}else if(side===1){x=canvas.width+25;y=Math.random()*canvas.height}else if(side===2){x=Math.random()*canvas.width;y=-25}else{x=Math.random()*canvas.width;y=canvas.height+25}const lvl=LEVEL.number||2;const hp=2+Math.floor(game.wave/2)+Math.max(0,lvl-1);const speed=34+game.wave*3+lvl*5;game.enemies.push({x,y,hp,maxHp:hp,speed,slow:0,r:13+Math.random()*5})}
+function slotPos(i){const a=game.ring+i*Math.PI*2/6-Math.PI/2;const r=Math.min(canvas.width,canvas.height)*.18+38;return{x:cx()+Math.cos(a)*r,y:cy()+Math.sin(a)*r,a}}
+function buildUpgrade(){const s=game.slots[game.selected];if(!s.type){s.type=game.selected%TYPES.length;s.level=1;s.cd=0;s.flash=1;spark(slotPos(game.selected).x,slotPos(game.selected).y,TYPES[s.type].color,14)}else if(s.level<3){s.level++;s.flash=1;spark(slotPos(game.selected).x,slotPos(game.selected).y,TYPES[s.type].color,16)}else{s.type=(s.type+1)%TYPES.length;s.level=1;s.flash=1;spark(slotPos(game.selected).x,slotPos(game.selected).y,TYPES[s.type].color,12)}}
+function repair(){if(game.coreHp<game.maxHp&&game.kills>=2){game.kills-=2;game.coreHp++;spark(cx(),cy(),C.green,18)}}
+function special(){if(game.specialCd>0)return;game.specialCd=8;game.enemies.forEach(e=>{e.hp-=2+Math.floor((LEVEL.number||2)/2);e.slow=2});spark(cx(),cy(),C.purple,38)}
+function nearestEnemy(x,y,range){let best=null,bd=range;for(const e of game.enemies){const d=Math.hypot(e.x-x,e.y-y);if(d<bd){bd=d;best=e}}return best}
+function updateTowers(dt){for(let i=0;i<game.slots.length;i++){const s=game.slots[i];if(s.flash>0)s.flash-=dt*3;if(!s.type&&s.type!==0)continue;s.cd-=dt;const pos=slotPos(i);const t=TYPES[s.type];if(s.cd<=0){const target=nearestEnemy(pos.x,pos.y,t.range+s.level*22);if(target){s.cd=Math.max(.16,t.rate-s.level*.08);if(t.kind==='slow')target.slow=1.7+s.level*.25;target.hp-=t.damage*s.level;game.shots.push({x:pos.x,y:pos.y,tx:target.x,ty:target.y,life:.18,color:t.color,beam:t.kind==='beam'});s.flash=1}}}}
+function updateEnemies(dt){for(let i=game.enemies.length-1;i>=0;i--){const e=game.enemies[i];const a=Math.atan2(cy()-e.y,cx()-e.x);const sp=e.speed*(e.slow>0?.52:1);e.x+=Math.cos(a)*sp*dt;e.y+=Math.sin(a)*sp*dt;e.slow=Math.max(0,e.slow-dt);if(e.hp<=0){spark(e.x,e.y,C.gold,10);game.enemies.splice(i,1);game.kills++;continue}if(Math.hypot(e.x-cx(),e.y-cy())<42){game.enemies.splice(i,1);game.coreHp--;spark(cx(),cy(),C.danger,20);if(game.coreHp<=0)endGame('The core was destroyed.')}}}
+function updateWaves(dt){if(!game.waveActive){game.waveTimer-=dt;if(game.waveTimer<=0)beginWave();return}game.spawnClock-=dt;if(game.spawnLeft>0&&game.spawnClock<=0){game.spawnClock=Math.max(.22,1.05-game.wave*.045-(LEVEL.number||2)*.06);game.spawnLeft--;spawnEnemy()}if(game.spawnLeft<=0&&game.enemies.length===0){game.waveActive=false;game.waveTimer=2.2;if(!LEVEL.endless&&game.wave>=WIN_WAVES)endGame('You defended the core through every wave.',true)}}
+function updateSparks(dt){for(let i=game.sparks.length-1;i>=0;i--){const p=game.sparks[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.98;p.vy*=.98;p.life-=dt*2;if(p.life<=0)game.sparks.splice(i,1)}}
+function updateShots(dt){for(let i=game.shots.length-1;i>=0;i--){game.shots[i].life-=dt;if(game.shots[i].life<=0)game.shots.splice(i,1)}}
+function update(dt){if(game.running){game.timer+=dt;if(game.input.topLeft){game.selected=(game.selected+5)%6;game.input.topLeft=false}if(game.input.topMid){buildUpgrade();game.input.topMid=false}if(game.input.topRight){repair();game.input.topRight=false}if(game.input.bottomLeft)game.ring-=2.4*dt;if(game.input.bottomRight)game.ring+=2.4*dt;if(game.input.bottomMid){special();game.input.bottomMid=false}game.specialCd=Math.max(0,game.specialCd-dt);updateWaves(dt);updateTowers(dt);updateEnemies(dt);updateShots(dt);timeText.textContent=LEVEL.endless?`${Math.floor(game.timer)}s`:`Wave ${Math.min(game.wave,WIN_WAVES)}/${WIN_WAVES}`;stressText.textContent=`${game.coreHp}`;fallText.textContent=game.kills;holdText.textContent=game.specialCd>0?`${Math.ceil(game.specialCd)}s`:'Ready'}updateSparks(dt)}
+function bg(){const g=ctx.createLinearGradient(0,0,canvas.width,canvas.height);g.addColorStop(0,C.bg);g.addColorStop(.6,C.bg2);g.addColorStop(1,'#080b10');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle=C.line;ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=64){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}}
+function drawCore(){ctx.save();ctx.translate(cx(),cy());ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,92,0,6.28);ctx.stroke();ctx.fillStyle='rgba(17,24,39,.95)';ctx.strokeStyle='rgba(255,255,255,.24)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,38,0,6.28);ctx.fill();ctx.stroke();ctx.fillStyle=game.coreHp<=2?C.danger:C.core;ctx.font='900 18px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(game.coreHp,0,1);ctx.restore()}
+function drawSlots(){for(let i=0;i<game.slots.length;i++){const s=game.slots[i],p=slotPos(i),sel=i===game.selected;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a+Math.PI/2);ctx.fillStyle=sel?'rgba(248,250,252,.12)':'rgba(17,24,39,.85)';ctx.strokeStyle=sel?C.white:'rgba(255,255,255,.18)';ctx.lineWidth=sel?2.5:1.5;ctx.beginPath();ctx.arc(0,0,24+(s.flash||0)*5,0,6.28);ctx.fill();ctx.stroke();if(s.type!==null){const t=TYPES[s.type];ctx.fillStyle=t.color;ctx.beginPath();ctx.arc(0,0,13,0,6.28);ctx.fill();ctx.fillStyle='#0b0f14';ctx.font='900 11px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s.level,0,1)}else{ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(-8,-2,16,4);ctx.fillRect(-2,-8,4,16)}ctx.restore()}}
+function drawEnemies(){for(const e of game.enemies){ctx.fillStyle=e.slow>0?C.purple:C.rock;ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,6.28);ctx.fill();ctx.stroke();if(e.hp<e.maxHp){ctx.fillStyle='rgba(17,24,39,.8)';ctx.fillRect(e.x-16,e.y-e.r-10,32,4);ctx.fillStyle=C.green;ctx.fillRect(e.x-16,e.y-e.r-10,32*clamp(e.hp/e.maxHp,0,1),4)}}}
+function drawShots(){for(const s of game.shots){ctx.globalAlpha=clamp(s.life/.18,0,1);ctx.strokeStyle=s.color;ctx.lineWidth=s.beam?4:2;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.tx,s.ty);ctx.stroke();ctx.globalAlpha=1}}
+function drawSparks(){for(const p of game.sparks){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.life,0,6.28);ctx.fill()}ctx.globalAlpha=1}
+function drawButton(x,y,w,h,label,on,color){ctx.fillStyle=on?color:'rgba(17,24,39,.80)';ctx.strokeStyle=on?'rgba(255,255,255,.45)':'rgba(255,255,255,.18)';ctx.lineWidth=1.7;rr(x,y,w,h,18);ctx.fillStyle=on?'#0b0f14':C.white;ctx.font='900 12px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2)}
+function controls(){if(!game.running)return;const w=canvas.width*.31,h=56;drawButton(canvas.width*.02,76,w,h,'SLOT ◀',game.input.topLeft,C.blue);drawButton(canvas.width*.345,76,w,h,'BUILD',game.input.topMid,C.blue);drawButton(canvas.width*.67,76,w,h,'REPAIR',game.input.topRight,C.blue);const y=canvas.height-90;drawButton(canvas.width*.02,y,w,h,'ROT ◀',game.input.bottomLeft,C.rose);drawButton(canvas.width*.345,y,w,h,'SPECIAL',game.input.bottomMid,C.rose);drawButton(canvas.width*.67,y,w,h,'ROT ▶',game.input.bottomRight,C.rose)}
+function render(){bg();drawShots();drawEnemies();drawCore();drawSlots();drawSparks();controls()}
+let last=performance.now();function loop(now){const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);render();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+function visibleOverlay(){return!startOverlay.classList.contains('hidden')||!endOverlay.classList.contains('hidden')}
+function start(e){if(e){e.preventDefault();e.stopPropagation()}startGame(e)}
+[startOverlay,startButton,restartButton].forEach(el=>{el.addEventListener('touchstart',start,{passive:false});el.addEventListener('pointerdown',start);el.addEventListener('click',start)});
+function keyForTouch(t){const top=t.clientY<canvas.height/2;const third=t.clientX/canvas.width;if(top){if(third<.333)return'topLeft';if(third<.666)return'topMid';return'topRight'}else{if(third<.333)return'bottomLeft';if(third<.666)return'bottomMid';return'bottomRight'}}
+document.addEventListener('touchstart',e=>{if(visibleOverlay())return;e.preventDefault();for(const t of e.changedTouches)game.input[keyForTouch(t)]=true},{passive:false});
+document.addEventListener('touchend',e=>{if(visibleOverlay())return;e.preventDefault();for(const t of e.changedTouches)game.input[keyForTouch(t)]=false},{passive:false});
+document.addEventListener('touchcancel',e=>{if(visibleOverlay())return;e.preventDefault();for(const t of e.changedTouches)game.input[keyForTouch(t)]=false},{passive:false});
+render();
