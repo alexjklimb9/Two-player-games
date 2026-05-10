@@ -1,10 +1,12 @@
-// Core Defense v59: show selected tower boost countdown on the BOOST button.
+// Core Defense v60: show selected tower type and boost countdown on buttons.
 (function(){
   controls = function(){
     if(!game.running) return;
     const w = canvas.width * .31;
     const h = 56;
     const s = game.slots && game.slots[game.selected];
+    const currentType = TYPES[game.buildType] ? TYPES[game.buildType].name : 'Tower';
+    const typeLabel = 'TYPE ' + currentType;
     const boostLabel = s && s.boost > 0 ? 'BOOST ' + Math.ceil(s.boost) + 's' : 'BOOST';
 
     let buildLabel = 'BUILD $6';
@@ -14,7 +16,7 @@
       else buildLabel = 'UP $' + (5 + s.level * 5);
     }
 
-    drawButton(canvas.width*.02,76,w,h,'TYPE',game.input.topLeft,C.blue);
+    drawButton(canvas.width*.02,76,w,h,typeLabel,game.input.topLeft,C.blue);
     drawButton(canvas.width*.345,76,w,h,buildLabel,game.input.topMid,C.blue);
     drawButton(canvas.width*.67,76,w,h,'SLOT',game.input.topRight,C.blue);
 
