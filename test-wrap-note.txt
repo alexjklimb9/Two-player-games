@@ -1,0 +1,1 @@
+wrapped asteroids should point back toward the screen after crossing an edge
