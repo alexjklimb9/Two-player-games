@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Choose Level</title>
+    <link rel="stylesheet" href="style.css?v=52" />
+  </head>
+  <body>
+    <main id="app">
+      <section class="home-screen">
+        <div class="home-inner">
+          <p class="eyebrow">Two Player Games</p>
+          <h1 id="title">Choose Level</h1>
+          <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
+          <div id="levelGrid" class="game-grid"></div>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=52">Back to Games</a></p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const game = params.get('game') || 'balance';
+      const data = {
+        balance: {
+          title: 'Balance Board',
+          subtitle: 'Dodge falling objects and keep the shared board steady.',
+          levels: [
+            ['Warmup', 'Dodge 15 objects.', 1],
+            ['Standard', 'Dodge 25 objects.', 2],
+            ['Pressure', 'Dodge 40 objects.', 3]
+          ]
+        },
+        seesaw: {
+          title: 'Trampoline Climb',
+          subtitle: 'Bounce higher while platforms become harder to chain.',
+          levels: [
+            ['Climb', 'Reach height 50.', 1],
+            ['High Climb', 'Reach height 100.', 2],
+            ['Sky Run', 'Reach height 150.', 3]
+          ]
+        },
+        asteroids: {
+          title: 'Asteroid Crew',
+          subtitle: 'Survive together while asteroids keep entering the field.',
+          levels: [
+            ['Patrol', 'Survive 45 seconds.', 1],
+            ['Field Run', 'Survive 60 seconds.', 2],
+            ['Deep Space', 'Survive 90 seconds.', 3]
+          ]
+        }
+      };
+
+      const cfg = data[game] || data.balance;
+      document.getElementById('title').textContent = cfg.title;
+      document.getElementById('subtitle').textContent = cfg.subtitle;
+      const grid = document.getElementById('levelGrid');
+      cfg.levels.forEach(level => {
+        const a = document.createElement('a');
+        a.className = 'game-card';
+        a.href = `./?game=${game}&level=${level[2]}&v=52`;
+        a.innerHTML = `<div><p class="card-kicker">Level ${level[2]}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
+        grid.appendChild(a);
+      });
+    </script>
+  </body>
+</html>
