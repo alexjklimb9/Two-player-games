@@ -1,4 +1,4 @@
-// Dual Gravity v84: first wall teaches asymmetric jump + controlled launch teamwork.
+// Dual Gravity v84: first wall teaches asymmetric jump + controlled two-player launch teamwork.
 (function(){
   function installMap(){
     if(typeof game==='undefined'||typeof seam==='undefined')return;
@@ -21,10 +21,7 @@
         {x:510,y:y-10,w:58,h:10,side:'top',active:false},
         {x:1170,y:y,w:58,h:10,side:'bottom',active:false}
       ];
-      launchers=[
-        {x:585,y:y-10,w:54,h:10,target:'bottom'},
-        {x:1240,y:y,w:62,h:10,target:'top'}
-      ];
+      launchers=[];
       enemies=[
         {x:875,y:y-28,w:24,h:24,vx:42,side:'top'},
         {x:940,y:y+4,w:24,h:24,vx:-42,side:'bottom'}
