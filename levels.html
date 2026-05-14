@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=54" />
+    <link rel="stylesheet" href="style.css?v=90" />
   </head>
   <body>
     <main id="app">
@@ -14,7 +14,7 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=54">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=90">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -66,6 +66,18 @@
             ['Expert', 'Survive 15 waves.', 4],
             ['Endless', 'Defend as long as possible.', 5]
           ]
+        },
+        dual: {
+          title: 'Dual Gravity',
+          subtitle: 'Shared-line co-op puzzles with mirrored gravity. No endless mode yet.',
+          levels: [
+            ['Tutorial', 'Learn movement, launch pads, traps, platforms, switches, and finish rails.', 0, 'Tutorial'],
+            ['Level 1: Coordination', 'Chain launch pads, spike traps, and the one-player platform.', 1, 'Level 1'],
+            ['Level 2: Split Tasks', 'One player creates safety while the other advances.', 2, 'Level 2'],
+            ['Level 3: Moving Systems', 'Time chained platforms, enemies, traps, and launches.', 3, 'Level 3'],
+            ['Level 4: Co-op Chaos', 'Overlapping mechanics with faster reactions and more communication.', 4, 'Level 4'],
+            ['Level 5: Final Trial', 'A longer gauntlet combining every Dual Gravity mechanic.', 5, 'Level 5']
+          ]
         }
       };
 
@@ -76,8 +88,8 @@
       cfg.levels.forEach(level => {
         const a = document.createElement('a');
         a.className = 'game-card';
-        a.href = `./?game=${game}&level=${level[2]}&v=54`;
-        const kicker = level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`;
+        a.href = `./?game=${game}&level=${level[2]}&v=90`;
+        const kicker = level[3] || (level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`);
         a.innerHTML = `<div><p class="card-kicker">${kicker}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
         grid.appendChild(a);
       });
