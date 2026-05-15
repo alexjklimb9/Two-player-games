@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=93" />
+    <link rel="stylesheet" href="style.css?v=100" />
+    <link rel="stylesheet" href="level-cards.css?v=100" />
   </head>
   <body>
     <main id="app">
@@ -13,8 +14,8 @@
           <p class="eyebrow">Two Player Games</p>
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
-          <div id="levelGrid" class="game-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=93">Back to Games</a></p>
+          <div id="levelGrid" class="game-grid level-grid"></div>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=100">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -85,12 +86,20 @@
       document.getElementById('title').textContent = cfg.title;
       document.getElementById('subtitle').textContent = cfg.subtitle;
       const grid = document.getElementById('levelGrid');
+      const levelClasses = ['level-tutorial', 'level-easy', 'level-normal', 'level-hard', 'level-expert', 'level-endless'];
+
       cfg.levels.forEach(level => {
         const a = document.createElement('a');
-        a.className = 'game-card';
-        a.href = `./?game=${game}&level=${level[2]}&v=93`;
-        const kicker = level[3] || (level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`);
-        a.innerHTML = `<div><p class="card-kicker">${kicker}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
+        const levelNumber = level[2];
+        const levelClass = levelNumber === 0 ? 'level-tutorial' : levelClasses[levelNumber] || 'level-normal';
+        a.className = `game-card level-card ${levelClass}`;
+        a.href = `./?game=${game}&level=${levelNumber}&v=100`;
+        const kicker = level[3] || (levelNumber === 5 ? 'Endless Mode' : `Difficulty ${levelNumber}`);
+        const filled = levelNumber === 0 ? 1 : Math.min(levelNumber, 5);
+        const pips = levelNumber === 5
+          ? '<span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span>'
+          : Array.from({ length: 5 }, (_, i) => `<span class="${i < filled ? 'filled' : ''}"></span>`).join('');
+        a.innerHTML = `<div><div class="level-top-row"><p class="card-kicker">${kicker}</p><div class="difficulty-pips">${pips}</div></div><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
         grid.appendChild(a);
       });
     </script>
