@@ -68,7 +68,7 @@
     const weaponReady = key === 'weapon' && w;
     const fireReady = key === 'fire' && w && w.ammo > 0 && w.c <= 0;
     const specialReady = weaponReady || fireReady;
-    const accent = key === 'weapon' && w ? w.color : key === 'fire' && w ? w.color : top ? C.blue : C.rose;
+    const accent = key === 'weapon' && w ? w.color : top ? C.blue : C.rose;
     b.style.background = on ? accent : specialReady ? `linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.68))` : 'rgba(17,24,39,.78)';
     b.style.border = on ? '1.8px solid rgba(255,255,255,.48)' : specialReady ? `1.8px solid ${accent}` : `1.5px solid ${accent}`;
     b.style.color = on ? '#0b0f14' : accent;
