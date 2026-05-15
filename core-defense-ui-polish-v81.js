@@ -1,5 +1,5 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, obvious boost countdown ring, high-contrast core health ring, and brief wave/critical messages.
+// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, tuned boost countdown ring, inner core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
   let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
@@ -68,41 +68,26 @@
     const pct=Math.max(0,Math.min(1,game.coreHp/game.maxHp));
     const low=game.coreHp<=2;
     const pulse=low?(Math.sin(game.timer*8)*.5+.5):0;
-    const radius=60;
+    const radius=28;
     ctx.save();
     ctx.translate(cx(),cy());
-
-    // Dark under-ring makes the health arc readable on top of the core, towers, and shots.
-    ctx.strokeStyle='rgba(0,0,0,.72)';
-    ctx.lineWidth=15;
-    ctx.beginPath();
-    ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);
-    ctx.stroke();
-
-    // Full track.
-    ctx.strokeStyle='rgba(248,250,252,.34)';
-    ctx.lineWidth=10;
+    ctx.strokeStyle='rgba(0,0,0,.55)';
+    ctx.lineWidth=8;
+    ctx.beginPath();ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);ctx.stroke();
+    ctx.strokeStyle='rgba(248,250,252,.30)';
+    ctx.lineWidth=5.5;
     ctx.lineCap='round';
-    ctx.beginPath();
-    ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);
-    ctx.stroke();
-
-    // Health amount.
+    ctx.beginPath();ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);ctx.stroke();
     ctx.strokeStyle=low?`rgba(255,92,74,${.95+.05*pulse})`:'rgba(139,255,181,1)';
-    ctx.shadowColor=low?'rgba(255,92,74,.85)':'rgba(139,255,181,.72)';
-    ctx.shadowBlur=14;
-    ctx.lineWidth=10;
-    ctx.beginPath();
-    ctx.arc(0,0,radius,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
-    ctx.stroke();
+    ctx.shadowColor=low?'rgba(255,92,74,.75)':'rgba(139,255,181,.58)';
+    ctx.shadowBlur=9;
+    ctx.lineWidth=5.5;
+    ctx.beginPath();ctx.arc(0,0,radius,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
     ctx.shadowBlur=0;
-
     if(low){
-      ctx.strokeStyle=`rgba(255,92,74,${.26+.24*pulse})`;
-      ctx.lineWidth=16;
-      ctx.beginPath();
-      ctx.arc(0,0,radius+9+pulse*5,0,Math.PI*2);
-      ctx.stroke();
+      ctx.strokeStyle=`rgba(255,92,74,${.22+.2*pulse})`;
+      ctx.lineWidth=8;
+      ctx.beginPath();ctx.arc(0,0,radius+4+pulse*3,0,Math.PI*2);ctx.stroke();
     }
     ctx.restore();
   }
@@ -140,22 +125,22 @@
     const boosted=!isEmpty&&s.boost>0;
     const pulse=Math.sin(game.timer*7)*.5+.5;
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a+Math.PI/2);
-    ctx.strokeStyle=tower.color;ctx.lineWidth=boosted?3.4:2.4;ctx.globalAlpha=boosted?.72:.42+.18*pulse;
+    ctx.strokeStyle=tower.color;ctx.lineWidth=boosted?3:2.4;ctx.globalAlpha=boosted?.7:.42+.18*pulse;
     ctx.beginPath();ctx.arc(0,0,28+(pulse*2),0,Math.PI*2);ctx.stroke();
     if(boosted){
       const boostPct=Math.max(0,Math.min(1,s.boost/BOOST_TIME));
       ctx.globalAlpha=1;
-      ctx.lineWidth=9;
+      ctx.lineWidth=6.5;
       ctx.lineCap='round';
       ctx.strokeStyle=tower.color;
       ctx.shadowColor=tower.color;
-      ctx.shadowBlur=14;
-      ctx.beginPath();ctx.arc(0,0,34,-Math.PI/2,-Math.PI/2+Math.PI*2*boostPct);ctx.stroke();
+      ctx.shadowBlur=12;
+      ctx.beginPath();ctx.arc(0,0,38,-Math.PI/2,-Math.PI/2+Math.PI*2*boostPct);ctx.stroke();
       ctx.shadowBlur=0;
-      ctx.globalAlpha=.38;
-      ctx.lineWidth=9;
-      ctx.strokeStyle='rgba(255,255,255,.28)';
-      ctx.beginPath();ctx.arc(0,0,34,-Math.PI/2,Math.PI*1.5);ctx.stroke();
+      ctx.globalAlpha=.34;
+      ctx.lineWidth=6.5;
+      ctx.strokeStyle='rgba(255,255,255,.26)';
+      ctx.beginPath();ctx.arc(0,0,38,-Math.PI/2,Math.PI*1.5);ctx.stroke();
     }
     if(isEmpty){ctx.globalAlpha=.7;ctx.strokeStyle=tower.color;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-11,0);ctx.lineTo(11,0);ctx.moveTo(0,-11);ctx.lineTo(0,11);ctx.stroke();}
     ctx.restore();ctx.globalAlpha=1;
