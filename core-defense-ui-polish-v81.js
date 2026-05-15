@@ -1,16 +1,16 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: intuitive tower colors, tower glyphs, selected-slot glow, boost aura, core health ring, and brief wave/critical messages.
+// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, boost aura, core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
   let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
 
   function applyTowerColors(){
-    if(!Array.isArray(TYPES)||TYPES.__intuitiveColors)return;
-    TYPES[0].color=C.blue;
-    TYPES[1].color=C.gold;
-    TYPES[2].color='#7dd3fc';
-    TYPES[3].color='#34d399';
-    TYPES.__intuitiveColors=true;
+    if(!Array.isArray(TYPES)||TYPES.__intuitiveColorsV2)return;
+    TYPES[0].color='#5fb7cf'; // Pulse: deeper cyan energy, less icy than Freeze
+    TYPES[1].color=C.gold;     // Beam: gold laser/high damage
+    TYPES[2].color='#a7f3ff';  // Freeze: pale ice blue
+    TYPES[3].color='#34d399';  // Wave: green/teal ripple
+    TYPES.__intuitiveColorsV2=true;
   }
 
   function drawTowerTypeButton(x,y,w,h,label,on,color){
@@ -83,39 +83,52 @@
     ctx.restore();
   }
 
-  function towerGlyph(type){
+  function drawTowerBody(type,level,color){
     ctx.save();
-    ctx.strokeStyle='rgba(11,15,20,.92)';
-    ctx.fillStyle='rgba(11,15,20,.92)';
-    ctx.lineWidth=2.5;
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
+    ctx.fillStyle=color;
+    ctx.strokeStyle='rgba(255,255,255,.20)';
+    ctx.lineWidth=1.2;
     if(type===0){
-      ctx.beginPath();ctx.arc(0,0,6,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.stroke();
     }else if(type===1){
-      ctx.beginPath();ctx.moveTo(0,-8);ctx.lineTo(8,0);ctx.lineTo(0,8);ctx.lineTo(-8,0);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(15,0);ctx.lineTo(0,15);ctx.lineTo(-15,0);ctx.closePath();ctx.fill();ctx.stroke();
     }else if(type===2){
       ctx.beginPath();
-      for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*8,y=Math.sin(a)*8;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-      ctx.closePath();ctx.stroke();
-      ctx.beginPath();ctx.moveTo(-6,0);ctx.lineTo(6,0);ctx.moveTo(0,-6);ctx.lineTo(0,6);ctx.stroke();
+      for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*14,y=Math.sin(a)*14;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+      ctx.closePath();ctx.fill();ctx.stroke();
     }else{
-      ctx.beginPath();ctx.arc(-3,0,5,-1.15,1.15);ctx.stroke();
-      ctx.beginPath();ctx.arc(5,0,7,-1.15,1.15);ctx.stroke();
+      ctx.beginPath();ctx.ellipse(0,0,17,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(11,15,20,.30)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(-4,0,6,-1.1,1.1);ctx.stroke();
+      ctx.beginPath();ctx.arc(5,0,8,-1.1,1.1);ctx.stroke();
     }
+    ctx.fillStyle='#0b0f14';
+    ctx.font='900 11px Arial';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(level,0,1);
     ctx.restore();
   }
 
-  function drawTowerGlyphs(){
-    if(!game.running||!game.slots)return;
+  function drawSlotsEnhanced(){
     for(let i=0;i<game.slots.length;i++){
-      const s=game.slots[i];
-      if(empty(s))continue;
-      const p=slotPos(i);
+      let s=game.slots[i],p=slotPos(i),sel=i===game.selected;
       ctx.save();
       ctx.translate(p.x,p.y);
       ctx.rotate(p.a+Math.PI/2);
-      towerGlyph(s.type);
+      ctx.fillStyle=sel?'rgba(248,250,252,.12)':'rgba(17,24,39,.85)';
+      ctx.strokeStyle=sel?C.white:'rgba(255,255,255,.18)';
+      ctx.lineWidth=sel?2.5:1.5;
+      ctx.beginPath();
+      ctx.arc(0,0,24+(s.flash||0)*5,0,Math.PI*2);
+      ctx.fill();ctx.stroke();
+      if(!empty(s)){
+        drawTowerBody(s.type,s.level,TYPES[s.type].color);
+      }else{
+        ctx.fillStyle='rgba(255,255,255,.22)';
+        ctx.fillRect(-8,-2,16,4);
+        ctx.fillRect(-2,-8,4,16);
+      }
       ctx.restore();
     }
   }
@@ -130,16 +143,16 @@
     ctx.translate(p.x,p.y);
     ctx.rotate(p.a+Math.PI/2);
     ctx.strokeStyle=tower.color;
-    ctx.lineWidth=boosted?5:3.2;
-    ctx.globalAlpha=boosted?.9:.55+.25*pulse;
-    ctx.beginPath();ctx.arc(0,0,34+(boosted?pulse*9:pulse*4),0,Math.PI*2);ctx.stroke();
+    ctx.lineWidth=boosted?4.2:2.4;
+    ctx.globalAlpha=boosted?.82:.42+.18*pulse;
+    ctx.beginPath();ctx.arc(0,0,29+(boosted?pulse*6:pulse*2.5),0,Math.PI*2);ctx.stroke();
     if(boosted){
-      ctx.globalAlpha=.22+.18*pulse;ctx.lineWidth=12;
-      ctx.beginPath();ctx.arc(0,0,48+pulse*10,0,Math.PI*2);ctx.stroke();
+      ctx.globalAlpha=.16+.12*pulse;ctx.lineWidth=8;
+      ctx.beginPath();ctx.arc(0,0,40+pulse*6,0,Math.PI*2);ctx.stroke();
     }
     if(isEmpty){
-      ctx.globalAlpha=.75;ctx.strokeStyle=tower.color;ctx.lineWidth=3;
-      ctx.beginPath();ctx.moveTo(-12,0);ctx.lineTo(12,0);ctx.moveTo(0,-12);ctx.lineTo(0,12);ctx.stroke();
+      ctx.globalAlpha=.7;ctx.strokeStyle=tower.color;ctx.lineWidth=2.6;
+      ctx.beginPath();ctx.moveTo(-11,0);ctx.lineTo(11,0);ctx.moveTo(0,-11);ctx.lineTo(0,11);ctx.stroke();
     }
     ctx.restore();
     ctx.globalAlpha=1;
@@ -154,8 +167,7 @@
     if(originalRender&&!render.__messageWrapped){render=function(){originalRender();drawWaveMessage();};render.__messageWrapped=true;}
     const originalDrawCore=typeof drawCore==='function'?drawCore:null;
     if(originalDrawCore&&!drawCore.__clarityWrapped){drawCore=function(){originalDrawCore();drawCoreHealthRing();};drawCore.__clarityWrapped=true;}
-    const originalDrawSlots=typeof drawSlots==='function'?drawSlots:null;
-    if(originalDrawSlots&&!drawSlots.__clarityWrapped){drawSlots=function(){originalDrawSlots();drawTowerGlyphs();drawSlotClarity();};drawSlots.__clarityWrapped=true;}
+    drawSlots=function(){drawSlotsEnhanced();drawSlotClarity();};
     controls=function(){
       if(!game.running)return;
       let w=canvas.width*.31,h=56,s=game.slots[game.selected],tower=TYPES[game.buildType];
