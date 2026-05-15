@@ -1,4 +1,4 @@
-// Asteroid start flow override: show game screen first, then countdown, then start.
+// Asteroid start flow: start/restart button -> game screen -> countdown -> actual start.
 (function(){
   let active=false;
   function byId(id){return document.getElementById(id)}
@@ -41,7 +41,11 @@
       }
     },1000);
   }
-  ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
-    document.addEventListener(ev,begin,true);
+  ['startButton','restartButton'].forEach(function(id){
+    const btn=byId(id);
+    if(!btn)return;
+    ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
+      btn.addEventListener(ev,begin,true);
+    });
   });
 })();
