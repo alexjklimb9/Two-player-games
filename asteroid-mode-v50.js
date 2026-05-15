@@ -12,6 +12,13 @@
     W.__asteroidTuned = true;
   }
 
+  function stopEvent(e){
+    if(!e) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
   function showCountdown(n){
     let el = byId('countdownOverlay');
     if(!el){
@@ -35,10 +42,15 @@
   }
 
   function beginAfterCountdown(e){
-    if(!byId('startOverlay') || byId('startOverlay').classList.contains('hidden')) return;
+    const startOverlay = byId('startOverlay');
+    const endOverlay = byId('endOverlay');
+    const isStartVisible = startOverlay && !startOverlay.classList.contains('hidden');
+    const isEndVisible = endOverlay && !endOverlay.classList.contains('hidden');
+    if(!isStartVisible && !isEndVisible) return;
+
+    stopEvent(e);
     if(countingDown) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
+
     countingDown = true;
     let n = 3;
     showCountdown(n);
@@ -195,9 +207,12 @@
 
   function installCountdown(){
     realStart = window.startGame;
-    ['touchstart','pointerup','click'].forEach(function(ev){
-      byId('startButton').addEventListener(ev, beginAfterCountdown, true);
-      byId('restartButton').addEventListener(ev, beginAfterCountdown, true);
+    ['startOverlay','startButton','restartButton'].forEach(function(id){
+      const el = byId(id);
+      if(!el) return;
+      ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
+        el.addEventListener(ev, beginAfterCountdown, true);
+      });
     });
   }
 
