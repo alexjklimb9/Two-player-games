@@ -1,7 +1,8 @@
 // Core Defense UI polish v81
-// Makes only the tower type button reflect the active tower color.
+// Adds in-world clarity without extra panels: tower type color, selected-slot glow, boost aura, and core health ring.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
+
   function drawTowerTypeButton(x,y,w,h,label,on,color){
     ctx.fillStyle=on?color:'rgba(17,24,39,.84)';
     ctx.strokeStyle=on?'rgba(255,255,255,.48)':color;
@@ -17,8 +18,94 @@
     ctx.fillText(label,0,0);
     ctx.restore();
   }
+
+  function drawCoreHealthRing(){
+    if(!game.running)return;
+    const pct=Math.max(0,Math.min(1,game.coreHp/game.maxHp));
+    const low=game.coreHp<=2;
+    const pulse=low?(Math.sin(game.timer*8)*.5+.5):0;
+    ctx.save();
+    ctx.translate(cx(),cy());
+    ctx.strokeStyle='rgba(255,255,255,.10)';
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.arc(0,0,48,-Math.PI/2,Math.PI*1.5);
+    ctx.stroke();
+    ctx.strokeStyle=low?`rgba(217,119,87,${.68+.25*pulse})`:C.green;
+    ctx.lineWidth=5.5;
+    ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.arc(0,0,48,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
+    ctx.stroke();
+    if(low){
+      ctx.strokeStyle=`rgba(217,119,87,${.20+.18*pulse})`;
+      ctx.lineWidth=12;
+      ctx.beginPath();
+      ctx.arc(0,0,56+pulse*6,0,Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawSlotClarity(){
+    if(!game.running||!game.slots||!game.slots.length)return;
+    const i=game.selected;
+    const s=game.slots[i];
+    const p=slotPos(i);
+    const isEmpty=empty(s);
+    const tower=isEmpty?TYPES[game.buildType]:TYPES[s.type];
+    const boosted=!isEmpty&&s.boost>0;
+    const pulse=Math.sin(game.timer*7)*.5+.5;
+    ctx.save();
+    ctx.translate(p.x,p.y);
+    ctx.rotate(p.a+Math.PI/2);
+    ctx.strokeStyle=tower.color;
+    ctx.lineWidth=boosted?5:3.2;
+    ctx.globalAlpha=boosted?.9:.55+.25*pulse;
+    ctx.beginPath();
+    ctx.arc(0,0,34+(boosted?pulse*9:pulse*4),0,Math.PI*2);
+    ctx.stroke();
+    if(boosted){
+      ctx.globalAlpha=.22+.18*pulse;
+      ctx.lineWidth=12;
+      ctx.beginPath();
+      ctx.arc(0,0,48+pulse*10,0,Math.PI*2);
+      ctx.stroke();
+    }
+    if(isEmpty){
+      ctx.globalAlpha=.75;
+      ctx.strokeStyle=tower.color;
+      ctx.lineWidth=3;
+      ctx.beginPath();
+      ctx.moveTo(-12,0);ctx.lineTo(12,0);
+      ctx.moveTo(0,-12);ctx.lineTo(0,12);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.globalAlpha=1;
+  }
+
   function install(){
     if(!waitForCore())return setTimeout(install,50);
+
+    const originalDrawCore=typeof drawCore==='function'?drawCore:null;
+    if(originalDrawCore&&!drawCore.__clarityWrapped){
+      drawCore=function(){
+        originalDrawCore();
+        drawCoreHealthRing();
+      };
+      drawCore.__clarityWrapped=true;
+    }
+
+    const originalDrawSlots=typeof drawSlots==='function'?drawSlots:null;
+    if(originalDrawSlots&&!drawSlots.__clarityWrapped){
+      drawSlots=function(){
+        originalDrawSlots();
+        drawSlotClarity();
+      };
+      drawSlots.__clarityWrapped=true;
+    }
+
     controls=function(){
       if(!game.running)return;
       let w=canvas.width*.31,h=56,s=game.slots[game.selected],tower=TYPES[game.buildType];
