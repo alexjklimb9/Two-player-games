@@ -36,19 +36,28 @@
     if(el) el.style.display = 'none';
   }
 
+  function stopEvent(e){
+    if(!e) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
   function intercept(e){
-    if(bypass || active) return;
+    if(bypass) return;
+
     const startOverlay = byId('startOverlay');
     const endOverlay = byId('endOverlay');
     const isStartVisible = startOverlay && !startOverlay.classList.contains('hidden');
     const isEndVisible = endOverlay && !endOverlay.classList.contains('hidden');
     if(!isStartVisible && !isEndVisible) return;
 
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
+    stopEvent(e);
+
+    if(active) return;
 
     active = true;
+    const target = e.currentTarget;
     let n = 3;
     show('3');
     const timer = setInterval(function(){
@@ -60,8 +69,8 @@
         hide();
         active = false;
         bypass = true;
-        e.currentTarget.click();
-        setTimeout(function(){ bypass = false; }, 100);
+        target.click();
+        setTimeout(function(){ bypass = false; }, 160);
       }
     }, 1000);
   }
@@ -69,7 +78,7 @@
   ['startButton','restartButton'].forEach(function(id){
     const btn = byId(id);
     if(!btn) return;
-    ['pointerdown','touchstart','click'].forEach(function(ev){
+    ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
       btn.addEventListener(ev, intercept, true);
     });
   });
