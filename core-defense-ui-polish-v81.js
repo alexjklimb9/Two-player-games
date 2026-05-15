@@ -1,15 +1,15 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, boost aura, core health ring, and brief wave/critical messages.
+// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, boost countdown ring, brighter core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
   let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
 
   function applyTowerColors(){
     if(!Array.isArray(TYPES)||TYPES.__intuitiveColorsV2)return;
-    TYPES[0].color='#5fb7cf'; // Pulse: deeper cyan energy, less icy than Freeze
-    TYPES[1].color=C.gold;     // Beam: gold laser/high damage
-    TYPES[2].color='#a7f3ff';  // Freeze: pale ice blue
-    TYPES[3].color='#34d399';  // Wave: green/teal ripple
+    TYPES[0].color='#5fb7cf';
+    TYPES[1].color=C.gold;
+    TYPES[2].color='#a7f3ff';
+    TYPES[3].color='#34d399';
     TYPES.__intuitiveColorsV2=true;
   }
 
@@ -70,15 +70,19 @@
     const pulse=low?(Math.sin(game.timer*8)*.5+.5):0;
     ctx.save();
     ctx.translate(cx(),cy());
-    ctx.strokeStyle='rgba(255,255,255,.10)';
-    ctx.lineWidth=5;
-    ctx.beginPath();ctx.arc(0,0,48,-Math.PI/2,Math.PI*1.5);ctx.stroke();
-    ctx.strokeStyle=low?`rgba(217,119,87,${.68+.25*pulse})`:C.green;
-    ctx.lineWidth=5.5;ctx.lineCap='round';
-    ctx.beginPath();ctx.arc(0,0,48,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,.20)';
+    ctx.lineWidth=6.5;
+    ctx.beginPath();ctx.arc(0,0,49,-Math.PI/2,Math.PI*1.5);ctx.stroke();
+    ctx.strokeStyle=low?`rgba(255,116,92,${.86+.14*pulse})`:'rgba(139,211,167,.96)';
+    ctx.shadowColor=low?'rgba(217,119,87,.55)':'rgba(139,211,167,.45)';
+    ctx.shadowBlur=10;
+    ctx.lineWidth=7;
+    ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(0,0,49,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
+    ctx.shadowBlur=0;
     if(low){
-      ctx.strokeStyle=`rgba(217,119,87,${.20+.18*pulse})`;ctx.lineWidth=12;
-      ctx.beginPath();ctx.arc(0,0,56+pulse*6,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(217,119,87,${.24+.22*pulse})`;ctx.lineWidth=13;
+      ctx.beginPath();ctx.arc(0,0,57+pulse*6,0,Math.PI*2);ctx.stroke();
     }
     ctx.restore();
   }
@@ -143,12 +147,20 @@
     ctx.translate(p.x,p.y);
     ctx.rotate(p.a+Math.PI/2);
     ctx.strokeStyle=tower.color;
-    ctx.lineWidth=boosted?4.2:2.4;
-    ctx.globalAlpha=boosted?.82:.42+.18*pulse;
-    ctx.beginPath();ctx.arc(0,0,29+(boosted?pulse*6:pulse*2.5),0,Math.PI*2);ctx.stroke();
+    ctx.lineWidth=boosted?3.8:2.4;
+    ctx.globalAlpha=boosted?.88:.42+.18*pulse;
+    ctx.beginPath();ctx.arc(0,0,29+(boosted?pulse*2.5:pulse*2.5),0,Math.PI*2);ctx.stroke();
     if(boosted){
-      ctx.globalAlpha=.16+.12*pulse;ctx.lineWidth=8;
-      ctx.beginPath();ctx.arc(0,0,40+pulse*6,0,Math.PI*2);ctx.stroke();
+      const boostPct=Math.max(0,Math.min(1,s.boost/BOOST_TIME));
+      ctx.globalAlpha=.9;
+      ctx.lineWidth=6.5;
+      ctx.lineCap='round';
+      ctx.shadowColor=tower.color;
+      ctx.shadowBlur=8;
+      ctx.beginPath();
+      ctx.arc(0,0,38,-Math.PI/2,-Math.PI/2+Math.PI*2*boostPct);
+      ctx.stroke();
+      ctx.shadowBlur=0;
     }
     if(isEmpty){
       ctx.globalAlpha=.7;ctx.strokeStyle=tower.color;ctx.lineWidth=2.6;
