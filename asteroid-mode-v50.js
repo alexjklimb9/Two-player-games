@@ -1,10 +1,16 @@
-// Asteroid Crew v50: countdown, continuous pressure, inward wrapping, and polished controls.
+// Asteroid Crew v50: countdown, continuous pressure, inward wrapping, polished controls, weapon info, and pacing tuning.
 (function(){
   const GOAL = 60;
   let countingDown = false;
   let realStart = null;
 
   function byId(id){ return document.getElementById(id); }
+
+  function applyAsteroidTuning(){
+    if(!Array.isArray(W) || W.__asteroidTuned) return;
+    W.forEach(function(w){ w.reload = +(w.reload * 1.16).toFixed(2); });
+    W.__asteroidTuned = true;
+  }
 
   function showCountdown(n){
     let el = byId('countdownOverlay');
@@ -47,15 +53,22 @@
     }, 1000);
   }
 
+  function refreshWeaponButtonText(){
+    if(!game.controls || !Array.isArray(W)) return;
+    const b = game.controls.querySelector('button[data-k="weapon"]');
+    const w = W[game.weapon];
+    if(b && w) b.textContent = `${w.name.toUpperCase()} ${w.ammo}/${w.max}`;
+  }
+
   function polishButton(b,on){
     if(!b) return;
     const key = b.dataset.k;
     const top = ['forward','backward','weapon'].includes(key);
-    const weaponReady = key === 'weapon';
     const w = Array.isArray(W) ? W[game.weapon] : null;
+    const weaponReady = key === 'weapon' && w;
     const fireReady = key === 'fire' && w && w.ammo > 0 && w.c <= 0;
     const specialReady = weaponReady || fireReady;
-    const accent = key === 'fire' && w ? w.color : top ? C.blue : C.rose;
+    const accent = key === 'weapon' && w ? w.color : key === 'fire' && w ? w.color : top ? C.blue : C.rose;
     b.style.background = on ? accent : specialReady ? `linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.68))` : 'rgba(17,24,39,.78)';
     b.style.border = on ? '1.8px solid rgba(255,255,255,.48)' : specialReady ? `1.8px solid ${accent}` : `1.5px solid ${accent}`;
     b.style.color = on ? '#0b0f14' : accent;
@@ -75,6 +88,7 @@
     });
     window.buttonState = function(){
       if(!game.controls) return;
+      refreshWeaponButtonText();
       game.controls.querySelectorAll('button').forEach(function(b){ polishButton(b, game.input[b.dataset.k]); });
     };
     buttonState();
@@ -102,9 +116,9 @@
   window.update = function(dt){
     if(game.running){
       game.timer += dt;
-      if(game.input.forward) game.drift += 360 * dt;
-      if(game.input.backward) game.drift -= 300 * dt;
-      game.drift = clamp(game.drift, -360, 470);
+      if(game.input.forward) game.drift += 405 * dt;
+      if(game.input.backward) game.drift -= 335 * dt;
+      game.drift = clamp(game.drift, -405, 520);
       game.drift *= Math.pow(.94, dt * 60);
       if(game.input.turnLeft) game.angle -= 3.2 * dt;
       if(game.input.turnRight) game.angle += 3.2 * dt;
@@ -138,6 +152,7 @@
     game.shake = Math.max(0, game.shake - dt * 20);
   };
 
+  applyAsteroidTuning();
   installCountdown();
   installControlPolish();
 })();
