@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=90" />
+    <link rel="stylesheet" href="style.css?v=92" />
   </head>
   <body>
     <main id="app">
@@ -14,7 +14,7 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=90">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=92">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -88,7 +88,7 @@
       cfg.levels.forEach(level => {
         const a = document.createElement('a');
         a.className = 'game-card';
-        a.href = `./?game=${game}&level=${level[2]}&v=90`;
+        a.href = `./?game=${game}&level=${level[2]}&v=92`;
         const kicker = level[3] || (level[2] === 5 ? 'Endless Mode' : `Difficulty ${level[2]}`);
         a.innerHTML = `<div><p class="card-kicker">${kicker}</p><h2>${level[0]}</h2><p>${level[1]}</p></div><span class="play-chip">Play</span>`;
         grid.appendChild(a);
