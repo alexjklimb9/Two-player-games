@@ -1,0 +1,1 @@
+function addGameScript(src,done){var s=document.createElement('script');s.src=src;s.onload=done||function(){};document.body.appendChild(s)}addGameScript('seesaw-tower.js?v=108',function(){addGameScript('trampoline-difficulty-v46.js?v=108',function(){addGameScript('start-countdown-v51.js?v=108')})});
