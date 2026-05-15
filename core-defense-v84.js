@@ -15,13 +15,14 @@
     }
 
     function buttonSurface(x,y,w,h,label,on,color,opts={}){
-      const muted=opts.muted||false,rotate=opts.rotate||false,accent=opts.accent||color||C.blue;
+      const muted=opts.muted||false,rotate=opts.rotate||false,accent=opts.accent||color||C.blue,ready=opts.ready||false;
+      const pulse=Math.sin(game.timer*5)*.5+.5;
       const glow=opts.glow||0;
       ctx.save();
-      if(glow>0){ctx.shadowColor=accent;ctx.shadowBlur=glow}
-      ctx.fillStyle=on?accent:(muted?'rgba(17,24,39,.54)':'rgba(17,24,39,.78)');
-      ctx.strokeStyle=on?'rgba(255,255,255,.48)':muted?'rgba(255,255,255,.11)':accent;
-      ctx.lineWidth=on?2.25:1.65;
+      if(glow>0||ready){ctx.shadowColor=accent;ctx.shadowBlur=ready?(9+4*pulse):glow}
+      ctx.fillStyle=on?accent:ready?`rgba(79,184,216,${.22+.07*pulse})`:(muted?'rgba(17,24,39,.54)':'rgba(17,24,39,.78)');
+      ctx.strokeStyle=on?'rgba(255,255,255,.48)':ready?`rgba(79,184,216,${.62+.2*pulse})`:muted?'rgba(255,255,255,.11)':accent;
+      ctx.lineWidth=on?2.25:ready?2.15:1.65;
       rr(x,y,w,h,18);
       ctx.shadowBlur=0;
       ctx.fillStyle=on?'#0b0f14':muted?'rgba(248,250,252,.58)':C.white;
@@ -33,13 +34,8 @@
       ctx.restore();
     }
 
-    function drawTowerTypeButton(x,y,w,h,label,on,color){
-      buttonSurface(x,y,w,h,label,on,color,{rotate:true,glow:on?10:0});
-    }
-
-    function drawControlButton(x,y,w,h,label,on,color,rotate=false,muted=false){
-      buttonSurface(x,y,w,h,label,on,color,{rotate,muted,glow:on?8:0});
-    }
+    function drawTowerTypeButton(x,y,w,h,label,on,color){buttonSurface(x,y,w,h,label,on,color,{rotate:true,glow:on?10:0})}
+    function drawControlButton(x,y,w,h,label,on,color,rotate=false,muted=false,ready=false){buttonSurface(x,y,w,h,label,on,color,{rotate,muted,ready,glow:on?8:0})}
 
     function drawBoostButton(x,y,w,h,label,on,state){
       const ready=state==='ready',active=state==='active',cooldown=state==='cooldown';
@@ -52,11 +48,7 @@
       ctx.shadowBlur=0;
       ctx.fillStyle=on||active?'#0b0f14':cooldown?'rgba(248,250,252,.55)':C.white;
       ctx.font='900 12px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x+w/2,y+h/2);
-      if(cooldown){
-        const pct=game.specialCd/BOOST_CD;
-        ctx.strokeStyle='rgba(224,111,143,.42)';ctx.lineWidth=3;ctx.lineCap='round';
-        ctx.beginPath();ctx.moveTo(x+18,y+h-7);ctx.lineTo(x+18+(w-36)*(1-pct),y+h-7);ctx.stroke();
-      }
+      if(cooldown){const pct=game.specialCd/BOOST_CD;ctx.strokeStyle='rgba(224,111,143,.42)';ctx.lineWidth=3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x+18,y+h-7);ctx.lineTo(x+18+(w-36)*(1-pct),y+h-7);ctx.stroke()}
       ctx.restore();
     }
 
@@ -126,16 +118,17 @@
       controls=function(){
         if(!game.running)return;
         let w=canvas.width*.31,h=56,s=game.slots[game.selected],tower=TYPES[game.buildType];
-        let b=empty(s)?'BUILD $'+BUILD:s.level>=MAX?'MAX':'UP $'+price(s),boost='BOOST',boostState='ready';
+        const buildCost=price(s),canBuy=!(!empty(s)&&s.level>=MAX)&&game.money>=buildCost;
+        let b=empty(s)?'BUILD $'+BUILD:s.level>=MAX?'MAX':'UP $'+buildCost,boost='BOOST',boostState='ready';
         if(s&&s.boost>0){boost='BOOST '+Math.ceil(s.boost)+'s';boostState='active'}else if(game.specialCd>0){boost='WAIT '+Math.ceil(game.specialCd)+'s';boostState='cooldown'}
         drawTowerTypeButton(canvas.width*.02,76,w,h,'TYPE '+tower.name,game.input.topLeft,tower.color);
-        drawControlButton(canvas.width*.345,76,w,h,b,game.input.topMid,C.blue,true,false);
-        drawControlButton(canvas.width*.67,76,w,h,'SLOT '+(game.selected+1)+'/12',game.input.topRight,C.blue,true,false);
-        let y=canvas.height-90;drawControlButton(canvas.width*.02,y,w,h,'ROT ◀',game.input.bottomLeft,C.rose,false,false);drawBoostButton(canvas.width*.345,y,w,h,boost,game.input.bottomMid,boostState);drawControlButton(canvas.width*.67,y,w,h,'ROT ▶',game.input.bottomRight,C.rose,false,false);
+        drawControlButton(canvas.width*.345,76,w,h,b,game.input.topMid,C.blue,true,!canBuy,canBuy);
+        drawControlButton(canvas.width*.67,76,w,h,'SLOT '+(game.selected+1)+'/12',game.input.topRight,C.blue,true,false,false);
+        let y=canvas.height-90;drawControlButton(canvas.width*.02,y,w,h,'ROT ◀',game.input.bottomLeft,C.rose,false,false,false);drawBoostButton(canvas.width*.345,y,w,h,boost,game.input.bottomMid,boostState);drawControlButton(canvas.width*.67,y,w,h,'ROT ▶',game.input.bottomRight,C.rose,false,false,false);
       };
     }
     install();
   }
 
-  load('core-defense-v80.js?v=107',function(){load('start-countdown-v51.js?v=107',installPolish)});
+  load('core-defense-v80.js?v=108',function(){load('start-countdown-v51.js?v=108',installPolish)});
 })();
