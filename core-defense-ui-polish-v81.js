@@ -1,8 +1,8 @@
 // Core Defense UI polish v81
-// Makes the tower type/build buttons reflect the active tower color.
+// Makes only the tower type button reflect the active tower color.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
-  function drawTowerTopButton(x,y,w,h,label,on,color){
+  function drawTowerTypeButton(x,y,w,h,label,on,color){
     ctx.fillStyle=on?color:'rgba(17,24,39,.84)';
     ctx.strokeStyle=on?'rgba(255,255,255,.48)':color;
     ctx.lineWidth=on?2.2:1.8;
@@ -25,8 +25,8 @@
       let b=empty(s)?'BUILD $'+BUILD:s.level>=MAX?'MAX':'UP $'+price(s),boost='BOOST';
       if(s&&s.boost>0)boost='BOOST '+Math.ceil(s.boost)+'s';
       else if(game.specialCd>0)boost='WAIT '+Math.ceil(game.specialCd)+'s';
-      drawTowerTopButton(canvas.width*.02,76,w,h,'TYPE '+tower.name,game.input.topLeft,tower.color);
-      drawTowerTopButton(canvas.width*.345,76,w,h,b,game.input.topMid,empty(s)?tower.color:TYPES[s.type].color);
+      drawTowerTypeButton(canvas.width*.02,76,w,h,'TYPE '+tower.name,game.input.topLeft,tower.color);
+      topBtn(canvas.width*.345,76,w,h,b,game.input.topMid,C.blue);
       topBtn(canvas.width*.67,76,w,h,'SLOT '+(game.selected+1)+'/12',game.input.topRight,C.blue);
       let y=canvas.height-90;
       drawButton(canvas.width*.02,y,w,h,'ROT ◀',game.input.bottomLeft,C.rose);
