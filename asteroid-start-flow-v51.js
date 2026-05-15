@@ -20,9 +20,9 @@
     return (s&&!s.classList.contains('hidden'))||(e&&!e.classList.contains('hidden'));
   }
   function begin(e){
+    if(active){stop(e);return;}
     if(!shouldHandle())return;
     stop(e);
-    if(active)return;
     active=true;
     const s=byId('startOverlay'),end=byId('endOverlay');
     if(s)s.classList.add('hidden');
