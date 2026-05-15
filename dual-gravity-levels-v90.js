@@ -42,15 +42,15 @@ makeLevel = function(){
     spikeTraps=[{x:2110,w:130,side:'top',timer:0},{x:2075,w:130,side:'bottom',timer:0}];
     movingPlatforms=[{x:2520,w:82,min:2520,max:2730,vx:48,dir:1,lastDx:0}];
   } else if(L === 1){
-    spans=[{x:0,w:620},{x:720,w:640},{x:1480,w:600},{x:2200,w:500},{x:2860,w:740}];
-    walls=[{x:690,y:y-55,w:30,h:110},{x:1390,y:y-142,w:34,h:142},{x:1390,y:y,w:34,h:82},{x:2110,y:y-58,w:34,h:116},{x:2770,y:y-88,w:36,h:88},{x:2770,y:y,w:36,h:142},{x:3385,y:y-70,w:30,h:140,door:true}];
+    spans=[{x:0,w:620},{x:720,w:640},{x:1480,w:600},{x:2200,w:120},{x:2700,w:80},{x:2860,w:740}];
+    walls=[{x:690,y:y-55,w:30,h:110},{x:1390,y:y-142,w:34,h:142},{x:1390,y:y,w:34,h:82},{x:2110,y:y-58,w:34,h:116},{x:2488,y:y-44,w:32,h:88},{x:2770,y:y-88,w:36,h:88},{x:2770,y:y,w:36,h:142},{x:3385,y:y-70,w:30,h:140,door:true}];
     switches=[{x:3245,w:120,active:false,type:'both'}];
     goals=[{x:3505,w:105}];
     enemies=[{x:1880,y:y-28,w:24,h:24,vx:30,side:'top',alive:true,min:1780,max:2025},{x:1940,y:y+4,w:24,h:24,vx:-30,side:'bottom',alive:true,min:1780,max:2025}];
     launchPads=[{x:1245,w:110,cool:0},{x:2678,w:80,cool:0}];
     spikeButtons=[{x:1810,w:50,side:'top',target:'bottom',cool:0},{x:1970,w:50,side:'bottom',target:'top',cool:0}];
     spikeTraps=[{x:1910,w:150,side:'top',timer:0},{x:1815,w:150,side:'bottom',timer:0}];
-    movingPlatforms=[{x:2320,w:86,min:2320,max:2580,vx:52,dir:1,lastDx:0}];
+    movingPlatforms=[{x:2330,w:92,min:2330,max:2605,vx:48,dir:1,lastDx:0}];
   } else if(L === 2){
     spans=[{x:0,w:760},{x:860,w:670},{x:1640,w:520},{x:2300,w:360},{x:2860,w:360},{x:3360,w:520}];
     walls=[{x:805,y:y-70,w:34,h:140},{x:1570,y:y-92,w:36,h:92},{x:1570,y:y,w:36,h:156},{x:2210,y:y-66,w:36,h:132},{x:2730,y:y-148,w:38,h:148},{x:2730,y:y,w:38,h:86},{x:3580,y:y-70,w:30,h:140,door:true}];
@@ -109,7 +109,7 @@ tutorialText = function(){
   }
   const tips=[
     '',
-    'Level 1: Chain launch pads, spike traps, and the one-player platform.',
+    'Level 1: Ride the one-player platform across the gap and jump the middle block.',
     'Level 2: Split jobs. One player creates safety while the other advances.',
     'Level 3: Moving systems. Watch timing before crossing.',
     'Level 4: Co-op chaos. Communicate before every launch and trap.',
