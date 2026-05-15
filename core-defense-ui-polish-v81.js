@@ -1,5 +1,5 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, boost countdown ring, brighter core health ring, and brief wave/critical messages.
+// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, obvious boost countdown ring, brighter core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
   let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
@@ -70,19 +70,19 @@
     const pulse=low?(Math.sin(game.timer*8)*.5+.5):0;
     ctx.save();
     ctx.translate(cx(),cy());
-    ctx.strokeStyle='rgba(255,255,255,.20)';
-    ctx.lineWidth=6.5;
-    ctx.beginPath();ctx.arc(0,0,49,-Math.PI/2,Math.PI*1.5);ctx.stroke();
-    ctx.strokeStyle=low?`rgba(255,116,92,${.86+.14*pulse})`:'rgba(139,211,167,.96)';
-    ctx.shadowColor=low?'rgba(217,119,87,.55)':'rgba(139,211,167,.45)';
-    ctx.shadowBlur=10;
+    ctx.strokeStyle='rgba(255,255,255,.24)';
     ctx.lineWidth=7;
+    ctx.beginPath();ctx.arc(0,0,50,-Math.PI/2,Math.PI*1.5);ctx.stroke();
+    ctx.strokeStyle=low?`rgba(255,116,92,${.9+.1*pulse})`:'rgba(139,211,167,1)';
+    ctx.shadowColor=low?'rgba(217,119,87,.65)':'rgba(139,211,167,.55)';
+    ctx.shadowBlur=12;
+    ctx.lineWidth=8;
     ctx.lineCap='round';
-    ctx.beginPath();ctx.arc(0,0,49,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
+    ctx.beginPath();ctx.arc(0,0,50,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
     ctx.shadowBlur=0;
     if(low){
-      ctx.strokeStyle=`rgba(217,119,87,${.24+.22*pulse})`;ctx.lineWidth=13;
-      ctx.beginPath();ctx.arc(0,0,57+pulse*6,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(217,119,87,${.26+.24*pulse})`;ctx.lineWidth=14;
+      ctx.beginPath();ctx.arc(0,0,58+pulse*6,0,Math.PI*2);ctx.stroke();
     }
     ctx.restore();
   }
@@ -90,49 +90,25 @@
   function drawTowerBody(type,level,color){
     ctx.save();
     ctx.fillStyle=color;
-    ctx.strokeStyle='rgba(255,255,255,.20)';
-    ctx.lineWidth=1.2;
-    if(type===0){
-      ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.stroke();
-    }else if(type===1){
-      ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(15,0);ctx.lineTo(0,15);ctx.lineTo(-15,0);ctx.closePath();ctx.fill();ctx.stroke();
-    }else if(type===2){
-      ctx.beginPath();
-      for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*14,y=Math.sin(a)*14;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-      ctx.closePath();ctx.fill();ctx.stroke();
-    }else{
-      ctx.beginPath();ctx.ellipse(0,0,17,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-      ctx.strokeStyle='rgba(11,15,20,.30)';ctx.lineWidth=2;
-      ctx.beginPath();ctx.arc(-4,0,6,-1.1,1.1);ctx.stroke();
-      ctx.beginPath();ctx.arc(5,0,8,-1.1,1.1);ctx.stroke();
-    }
-    ctx.fillStyle='#0b0f14';
-    ctx.font='900 11px Arial';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillText(level,0,1);
+    ctx.strokeStyle='rgba(255,255,255,.22)';
+    ctx.lineWidth=1.25;
+    if(type===0){ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.stroke();}
+    else if(type===1){ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(15,0);ctx.lineTo(0,15);ctx.lineTo(-15,0);ctx.closePath();ctx.fill();ctx.stroke();}
+    else if(type===2){ctx.beginPath();for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3,x=Math.cos(a)*14,y=Math.sin(a)*14;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.closePath();ctx.fill();ctx.stroke();}
+    else{ctx.beginPath();ctx.ellipse(0,0,17,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(11,15,20,.30)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(-4,0,6,-1.1,1.1);ctx.stroke();ctx.beginPath();ctx.arc(5,0,8,-1.1,1.1);ctx.stroke();}
+    ctx.fillStyle='#0b0f14';ctx.font='900 11px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(level,0,1);
     ctx.restore();
   }
 
   function drawSlotsEnhanced(){
     for(let i=0;i<game.slots.length;i++){
       let s=game.slots[i],p=slotPos(i),sel=i===game.selected;
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.rotate(p.a+Math.PI/2);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a+Math.PI/2);
       ctx.fillStyle=sel?'rgba(248,250,252,.12)':'rgba(17,24,39,.85)';
-      ctx.strokeStyle=sel?C.white:'rgba(255,255,255,.18)';
-      ctx.lineWidth=sel?2.5:1.5;
-      ctx.beginPath();
-      ctx.arc(0,0,24+(s.flash||0)*5,0,Math.PI*2);
-      ctx.fill();ctx.stroke();
-      if(!empty(s)){
-        drawTowerBody(s.type,s.level,TYPES[s.type].color);
-      }else{
-        ctx.fillStyle='rgba(255,255,255,.22)';
-        ctx.fillRect(-8,-2,16,4);
-        ctx.fillRect(-2,-8,4,16);
-      }
+      ctx.strokeStyle=sel?C.white:'rgba(255,255,255,.18)';ctx.lineWidth=sel?2.5:1.5;
+      ctx.beginPath();ctx.arc(0,0,24+(s.flash||0)*5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if(!empty(s))drawTowerBody(s.type,s.level,TYPES[s.type].color);
+      else{ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(-8,-2,16,4);ctx.fillRect(-2,-8,4,16);}
       ctx.restore();
     }
   }
@@ -143,31 +119,26 @@
     const tower=isEmpty?TYPES[game.buildType]:TYPES[s.type];
     const boosted=!isEmpty&&s.boost>0;
     const pulse=Math.sin(game.timer*7)*.5+.5;
-    ctx.save();
-    ctx.translate(p.x,p.y);
-    ctx.rotate(p.a+Math.PI/2);
-    ctx.strokeStyle=tower.color;
-    ctx.lineWidth=boosted?3.8:2.4;
-    ctx.globalAlpha=boosted?.88:.42+.18*pulse;
-    ctx.beginPath();ctx.arc(0,0,29+(boosted?pulse*2.5:pulse*2.5),0,Math.PI*2);ctx.stroke();
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a+Math.PI/2);
+    ctx.strokeStyle=tower.color;ctx.lineWidth=boosted?3.4:2.4;ctx.globalAlpha=boosted?.72:.42+.18*pulse;
+    ctx.beginPath();ctx.arc(0,0,28+(pulse*2),0,Math.PI*2);ctx.stroke();
     if(boosted){
       const boostPct=Math.max(0,Math.min(1,s.boost/BOOST_TIME));
-      ctx.globalAlpha=.9;
-      ctx.lineWidth=6.5;
+      ctx.globalAlpha=1;
+      ctx.lineWidth=9;
       ctx.lineCap='round';
+      ctx.strokeStyle=tower.color;
       ctx.shadowColor=tower.color;
-      ctx.shadowBlur=8;
-      ctx.beginPath();
-      ctx.arc(0,0,38,-Math.PI/2,-Math.PI/2+Math.PI*2*boostPct);
-      ctx.stroke();
+      ctx.shadowBlur=14;
+      ctx.beginPath();ctx.arc(0,0,34,-Math.PI/2,-Math.PI/2+Math.PI*2*boostPct);ctx.stroke();
       ctx.shadowBlur=0;
+      ctx.globalAlpha=.38;
+      ctx.lineWidth=9;
+      ctx.strokeStyle='rgba(255,255,255,.28)';
+      ctx.beginPath();ctx.arc(0,0,34,-Math.PI/2,Math.PI*1.5);ctx.stroke();
     }
-    if(isEmpty){
-      ctx.globalAlpha=.7;ctx.strokeStyle=tower.color;ctx.lineWidth=2.6;
-      ctx.beginPath();ctx.moveTo(-11,0);ctx.lineTo(11,0);ctx.moveTo(0,-11);ctx.lineTo(0,11);ctx.stroke();
-    }
-    ctx.restore();
-    ctx.globalAlpha=1;
+    if(isEmpty){ctx.globalAlpha=.7;ctx.strokeStyle=tower.color;ctx.lineWidth=2.6;ctx.beginPath();ctx.moveTo(-11,0);ctx.lineTo(11,0);ctx.moveTo(0,-11);ctx.lineTo(0,11);ctx.stroke();}
+    ctx.restore();ctx.globalAlpha=1;
   }
 
   function install(){
