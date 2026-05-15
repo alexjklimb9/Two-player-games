@@ -36,6 +36,13 @@
     if(el) el.style.display = 'none';
   }
 
+  function showGameScreen(){
+    const startOverlay = byId('startOverlay');
+    const endOverlay = byId('endOverlay');
+    if(startOverlay) startOverlay.classList.add('hidden');
+    if(endOverlay) endOverlay.classList.add('hidden');
+  }
+
   function stopEvent(e){
     if(!e) return;
     e.preventDefault();
@@ -58,6 +65,7 @@
 
     active = true;
     const target = e.currentTarget;
+    showGameScreen();
     let n = 3;
     show('3');
     const timer = setInterval(function(){
@@ -75,7 +83,7 @@
     }, 1000);
   }
 
-  ['startButton','restartButton'].forEach(function(id){
+  ['startOverlay','startButton','restartButton'].forEach(function(id){
     const btn = byId(id);
     if(!btn) return;
     ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
