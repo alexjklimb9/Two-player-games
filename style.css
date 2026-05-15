@@ -57,14 +57,18 @@ canvas {
 
 .home-screen h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 9vw, 5rem);
-  letter-spacing: -0.06em;
+  max-width: 760px;
+  font-size: clamp(2.65rem, 10vw, 5.4rem);
+  line-height: .9;
+  letter-spacing: -0.075em;
 }
 
 .home-subtitle {
-  margin: 10px 0 28px;
+  margin: 14px 0 30px;
+  max-width: 520px;
   color: #94a3b8;
-  font-size: 1.05rem;
+  font-size: clamp(1.02rem, 3.8vw, 1.22rem);
+  line-height: 1.42;
 }
 
 .game-grid {
@@ -88,7 +92,20 @@ canvas {
   border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 24px 70px rgba(0,0,0,0.34);
   overflow: hidden;
+  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
 }
+
+.game-card:active {
+  transform: scale(.985) translateY(2px);
+  border-color: rgba(255,255,255,0.2);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.34);
+}
+
+.balance-card { background: linear-gradient(160deg, rgba(79,184,216,.10), rgba(17,24,39,.78) 44%, rgba(224,111,143,.08)); }
+.trampoline-card { background: linear-gradient(160deg, rgba(139,211,167,.10), rgba(17,24,39,.78) 44%, rgba(240,184,110,.08)); }
+.asteroid-card { background: linear-gradient(160deg, rgba(183,140,255,.09), rgba(17,24,39,.78) 48%, rgba(168,162,158,.08)); }
+.core-card { background: linear-gradient(160deg, rgba(240,184,110,.10), rgba(17,24,39,.78) 45%, rgba(79,184,216,.08)); }
+.dual-card { background: linear-gradient(160deg, rgba(79,184,216,.09), rgba(17,24,39,.78) 44%, rgba(224,111,143,.09)); }
 
 .game-card::after {
   content: "";
@@ -102,6 +119,7 @@ canvas {
   margin: 4px 0 8px;
   font-size: clamp(1.55rem, 5vw, 2.2rem);
   letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .game-card p {
@@ -162,6 +180,18 @@ canvas {
   transform: rotate(-5deg);
 }
 
+.mini-fall {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  background: #d7dde5;
+  opacity: .72;
+  box-shadow: 0 10px 20px rgba(0,0,0,.22);
+}
+.fall-one { left: 12%; top: 8px; transform: rotate(12deg); }
+.fall-two { right: 18%; top: 18px; transform: rotate(-18deg); background: #f0b86e; }
+
 .tower-art,
 .trampoline-art {
   display: flex;
@@ -185,7 +215,9 @@ canvas {
 }
 
 .trampoline-art,
-.asteroid-art {
+.asteroid-art,
+.core-art,
+.dual-art {
   display: block;
 }
 
@@ -267,6 +299,72 @@ canvas {
 
 .shot-one { left: 57%; top: 30px; transform: rotate(-24deg); }
 .shot-two { left: 34%; top: 78px; transform: rotate(28deg); background: #4fb8d8; }
+
+.mini-core-ring {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px solid rgba(248,250,252,.18);
+  transform: translate(-50%,-50%);
+}
+.mini-core {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #d7dde5;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 14px 26px rgba(0,0,0,.26);
+}
+.mini-tower {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: #4fb8d8;
+  box-shadow: 0 12px 22px rgba(0,0,0,.24);
+}
+.tower-a { left: 29%; top: 30px; }
+.tower-b { right: 29%; top: 30px; background: #f0b86e; }
+.tower-c { left: 46%; bottom: 8px; background: #b78cff; }
+.mini-enemy {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #a8a29e;
+  opacity: .92;
+}
+.enemy-a { left: 7%; top: 48px; }
+.enemy-b { right: 8%; top: 72px; background: #d97757; }
+.enemy-c { left: 68%; top: 8px; background: #8bd3a7; }
+
+.dual-line {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 53%;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4fb8d8, #d7dde5, #e06f8f);
+  box-shadow: 0 12px 22px rgba(0,0,0,.22);
+}
+.dual-top { left: 25%; top: 18px; }
+.dual-bottom { right: 24%; top: 68px; }
+.dual-gate {
+  position: absolute;
+  width: 12px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(248,250,252,.8);
+}
+.gate-one { left: 12%; top: 30px; }
+.gate-two { right: 13%; top: 42px; }
 
 .overlay {
   position: absolute;
