@@ -1,5 +1,5 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, obvious boost countdown ring, brighter core health ring, and brief wave/critical messages.
+// Adds in-world clarity without extra panels: distinct tower colors, tower body shapes, selected-slot glow, obvious boost countdown ring, high-contrast core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
   let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
@@ -68,21 +68,41 @@
     const pct=Math.max(0,Math.min(1,game.coreHp/game.maxHp));
     const low=game.coreHp<=2;
     const pulse=low?(Math.sin(game.timer*8)*.5+.5):0;
+    const radius=60;
     ctx.save();
     ctx.translate(cx(),cy());
-    ctx.strokeStyle='rgba(255,255,255,.24)';
-    ctx.lineWidth=7;
-    ctx.beginPath();ctx.arc(0,0,50,-Math.PI/2,Math.PI*1.5);ctx.stroke();
-    ctx.strokeStyle=low?`rgba(255,116,92,${.9+.1*pulse})`:'rgba(139,211,167,1)';
-    ctx.shadowColor=low?'rgba(217,119,87,.65)':'rgba(139,211,167,.55)';
-    ctx.shadowBlur=12;
-    ctx.lineWidth=8;
+
+    // Dark under-ring makes the health arc readable on top of the core, towers, and shots.
+    ctx.strokeStyle='rgba(0,0,0,.72)';
+    ctx.lineWidth=15;
+    ctx.beginPath();
+    ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);
+    ctx.stroke();
+
+    // Full track.
+    ctx.strokeStyle='rgba(248,250,252,.34)';
+    ctx.lineWidth=10;
     ctx.lineCap='round';
-    ctx.beginPath();ctx.arc(0,0,50,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0,0,radius,-Math.PI/2,Math.PI*1.5);
+    ctx.stroke();
+
+    // Health amount.
+    ctx.strokeStyle=low?`rgba(255,92,74,${.95+.05*pulse})`:'rgba(139,255,181,1)';
+    ctx.shadowColor=low?'rgba(255,92,74,.85)':'rgba(139,255,181,.72)';
+    ctx.shadowBlur=14;
+    ctx.lineWidth=10;
+    ctx.beginPath();
+    ctx.arc(0,0,radius,-Math.PI/2,-Math.PI/2+Math.PI*2*pct);
+    ctx.stroke();
     ctx.shadowBlur=0;
+
     if(low){
-      ctx.strokeStyle=`rgba(217,119,87,${.26+.24*pulse})`;ctx.lineWidth=14;
-      ctx.beginPath();ctx.arc(0,0,58+pulse*6,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,92,74,${.26+.24*pulse})`;
+      ctx.lineWidth=16;
+      ctx.beginPath();
+      ctx.arc(0,0,radius+9+pulse*5,0,Math.PI*2);
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -147,9 +167,7 @@
     const originalUpdate=typeof update==='function'?update:null;
     if(originalUpdate&&!update.__messageWrapped){update=function(dt){originalUpdate(dt);updateMessages(dt);};update.__messageWrapped=true;}
     const originalRender=typeof render==='function'?render:null;
-    if(originalRender&&!render.__messageWrapped){render=function(){originalRender();drawWaveMessage();};render.__messageWrapped=true;}
-    const originalDrawCore=typeof drawCore==='function'?drawCore:null;
-    if(originalDrawCore&&!drawCore.__clarityWrapped){drawCore=function(){originalDrawCore();drawCoreHealthRing();};drawCore.__clarityWrapped=true;}
+    if(originalRender&&!render.__messageWrapped){render=function(){originalRender();drawWaveMessage();drawCoreHealthRing();};render.__messageWrapped=true;}
     drawSlots=function(){drawSlotsEnhanced();drawSlotClarity();};
     controls=function(){
       if(!game.running)return;
