@@ -1,4 +1,4 @@
-// Asteroid Crew v50: countdown, continuous pressure, and inward wrapping.
+// Asteroid Crew v50: countdown, continuous pressure, inward wrapping, and polished controls.
 (function(){
   const GOAL = 60;
   let countingDown = false;
@@ -45,6 +45,39 @@
         if(realStart) realStart(e);
       }
     }, 1000);
+  }
+
+  function polishButton(b,on){
+    if(!b) return;
+    const key = b.dataset.k;
+    const top = ['forward','backward','weapon'].includes(key);
+    const weaponReady = key === 'weapon';
+    const w = Array.isArray(W) ? W[game.weapon] : null;
+    const fireReady = key === 'fire' && w && w.ammo > 0 && w.c <= 0;
+    const specialReady = weaponReady || fireReady;
+    const accent = key === 'fire' && w ? w.color : top ? C.blue : C.rose;
+    b.style.background = on ? accent : specialReady ? `linear-gradient(180deg, rgba(17,24,39,.88), rgba(17,24,39,.68))` : 'rgba(17,24,39,.78)';
+    b.style.border = on ? '1.8px solid rgba(255,255,255,.48)' : specialReady ? `1.8px solid ${accent}` : `1.5px solid ${accent}`;
+    b.style.color = on ? '#0b0f14' : accent;
+    b.style.boxShadow = on ? `0 10px 24px rgba(0,0,0,.36), 0 0 16px ${accent}66` : specialReady ? `0 14px 30px rgba(0,0,0,.38), 0 0 14px ${accent}55` : '0 12px 28px rgba(0,0,0,.34)';
+    b.style.transform = on ? 'scale(.97)' : 'scale(1)';
+    b.style.opacity = key === 'fire' && w && w.ammo <= 0 ? '.62' : '1';
+  }
+
+  function installControlPolish(){
+    if(!game.controls) return setTimeout(installControlPolish, 50);
+    game.controls.querySelectorAll('button').forEach(function(b){
+      b.style.background = 'rgba(17,24,39,.78)';
+      b.style.backdropFilter = 'blur(10px)';
+      b.style.webkitBackdropFilter = 'blur(10px)';
+      b.style.borderRadius = '18px';
+      b.style.transition = 'transform .08s ease, background .12s ease, border .12s ease, box-shadow .12s ease, opacity .12s ease';
+    });
+    window.buttonState = function(){
+      if(!game.controls) return;
+      game.controls.querySelectorAll('button').forEach(function(b){ polishButton(b, game.input[b.dataset.k]); });
+    };
+    buttonState();
   }
 
   function installCountdown(){
@@ -99,10 +132,12 @@
       const tt = byId('timeText');
       if(tt) tt.textContent = remaining + 's left';
       stressText.textContent = String(3 - game.hits);
+      if(typeof buttonState === 'function') buttonState();
     }
     updateSparks(dt);
     game.shake = Math.max(0, game.shake - dt * 20);
   };
 
   installCountdown();
+  installControlPolish();
 })();
