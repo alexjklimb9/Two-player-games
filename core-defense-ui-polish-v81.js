@@ -1,7 +1,8 @@
 // Core Defense UI polish v81
-// Adds in-world clarity without extra panels: tower type color, selected-slot glow, boost aura, and core health ring.
+// Adds in-world clarity without extra panels: tower type color, selected-slot glow, boost aura, core health ring, and brief wave/critical messages.
 (function(){
   const waitForCore=()=>typeof controls==='function'&&typeof drawButton==='function'&&typeof topBtn==='function'&&typeof game==='object'&&Array.isArray(TYPES);
+  let lastWave=-1,lastCritical=false,message='',messageTime=0,messageColor=null;
 
   function drawTowerTypeButton(x,y,w,h,label,on,color){
     ctx.fillStyle=on?color:'rgba(17,24,39,.84)';
@@ -17,6 +18,46 @@
     ctx.textBaseline='middle';
     ctx.fillText(label,0,0);
     ctx.restore();
+  }
+
+  function flashMessage(text,color=C.white,time=1.25){
+    message=text;
+    messageColor=color;
+    messageTime=time;
+  }
+
+  function updateMessages(dt){
+    if(!game.running)return;
+    if(game.wave!==lastWave&&game.wave>0){
+      lastWave=game.wave;
+      const finalText=!ENDLESS&&game.wave>=TARGET?'FINAL WAVE':'WAVE '+game.wave;
+      flashMessage(finalText,!ENDLESS&&game.wave>=TARGET?C.gold:C.white,1.25);
+    }
+    const critical=game.coreHp<=2;
+    if(critical&&!lastCritical)flashMessage('CORE CRITICAL',C.danger,1.35);
+    lastCritical=critical;
+    messageTime=Math.max(0,messageTime-dt);
+  }
+
+  function drawWaveMessage(){
+    if(!game.running||messageTime<=0||!message)return;
+    const a=Math.min(1,messageTime/.35);
+    const scale=1+(1-a)*.05;
+    ctx.save();
+    ctx.globalAlpha=Math.min(.9,a);
+    ctx.translate(cx(),cy()-86);
+    ctx.scale(scale,scale);
+    ctx.fillStyle='rgba(17,24,39,.46)';
+    ctx.strokeStyle='rgba(255,255,255,.10)';
+    ctx.lineWidth=1.2;
+    rr(-86,-21,172,42,21);
+    ctx.fillStyle=messageColor||C.white;
+    ctx.font='900 15px Arial';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(message,0,1);
+    ctx.restore();
+    ctx.globalAlpha=1;
   }
 
   function drawCoreHealthRing(){
@@ -87,6 +128,24 @@
 
   function install(){
     if(!waitForCore())return setTimeout(install,50);
+
+    const originalUpdate=typeof update==='function'?update:null;
+    if(originalUpdate&&!update.__messageWrapped){
+      update=function(dt){
+        originalUpdate(dt);
+        updateMessages(dt);
+      };
+      update.__messageWrapped=true;
+    }
+
+    const originalRender=typeof render==='function'?render:null;
+    if(originalRender&&!render.__messageWrapped){
+      render=function(){
+        originalRender();
+        drawWaveMessage();
+      };
+      render.__messageWrapped=true;
+    }
 
     const originalDrawCore=typeof drawCore==='function'?drawCore:null;
     if(originalDrawCore&&!drawCore.__clarityWrapped){
