@@ -150,221 +150,158 @@ canvas {
   position: relative;
 }
 
-.mini-head {
-  position: absolute;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  top: 36px;
-  box-shadow: 0 12px 26px rgba(0,0,0,0.25);
-}
-
-.cyan-head {
-  left: 18%;
-  background: #4fb8d8;
-}
-
-.rose-head {
-  right: 18%;
-  background: #e06f8f;
-}
-
-.mini-board {
-  position: absolute;
-  left: 9%;
-  right: 9%;
-  height: 12px;
-  top: 72px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #4fb8d8, #d7dde5, #e06f8f);
-  transform: rotate(-5deg);
-}
-
-.mini-fall {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border-radius: 7px;
-  background: #d7dde5;
-  opacity: .72;
-  box-shadow: 0 10px 20px rgba(0,0,0,.22);
-}
-.fall-one { left: 12%; top: 8px; transform: rotate(12deg); }
-.fall-two { right: 18%; top: 18px; transform: rotate(-18deg); background: #f0b86e; }
-
-.tower-art,
-.trampoline-art {
+.clean-art {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 16px;
 }
 
-.mini-platform {
-  width: 78%;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #4fb8d8, #d7dde5, #e06f8f);
-  transform: rotate(5deg);
-  margin: 0 auto;
+.art-disc {
+  position: relative;
+  width: 126px;
+  height: 96px;
+  border-radius: 32px;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.09);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 18px 34px rgba(0,0,0,.24);
+  overflow: hidden;
 }
 
-.mini-platform.offset {
-  transform: rotate(-7deg);
-  width: 62%;
-}
-
-.trampoline-art,
-.asteroid-art,
-.core-art,
-.dual-art {
-  display: block;
-}
-
-.mini-trampoline {
-  position: absolute;
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(248,250,252,0.92);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.24);
-}
-
-.mini-trampoline::after {
+.art-disc::before {
   content: "";
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 4px;
-  height: 4px;
-  border-radius: 999px;
+  inset: 14px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.06);
 }
 
-.mini-low { width: 82px; left: 10%; top: 78px; transform: rotate(-4deg); }
-.mini-low::after { background: #8bd3a7; }
-.mini-mid { width: 94px; right: 8%; top: 64px; transform: rotate(4deg); }
-.mini-mid::after { background: #d7dde5; }
-.mini-high { width: 74px; left: 40%; top: 42px; transform: rotate(-7deg); }
-.mini-high::after { background: #f0b86e; }
-.mini-super { width: 68px; right: 20%; top: 18px; transform: rotate(7deg); }
-.mini-super::after { background: #b78cff; }
-.bounce-blue { left: 20%; top: 32px; }
-.bounce-rose { right: 30%; top: 6px; }
-
-.mini-ship {
+.player-dot,
+.rock-dot,
+.tower-dot {
   position: absolute;
-  left: 50%;
-  top: 48px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 12px 22px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.dot-cyan { background: #4fb8d8; }
+.dot-rose { background: #e06f8f; }
+
+.balance-beam,
+.tramp-line,
+.gravity-line {
+  position: absolute;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4fb8d8, #d7dde5, #e06f8f);
+  box-shadow: 0 12px 20px rgba(0,0,0,.22);
+}
+
+.balance-beam {
+  left: 20px;
+  right: 20px;
+  top: 55px;
+  transform: rotate(-6deg);
+}
+
+.balance-art .dot-cyan { left: 26px; top: 27px; }
+.balance-art .dot-rose { right: 26px; top: 37px; }
+
+.tramp-line {
+  left: 22px;
+  right: 22px;
+  background: rgba(248,250,252,.86);
+}
+.tramp-line.low { top: 64px; transform: rotate(-5deg); }
+.tramp-line.high { left: 44px; right: 28px; top: 34px; transform: rotate(6deg); }
+.jump-one { left: 26px; top: 35px; }
+.jump-two { right: 28px; top: 7px; }
+
+.ship-icon {
+  position: absolute;
+  left: 48px;
+  top: 31px;
   width: 0;
   height: 0;
-  transform: translateX(-50%) rotate(-90deg);
   border-top: 18px solid transparent;
   border-bottom: 18px solid transparent;
   border-left: 42px solid #f8fafc;
-  filter: drop-shadow(0 12px 22px rgba(0,0,0,0.28));
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 12px 18px rgba(0,0,0,.24));
 }
-
-.mini-ship::after {
+.ship-icon::after {
   content: "";
   position: absolute;
-  left: -34px;
-  top: -8px;
-  width: 16px;
-  height: 16px;
+  left: -33px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #4fb8d8;
 }
-
-.mini-rock {
-  position: absolute;
-  width: 34px;
-  height: 34px;
-  border-radius: 42% 58% 47% 53%;
+.rock-dot {
   background: #a8a29e;
-  border: 1px solid rgba(255,255,255,0.22);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.24);
+  border-radius: 42% 58% 47% 53%;
+  width: 30px;
+  height: 30px;
 }
+.rock-left { left: 18px; top: 18px; transform: rotate(18deg); }
+.rock-right { right: 17px; bottom: 13px; transform: rotate(-16deg); }
 
-.rock-one { left: 14%; top: 16px; transform: rotate(18deg); }
-.rock-two { right: 16%; top: 72px; transform: rotate(-20deg); width: 28px; height: 28px; }
-
-.mini-shot {
+.core-orbit {
   position: absolute;
-  width: 28px;
-  height: 5px;
-  border-radius: 999px;
-  background: #f0b86e;
-  box-shadow: 0 0 16px rgba(240,184,110,0.55);
-}
-
-.shot-one { left: 57%; top: 30px; transform: rotate(-24deg); }
-.shot-two { left: 34%; top: 78px; transform: rotate(28deg); background: #4fb8d8; }
-
-.mini-core-ring {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  width: 96px;
-  height: 96px;
+  left: 25px;
+  top: 10px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   border: 2px solid rgba(248,250,252,.18);
-  transform: translate(-50%,-50%);
 }
-.mini-core {
+.core-center {
   position: absolute;
-  left: 50%;
-  top: 52%;
-  width: 42px;
-  height: 42px;
+  left: 48px;
+  top: 33px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #d7dde5;
-  transform: translate(-50%,-50%);
-  box-shadow: 0 14px 26px rgba(0,0,0,.26);
+  box-shadow: 0 12px 22px rgba(0,0,0,.26);
 }
-.mini-tower {
-  position: absolute;
-  width: 22px;
-  height: 22px;
+.tower-dot {
+  width: 20px;
+  height: 20px;
   border-radius: 8px;
-  background: #4fb8d8;
-  box-shadow: 0 12px 22px rgba(0,0,0,.24);
 }
-.tower-a { left: 29%; top: 30px; }
-.tower-b { right: 29%; top: 30px; background: #f0b86e; }
-.tower-c { left: 46%; bottom: 8px; background: #b78cff; }
-.mini-enemy {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #a8a29e;
-  opacity: .92;
-}
-.enemy-a { left: 7%; top: 48px; }
-.enemy-b { right: 8%; top: 72px; background: #d97757; }
-.enemy-c { left: 68%; top: 8px; background: #8bd3a7; }
+.tower-left { left: 27px; top: 35px; background: #4fb8d8; }
+.tower-right { right: 27px; top: 35px; background: #f0b86e; }
 
-.dual-line {
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 53%;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #4fb8d8, #d7dde5, #e06f8f);
-  box-shadow: 0 12px 22px rgba(0,0,0,.22);
+.gravity-line {
+  left: 16px;
+  right: 16px;
+  top: 43px;
 }
-.dual-top { left: 25%; top: 18px; }
-.dual-bottom { right: 24%; top: 68px; }
+.gravity-top { left: 30px; top: 16px; }
+.gravity-bottom { right: 30px; top: 54px; }
+
+.mini-head,
+.cyan-head,
+.rose-head,
+.mini-board,
+.mini-fall,
+.mini-platform,
+.mini-trampoline,
+.mini-ship,
+.mini-rock,
+.mini-shot,
+.mini-core-ring,
+.mini-core,
+.mini-tower,
+.mini-enemy,
+.dual-line,
 .dual-gate {
-  position: absolute;
-  width: 12px;
-  height: 44px;
-  border-radius: 999px;
-  background: rgba(248,250,252,.8);
+  /* Legacy card-art pieces kept for older cached markup; new cards use clean-art. */
 }
-.gate-one { left: 12%; top: 30px; }
-.gate-two { right: 13%; top: 42px; }
 
 .overlay {
   position: absolute;
