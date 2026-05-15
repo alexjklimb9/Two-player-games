@@ -94,6 +94,105 @@
     buttonState();
   }
 
+  function drawSurvivalProgress(){
+    if(!game.running) return;
+    const pct = Math.max(0, Math.min(1, game.timer / GOAL));
+    const w = Math.min(240, canvas.width * .54), h = 6, x = canvas.width / 2 - w / 2, y = 58;
+    ctx.save();
+    ctx.globalAlpha = .9;
+    ctx.fillStyle = 'rgba(17,24,39,.55)';
+    ctx.strokeStyle = 'rgba(255,255,255,.10)';
+    ctx.lineWidth = 1;
+    rr(x, y, w, h, 4);
+    ctx.strokeStyle = 'rgba(79,184,216,.85)';
+    ctx.shadowColor = 'rgba(79,184,216,.38)';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = h;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x + h / 2, y + h / 2);
+    ctx.lineTo(x + h / 2 + Math.max(0, (w - h) * pct), y + h / 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = .72;
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = '900 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('SURVIVE', canvas.width / 2, y - 8);
+    ctx.restore();
+  }
+
+  function installVisualPolish(){
+    const oldDrawWeaponInfo = typeof drawWeaponInfo === 'function' ? drawWeaponInfo : null;
+    if(oldDrawWeaponInfo) drawWeaponInfo = function(){};
+
+    const oldFire = typeof fire === 'function' ? fire : null;
+    if(oldFire && !oldFire.__feedbackWrapped){
+      fire = function(){
+        const w = Array.isArray(W) ? W[game.weapon] : null;
+        const canFire = w && w.c <= 0 && w.ammo > 0;
+        oldFire();
+        if(canFire) game.fireFlash = .14;
+      };
+      fire.__feedbackWrapped = true;
+    }
+
+    const oldDrawShip = typeof drawShip === 'function' ? drawShip : null;
+    if(oldDrawShip && !oldDrawShip.__feedbackWrapped){
+      drawShip = function(){
+        oldDrawShip();
+        if(!game.running) return;
+        const thrust = Math.min(1, Math.abs(game.drift || 0) / 520);
+        const flash = Math.max(0, game.fireFlash || 0);
+        ctx.save();
+        ctx.translate(cx(), cy());
+        ctx.rotate(game.angle);
+        if(thrust > .05){
+          ctx.globalAlpha = .18 + thrust * .28;
+          ctx.fillStyle = C.blue;
+          ctx.shadowColor = C.blue;
+          ctx.shadowBlur = 16;
+          ctx.beginPath();
+          ctx.moveTo(-23, 0);
+          ctx.lineTo(-42 - thrust * 18, -8 - thrust * 4);
+          ctx.lineTo(-35 - thrust * 16, 0);
+          ctx.lineTo(-42 - thrust * 18, 8 + thrust * 4);
+          ctx.closePath();
+          ctx.fill();
+        }
+        if(flash > 0){
+          ctx.globalAlpha = Math.min(.8, flash * 6);
+          ctx.strokeStyle = 'rgba(248,250,252,.95)';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = 'rgba(248,250,252,.75)';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(35, 0, 9 + flash * 22, -.7, .7);
+          ctx.stroke();
+        }
+        if(game.shield > 0){
+          const p = Math.max(0, Math.min(1, game.shield / 2.6));
+          ctx.globalAlpha = .12 + p * .18;
+          ctx.strokeStyle = C.green;
+          ctx.lineWidth = 5;
+          ctx.shadowColor = C.green;
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.arc(0, 0, 45 + Math.sin(game.timer * 8) * 2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      };
+      drawShip.__feedbackWrapped = true;
+    }
+
+    const oldRender = typeof render === 'function' ? render : null;
+    if(oldRender && !oldRender.__survivalWrapped){
+      render = function(){ oldRender(); drawSurvivalProgress(); };
+      render.__survivalWrapped = true;
+    }
+  }
+
   function installCountdown(){
     realStart = window.startGame;
     ['touchstart','pointerup','click'].forEach(function(ev){
@@ -116,6 +215,7 @@
   window.update = function(dt){
     if(game.running){
       game.timer += dt;
+      game.fireFlash = Math.max(0, (game.fireFlash || 0) - dt);
       if(game.input.forward) game.drift += 405 * dt;
       if(game.input.backward) game.drift -= 335 * dt;
       game.drift = clamp(game.drift, -405, 520);
@@ -155,4 +255,5 @@
   applyAsteroidTuning();
   installCountdown();
   installControlPolish();
+  installVisualPolish();
 })();
