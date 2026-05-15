@@ -7,9 +7,9 @@
     s.onload=done||function(){};
     document.body.appendChild(s);
   }
-  load('asteroids-crew-v2.js?v=111',function(){
-    load('asteroid-start-flow-v51.js?v=111',function(){
-      load('asteroid-mode-v50.js?v=111');
+  load('asteroids-crew-v2.js?v=112',function(){
+    load('asteroid-start-flow-v52.js?v=112',function(){
+      load('asteroid-mode-v50.js?v=112');
     });
   });
 })();
