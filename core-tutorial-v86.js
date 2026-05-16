@@ -1,20 +1,19 @@
-// Core tutorial v86: one guided wave with tower and enemy explanations.
+// Core tutorial v86: step-based tower counter lessons.
 (function(){
   const params=new URLSearchParams(location.search);
   if(params.get('game')!=='core'||params.get('level')!=='0') return;
 
   function wait(){
-    if(typeof game==='object'&&typeof startGame==='function'&&typeof beginWave==='function'&&typeof spawnEnemy==='function'&&typeof endGame==='function'&&typeof render==='function') install();
+    if(typeof game==='object'&&typeof startGame==='function'&&typeof beginWave==='function'&&typeof spawnEnemy==='function'&&typeof endGame==='function'&&typeof render==='function'&&typeof buildUpgrade==='function') install();
     else setTimeout(wait,50);
   }
 
-  const enemyInfo={
-    basic:['BASIC ENEMY','Standard enemy. Build towers and rotate the ring so shots face the threat.'],
-    swarm:['SWARM ENEMY','Small and fast. Great test for rotation and quick coverage.'],
-    dash:['DASHER ENEMY','Moves normally, then lunges forward. Freeze or focus it early.'],
-    armor:['ARMORED ENEMY','Slow but tough. Beam and upgrades are strong against armor.'],
-    split:['SPLITTER ENEMY','Breaks into two small enemies when destroyed. Kill it away from the core.']
-  };
+  const lessons=[
+    {tower:0,enemy:'swarm',count:4,title:'PULSE VS SWARM',body:'Build a free Pulse tower. Pulse fires steadily, so it is good at cleaning up fast swarm packs.'},
+    {tower:2,enemy:'dash',count:2,title:'FREEZE VS DASHERS',body:'Build a free Freeze tower. Dashers burst forward, and Freeze counters them by slowing the rush.'},
+    {tower:1,enemy:'armor',count:1,title:'BEAM VS ARMORED',body:'Build a free Beam tower. Armored enemies have high health, and Beam counters them with focused damage.'},
+    {tower:3,enemy:'split',count:1,title:'WAVE VS SPLITTERS',body:'Build a free Wave tower. Splitters create small swarm enemies, and Wave counters groups after the split.'}
+  ];
 
   function install(){
     if(window.__coreTutorialV86) return;
@@ -23,100 +22,126 @@
     const oldStart=startGame;
     const oldBegin=beginWave;
     const oldSpawn=spawnEnemy;
+    const oldBuild=buildUpgrade;
     const oldRender=render;
 
     let title='CORE DEFENSE TUTORIAL';
-    let body='Top player chooses tower, builds/upgrades, and changes slots. Bottom player rotates the ring and uses Boost.';
+    let body='Each lesson teaches one tower and the enemy it counters.';
     let messageTime=999;
+    let step=0;
+    let phase='build';
     let spawned=0;
+    let waitUntil=0;
     let tutorialDone=false;
 
-    function setMessage(t,b,time=4.4){title=t;body=b;messageTime=time;}
+    function setMessage(t,b,time=999){title=t;body=b;messageTime=time;}
+    function current(){return lessons[Math.min(step,lessons.length-1)]}
+    function hasTower(type){return game.slots.some(s=>s&&s.type===type&&s.level>0)}
 
-    function applyBehavior(e,b){
-      if(!e||!b||b==='basic') return;
-      e.behavior=b;
-      e.seed=Math.random()*10;
-      e.dashCd=.75;
-      e.dashTime=0;
-      e.splitDone=false;
-      if(b==='swarm'){
-        e.kind='small';e.r=Math.max(8,e.r*.72);e.speed*=1.35;e.hp=Math.max(1,Math.ceil(e.hp*.62));e.maxHp=e.hp;e.color='#facc15';
-      }else if(b==='dash'){
-        if(e.kind==='large')e.kind='medium';e.speed*=.94;e.hp=Math.ceil(e.hp*1.08);e.maxHp=e.hp;e.color='#fb7185';
-      }else if(b==='armor'){
-        e.kind='large';e.r=Math.max(e.r,22);e.speed*=.78;e.hp=Math.ceil(e.hp*1.5);e.maxHp=e.hp;e.reward=(e.reward||3)+2;e.color='#93a4b8';
-      }else if(b==='split'){
-        e.kind='medium';e.r=15;e.hp=Math.ceil(e.hp*1.2);e.maxHp=e.hp;e.reward=(e.reward||3)+1;e.color='#c084fc';
+    function setLessonBuild(){
+      const l=current();
+      phase='build';
+      game.buildType=l.tower;
+      setMessage(l.title,l.body+' Use TYPE if needed, then tap BUILD. Tutorial tower builds are free; upgrades still cost money.');
+    }
+
+    function makeEnemy(type,x,y){
+      const e={x:x,y:y,hp:3,maxHp:3,speed:34,slow:0,r:13,reward:1,kind:'medium',color:'#a8a29e'};
+      if(type==='swarm'){
+        e.behavior='swarm';e.kind='small';e.r=8;e.hp=2;e.maxHp=2;e.speed=48;e.color='#facc15';
+      }else if(type==='dash'){
+        e.behavior='dash';e.kind='medium';e.r=14;e.hp=5;e.maxHp=5;e.speed=30;e.dashCd=1.25;e.dashTime=0;e.color='#fb7185';
+      }else if(type==='armor'){
+        e.behavior='armor';e.kind='large';e.r=22;e.hp=13;e.maxHp=13;e.speed=22;e.color='#93a4b8';
+      }else if(type==='split'){
+        e.behavior='split';e.kind='medium';e.r=15;e.hp=7;e.maxHp=7;e.speed=27;e.splitDone=false;e.color='#c084fc';
       }
+      e.seed=Math.random()*10;
+      return e;
+    }
+
+    function spawnTutorialEnemy(type){
+      const side=spawned%4,m=40;let x,y;
+      if(side===0){x=-m;y=canvas.height*.35}else if(side===1){x=canvas.width+m;y=canvas.height*.65}else if(side===2){x=canvas.width*.35;y=-m}else{x=canvas.width*.65;y=canvas.height+m}
+      game.enemies.push(makeEnemy(type,x,y));
     }
 
     startGame=function(e){
       oldStart(e);
-      game.money=32;
+      game.money=18;
       game.coreHp=10;
       game.maxHp=10;
-      game.waveTimer=2.2;
-      game.__enemyIntroSeen={};
-      spawned=0;
-      tutorialDone=false;
-      setMessage('TOWER TYPES','Pulse is steady. Beam hits hard. Freeze slows. Wave handles groups. Use TYPE to cycle, BUILD to place, SLOT to move.',7.5);
+      game.wave=1;
+      game.waveTimer=999;
+      game.waveActive=false;
+      game.spawnLeft=0;
+      game.enemies=[];
+      game.shots=[];
+      step=0;phase='build';spawned=0;tutorialDone=false;waitUntil=0;
+      setLessonBuild();
     };
 
     beginWave=function(){
       game.wave=1;
-      game.waveActive=true;
-      game.spawnLeft=9;
-      game.spawnClock=.55;
-      game.spawnIndex=0;
-      game.spawnPattern=[0,1,2,3,0,1,2,3,0];
-      setMessage('ONE GUIDED WAVE','This tutorial introduces every enemy type in one wave. Watch the text when a new enemy appears.',5.5);
+      game.waveActive=false;
+      game.spawnLeft=0;
+      game.spawnClock=999;
     };
 
-    spawnEnemy=function(){
-      const before=game.enemies.length;
-      oldSpawn();
-      for(let i=before;i<game.enemies.length;i++){
-        const e=game.enemies[i];
-        const order=['basic','swarm','dash','armor','split','swarm','dash','armor','split'];
-        const type=order[Math.min(spawned,order.length-1)];
-        applyBehavior(e,type);
-        const info=enemyInfo[type];
-        if(info) setMessage(info[0],info[1],4.6);
-        spawned++;
-      }
+    buildUpgrade=function(){
+      const s=game.slots[game.selected];
+      const wasEmpty=empty(s);
+      if(wasEmpty&&phase==='build'){
+        const before=game.money;
+        game.money+=BUILD;
+        oldBuild();
+        game.money=before;
+      }else oldBuild();
     };
+
+    spawnEnemy=function(){ oldSpawn(); };
 
     const oldUpdate=update;
     update=function(dt){
       oldUpdate(dt);
       messageTime=Math.max(0,messageTime-dt);
-      if(game.running&&game.waveActive&&game.spawnLeft<=0&&game.enemies.length===0&&!tutorialDone){
-        tutorialDone=true;
-        setTimeout(function(){ if(game.running) endGame('Tutorial complete. You learned towers, boost, and every enemy type.',true); },350);
+      if(!game.running||tutorialDone)return;
+      const l=current();
+      if(phase==='build'){
+        game.spawnLeft=0;game.spawnClock=999;
+        if(hasTower(l.tower)){
+          phase='explain';
+          waitUntil=game.timer+3.5;
+          const enemyNames={swarm:'Swarm packs',dash:'Dashers',armor:'Armored enemies',split:'Splitters'};
+          setMessage(enemyNames[l.enemy],l.body.replace('Build a free ','You built ').replace(' tower.',' tower.'));
+        }
+      }else if(phase==='explain'){
+        if(game.timer>=waitUntil){phase='fight';spawned=0;setMessage('COUNTER TEST','Now defeat this enemy type with the tower you just built. Rotate the ring so the tower faces the threat.',6.5)}
+      }else if(phase==='fight'){
+        if(spawned<l.count&&game.enemies.length===0){
+          if(l.enemy==='swarm'){for(let i=0;i<l.count;i++)spawnTutorialEnemy('swarm');spawned=l.count}
+          else {spawnTutorialEnemy(l.enemy);spawned++}
+        }
+        if(spawned>=l.count&&game.enemies.length===0){
+          step++;
+          if(step>=lessons.length){tutorialDone=true;setTimeout(function(){if(game.running)endGame('Tutorial complete. You learned which towers counter each enemy type.',true)},700)}
+          else {waitUntil=game.timer+2.0;setTimeout(setLessonBuild,700)}
+        }
       }
     };
 
     render=function(){
       oldRender();
-      if(!game.running||messageTime<=0) return;
-      const w=Math.min(420,canvas.width*.88),h=88,x=canvas.width/2-w/2,y=canvas.height*.18;
+      if(!game.running||messageTime<=0)return;
+      const w=Math.min(470,canvas.width*.92),h=120,x=canvas.width/2-w/2,y=canvas.height*.14;
       ctx.save();
-      ctx.fillStyle='rgba(17,24,39,.78)';
-      ctx.strokeStyle='rgba(255,255,255,.16)';
-      ctx.lineWidth=1.4;
-      rr(x,y,w,h,22);
-      ctx.fillStyle='#f8fafc';
-      ctx.font='900 13px Arial';
-      ctx.textAlign='center';
-      ctx.textBaseline='top';
-      ctx.fillText(title,canvas.width/2,y+14);
-      ctx.fillStyle='rgba(248,250,252,.82)';
-      ctx.font='800 11px Arial';
-      const words=body.split(' ');let line='',lines=[],max=48;
+      ctx.fillStyle='rgba(17,24,39,.84)';ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.4;rr(x,y,w,h,22);
+      ctx.fillStyle='#f8fafc';ctx.font='900 13px Arial';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(title,canvas.width/2,y+14);
+      ctx.fillStyle='rgba(248,250,252,.84)';ctx.font='800 11px Arial';
+      const words=body.split(' ');let line='',lines=[],max=52;
       for(const word of words){if((line+' '+word).trim().length>max){lines.push(line);line=word}else line=(line+' '+word).trim()}
       if(line)lines.push(line);
-      lines.slice(0,3).forEach((ln,i)=>ctx.fillText(ln,canvas.width/2,y+38+i*14));
+      lines.slice(0,5).forEach((ln,i)=>ctx.fillText(ln,canvas.width/2,y+38+i*14));
       ctx.restore();
     };
   }
