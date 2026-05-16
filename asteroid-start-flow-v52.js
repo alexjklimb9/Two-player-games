@@ -51,7 +51,7 @@
     if(!old||!old.parentNode)return;
     const fresh=old.cloneNode(true);
     old.parentNode.replaceChild(fresh,old);
-    ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
+    ['touchstart','pointerdown'].forEach(function(ev){
       fresh.addEventListener(ev,begin,{capture:true,passive:false});
     });
   }
