@@ -1,6 +1,5 @@
 // Shared v51 start countdown for non-asteroid games.
 (function(){
-  let bypass = false;
   let active = false;
 
   function byId(id){ return document.getElementById(id); }
@@ -50,21 +49,15 @@
     e.stopImmediatePropagation();
   }
 
-  function intercept(e){
-    if(bypass) return;
+  function runStart(e){
+    if(typeof window.startGame === 'function') window.startGame(e);
+    else if(typeof startGame === 'function') startGame(e);
+  }
 
-    const startOverlay = byId('startOverlay');
-    const endOverlay = byId('endOverlay');
-    const isStartVisible = startOverlay && !startOverlay.classList.contains('hidden');
-    const isEndVisible = endOverlay && !endOverlay.classList.contains('hidden');
-    if(!isStartVisible && !isEndVisible) return;
-
+  function begin(e){
     stopEvent(e);
-
     if(active) return;
-
     active = true;
-    const target = e.currentTarget;
     showGameScreen();
     let n = 3;
     show('3');
@@ -76,18 +69,21 @@
         clearInterval(timer);
         hide();
         active = false;
-        bypass = true;
-        target.click();
-        setTimeout(function(){ bypass = false; }, 160);
+        runStart(e);
       }
     }, 1000);
   }
 
-  ['startOverlay','startButton','restartButton'].forEach(function(id){
-    const btn = byId(id);
-    if(!btn) return;
-    ['touchstart','pointerdown','pointerup','click'].forEach(function(ev){
-      btn.addEventListener(ev, intercept, true);
+  function replaceButton(id){
+    const old = byId(id);
+    if(!old || !old.parentNode) return;
+    const fresh = old.cloneNode(true);
+    old.parentNode.replaceChild(fresh, old);
+    ['touchstart','pointerdown'].forEach(function(ev){
+      fresh.addEventListener(ev, begin, {capture:true, passive:false});
     });
-  });
+  }
+
+  replaceButton('startButton');
+  replaceButton('restartButton');
 })();
