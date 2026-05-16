@@ -9,10 +9,10 @@
   }
 
   const lessons=[
-    {tower:0,enemy:'swarm',count:4,title:'PULSE VS SWARM',body:'Build a free Pulse tower. Pulse fires steadily, so it is good at cleaning up fast swarm packs.'},
+    {tower:3,enemy:'swarm',count:5,title:'WAVE VS SWARM',body:'Build a free Wave tower. Swarm enemies come in packs, and Wave counters them by hitting groups at once.'},
     {tower:2,enemy:'dash',count:2,title:'FREEZE VS DASHERS',body:'Build a free Freeze tower. Dashers burst forward, and Freeze counters them by slowing the rush.'},
     {tower:1,enemy:'armor',count:1,title:'BEAM VS ARMORED',body:'Build a free Beam tower. Armored enemies have high health, and Beam counters them with focused damage.'},
-    {tower:3,enemy:'split',count:1,title:'WAVE VS SPLITTERS',body:'Build a free Wave tower. Splitters create small swarm enemies, and Wave counters groups after the split.'}
+    {tower:0,enemy:'split',count:1,title:'PULSE VS SPLITTERS',body:'Build a free Pulse tower. Splitters break into small swarm enemies, and Pulse counters them with steady cleanup shots.'}
   ];
 
   function install(){
@@ -24,6 +24,7 @@
     const oldSpawn=spawnEnemy;
     const oldBuild=buildUpgrade;
     const oldRender=render;
+    const oldEnd=endGame;
 
     let title='CORE DEFENSE TUTORIAL';
     let body='Each lesson teaches one tower and the enemy it counters.';
@@ -33,22 +34,31 @@
     let spawned=0;
     let waitUntil=0;
     let tutorialDone=false;
+    let requiredCount=0;
 
     function setMessage(t,b,time=999){title=t;body=b;messageTime=time;}
     function current(){return lessons[Math.min(step,lessons.length-1)]}
-    function hasTower(type){return game.slots.some(s=>s&&s.type===type&&s.level>0)}
+    function towerCount(type){return game.slots.filter(s=>s&&s.type===type&&s.level>0).length}
 
     function setLessonBuild(){
       const l=current();
       phase='build';
+      spawned=0;
+      game.enemies=[];
+      game.shots=[];
+      game.spawnLeft=0;
+      game.spawnClock=999;
+      game.waveActive=false;
+      game.waveTimer=999;
       game.buildType=l.tower;
+      requiredCount=towerCount(l.tower)+1;
       setMessage(l.title,l.body+' Use TYPE if needed, then tap BUILD. Tutorial tower builds are free; upgrades still cost money.');
     }
 
     function makeEnemy(type,x,y){
-      const e={x:x,y:y,hp:3,maxHp:3,speed:34,slow:0,r:13,reward:1,kind:'medium',color:'#a8a29e'};
+      const e={x:x,y:y,hp:3,maxHp:3,speed:34,slow:0,r:13,reward:1,kind:'medium',color:'#a8a29e',seed:Math.random()*10};
       if(type==='swarm'){
-        e.behavior='swarm';e.kind='small';e.r=8;e.hp=2;e.maxHp=2;e.speed=48;e.color='#facc15';
+        e.behavior='swarm';e.kind='small';e.r=8;e.hp=2;e.maxHp=2;e.speed=46;e.color='#facc15';
       }else if(type==='dash'){
         e.behavior='dash';e.kind='medium';e.r=14;e.hp=5;e.maxHp=5;e.speed=30;e.dashCd=1.25;e.dashTime=0;e.color='#fb7185';
       }else if(type==='armor'){
@@ -56,19 +66,21 @@
       }else if(type==='split'){
         e.behavior='split';e.kind='medium';e.r=15;e.hp=7;e.maxHp=7;e.speed=27;e.splitDone=false;e.color='#c084fc';
       }
-      e.seed=Math.random()*10;
       return e;
     }
 
-    function spawnTutorialEnemy(type){
-      const side=spawned%4,m=40;let x,y;
-      if(side===0){x=-m;y=canvas.height*.35}else if(side===1){x=canvas.width+m;y=canvas.height*.65}else if(side===2){x=canvas.width*.35;y=-m}else{x=canvas.width*.65;y=canvas.height+m}
+    function spawnTutorialEnemy(type,offset){
+      const side=(spawned+offset)%4,m=40;let x,y;
+      if(side===0){x=-m;y=canvas.height*(.32+offset*.055)}
+      else if(side===1){x=canvas.width+m;y=canvas.height*(.62-offset*.045)}
+      else if(side===2){x=canvas.width*(.34+offset*.05);y=-m}
+      else{x=canvas.width*(.64-offset*.05);y=canvas.height+m}
       game.enemies.push(makeEnemy(type,x,y));
     }
 
     startGame=function(e){
       oldStart(e);
-      game.money=18;
+      game.money=20;
       game.coreHp=10;
       game.maxHp=10;
       game.wave=1;
@@ -81,11 +93,17 @@
       setLessonBuild();
     };
 
+    endGame=function(msg,win){
+      if(win&&!tutorialDone) return;
+      oldEnd(msg,win);
+    };
+
     beginWave=function(){
       game.wave=1;
       game.waveActive=false;
       game.spawnLeft=0;
       game.spawnClock=999;
+      game.waveTimer=999;
     };
 
     buildUpgrade=function(){
@@ -106,27 +124,48 @@
       oldUpdate(dt);
       messageTime=Math.max(0,messageTime-dt);
       if(!game.running||tutorialDone)return;
+      game.waveActive=false;
+      game.waveTimer=999;
+      game.spawnLeft=0;
+      game.spawnClock=999;
+
       const l=current();
       if(phase==='build'){
-        game.spawnLeft=0;game.spawnClock=999;
-        if(hasTower(l.tower)){
+        if(towerCount(l.tower)>=requiredCount){
           phase='explain';
-          waitUntil=game.timer+3.5;
+          waitUntil=game.timer+4.0;
           const enemyNames={swarm:'Swarm packs',dash:'Dashers',armor:'Armored enemies',split:'Splitters'};
-          setMessage(enemyNames[l.enemy],l.body.replace('Build a free ','You built ').replace(' tower.',' tower.'));
+          setMessage(enemyNames[l.enemy],l.body.replace('Build a free ','You built a ').replace(' tower.',' tower.'));
         }
       }else if(phase==='explain'){
-        if(game.timer>=waitUntil){phase='fight';spawned=0;setMessage('COUNTER TEST','Now defeat this enemy type with the tower you just built. Rotate the ring so the tower faces the threat.',6.5)}
+        if(game.timer>=waitUntil){
+          phase='fight';
+          spawned=0;
+          setMessage('COUNTER TEST','Now defeat this enemy type with the tower you just built. Rotate the ring so the tower faces the threat.',7.0);
+        }
       }else if(phase==='fight'){
         if(spawned<l.count&&game.enemies.length===0){
-          if(l.enemy==='swarm'){for(let i=0;i<l.count;i++)spawnTutorialEnemy('swarm');spawned=l.count}
-          else {spawnTutorialEnemy(l.enemy);spawned++}
+          if(l.enemy==='swarm'){
+            for(let i=0;i<l.count;i++)spawnTutorialEnemy('swarm',i);
+            spawned=l.count;
+          }else{
+            spawnTutorialEnemy(l.enemy,0);
+            spawned++;
+          }
         }
         if(spawned>=l.count&&game.enemies.length===0){
           step++;
-          if(step>=lessons.length){tutorialDone=true;setTimeout(function(){if(game.running)endGame('Tutorial complete. You learned which towers counter each enemy type.',true)},700)}
-          else {waitUntil=game.timer+2.0;setTimeout(setLessonBuild,700)}
+          if(step>=lessons.length){
+            tutorialDone=true;
+            setTimeout(function(){if(game.running)oldEnd('Tutorial complete. You learned which towers counter each enemy type.',true)},900);
+          }else{
+            phase='pause';
+            waitUntil=game.timer+2.5;
+            setMessage('GOOD COUNTER','Nice. Next we will build a different tower and test it against a different enemy.',2.5);
+          }
         }
+      }else if(phase==='pause'){
+        if(game.timer>=waitUntil)setLessonBuild();
       }
     };
 
