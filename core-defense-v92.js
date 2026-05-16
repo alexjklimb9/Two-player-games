@@ -20,7 +20,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '129';
+  const VERSION = '130';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -62,10 +62,39 @@
     panel.appendChild(msg);
   }
 
+  function reduceEnemySpeed(){
+    if(window.__coreEnemySpeedReduced) return;
+    window.__coreEnemySpeedReduced = true;
+
+    const SPEED_SCALE = 0.8;
+
+    function applyScale(){
+      if(!window.game || !Array.isArray(game.enemies)) return;
+
+      for(const enemy of game.enemies){
+        if(enemy && !enemy.__speedReduced && typeof enemy.speed === 'number'){
+          enemy.speed *= SPEED_SCALE;
+          enemy.__speedReduced = true;
+        }
+      }
+    }
+
+    if(typeof updateEnemies === 'function'){
+      const oldUpdateEnemies = updateEnemies;
+      updateEnemies = function(dt){
+        applyScale();
+        oldUpdateEnemies.call(this, dt);
+      };
+    }
+  }
+
   async function boot(){
     for(const layer of CORE_STACK){
       await loadLayer(layer);
     }
+
+    reduceEnemySpeed();
+
     window.__coreDefenseV92Ready = true;
   }
 
