@@ -172,7 +172,7 @@
     render=function(){
       oldRender();
       if(!game.running||messageTime<=0)return;
-      const w=Math.min(470,canvas.width*.92),h=120,x=canvas.width/2-w/2,y=canvas.height*.14;
+      const w=Math.min(470,canvas.width*.92),h=120,x=canvas.width/2-w/2,y=canvas.height-230;
       ctx.save();
       ctx.fillStyle='rgba(17,24,39,.84)';ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1.4;rr(x,y,w,h,22);
       ctx.fillStyle='#f8fafc';ctx.font='900 13px Arial';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(title,canvas.width/2,y+14);
