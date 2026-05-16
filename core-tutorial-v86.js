@@ -9,10 +9,10 @@
   }
 
   const lessons=[
-    {tower:3,enemy:'swarm',count:5,title:'WAVE VS SWARM',body:'Build a free Wave tower. Swarm enemies come in packs, and Wave counters them by hitting groups at once.'},
-    {tower:2,enemy:'dash',count:2,title:'FREEZE VS DASHERS',body:'Build a free Freeze tower. Dashers burst forward, and Freeze counters them by slowing the rush.'},
+    {tower:0,enemy:'split',count:1,title:'PULSE VS SPLITTERS',body:'Build a free Pulse tower. Splitters break into small swarm enemies, and Pulse counters them with steady cleanup shots.'},
     {tower:1,enemy:'armor',count:1,title:'BEAM VS ARMORED',body:'Build a free Beam tower. Armored enemies have high health, and Beam counters them with focused damage.'},
-    {tower:0,enemy:'split',count:1,title:'PULSE VS SPLITTERS',body:'Build a free Pulse tower. Splitters break into small swarm enemies, and Pulse counters them with steady cleanup shots.'}
+    {tower:2,enemy:'dash',count:2,title:'FREEZE VS DASHERS',body:'Build a free Freeze tower. Dashers burst forward, and Freeze counters them by slowing the rush.'},
+    {tower:3,enemy:'swarm',count:5,title:'WAVE VS SWARM',body:'Build a free Wave tower. Swarm enemies come in packs, and Wave counters them by hitting groups at once.'}
   ];
 
   function install(){
@@ -161,7 +161,7 @@
           }else{
             phase='pause';
             waitUntil=game.timer+2.5;
-            setMessage('GOOD COUNTER','Nice. Next we will build a different tower and test it against a different enemy.',2.5);
+            setMessage('GOOD COUNTER','Nice. Next we will build the next tower in TYPE order and test it against a different enemy.',2.5);
           }
         }
       }else if(phase==='pause'){
