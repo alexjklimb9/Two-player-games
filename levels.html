@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=100" />
-    <link rel="stylesheet" href="level-cards.css?v=100" />
+    <link rel="stylesheet" href="style.css?v=120" />
+    <link rel="stylesheet" href="level-cards.css?v=120" />
   </head>
   <body>
     <main id="app">
@@ -15,7 +15,7 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid level-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=100">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=120">Back to Games</a></p>
         </div>
       </section>
     </main>
@@ -61,6 +61,7 @@
           title: 'Core Defense',
           subtitle: 'Build, rotate, and repair a shared defense ring.',
           levels: [
+            ['Tutorial', 'Learn tower counters, enemy types, boost timing, and defense rotation.', 0, 'Tutorial'],
             ['Easy', 'Survive 5 waves.', 1],
             ['Normal', 'Survive 8 waves.', 2],
             ['Hard', 'Survive 12 waves.', 3],
@@ -93,7 +94,7 @@
         const levelNumber = level[2];
         const levelClass = levelNumber === 0 ? 'level-tutorial' : levelClasses[levelNumber] || 'level-normal';
         a.className = `game-card level-card ${levelClass}`;
-        a.href = `./?game=${game}&level=${levelNumber}&v=100`;
+        a.href = `./?game=${game}&level=${levelNumber}&v=120`;
         const kicker = level[3] || (levelNumber === 5 ? 'Endless Mode' : `Difficulty ${levelNumber}`);
         const filled = levelNumber === 0 ? 1 : Math.min(levelNumber, 5);
         const pips = levelNumber === 5
