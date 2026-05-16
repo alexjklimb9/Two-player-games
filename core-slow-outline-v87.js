@@ -1,4 +1,4 @@
-// Core slow outline v87: show icy blue outline on any slowed enemy.
+// Core slow outline v87: show icy blue outline only for Freeze-level slow.
 (function(){
   function wait(){
     if(typeof game==='object'&&Array.isArray(game.enemies)&&typeof drawEnemies==='function'&&typeof ctx==='object') install();
@@ -11,7 +11,8 @@
     drawEnemies=function(){
       oldDrawEnemies();
       for(const e of game.enemies){
-        if(!e||!(e.slow>0)) continue;
+        // Wave applies a tiny slow, but the icy outline should only represent Freeze.
+        if(!e||!(e.slow>.75)) continue;
         const pulse=Math.sin((game.timer||0)*10+(e.seed||0))*0.5+0.5;
         ctx.save();
         ctx.globalAlpha=0.72+0.22*pulse;
