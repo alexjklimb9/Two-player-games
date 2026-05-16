@@ -70,11 +70,22 @@
     }
 
     function spawnTutorialEnemy(type,offset){
-      const side=(spawned+offset)%4,m=40;let x,y;
-      if(side===0){x=-m;y=canvas.height*(.32+offset*.055)}
-      else if(side===1){x=canvas.width+m;y=canvas.height*(.62-offset*.045)}
-      else if(side===2){x=canvas.width*(.34+offset*.05);y=-m}
-      else{x=canvas.width*(.64-offset*.05);y=canvas.height+m}
+      let x,y;
+      const m=40;
+      if(type==='swarm'){
+        const baseX=-m;
+        const baseY=canvas.height*.50;
+        const dx=((offset%3)-1)*18;
+        const dy=(Math.floor(offset/3)-1)*16;
+        x=baseX+dx;
+        y=baseY+dy;
+      }else{
+        const side=spawned%4;
+        if(side===0){x=-m;y=canvas.height*.35}
+        else if(side===1){x=canvas.width+m;y=canvas.height*.65}
+        else if(side===2){x=canvas.width*.35;y=-m}
+        else{x=canvas.width*.65;y=canvas.height+m}
+      }
       game.enemies.push(makeEnemy(type,x,y));
     }
 
