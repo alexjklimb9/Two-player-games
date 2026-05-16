@@ -16,6 +16,24 @@
     return colors[b] ? colors[b][t] : e.color;
   }
 
+  function makeSwarmChild(x,y){
+    const a=Math.random()*6.283;
+    return {
+      x:x+Math.cos(a)*12,
+      y:y+Math.sin(a)*12,
+      hp:2,
+      maxHp:2,
+      speed:54+Math.random()*10,
+      slow:0,
+      r:8,
+      reward:1,
+      kind:'small',
+      behavior:'swarm',
+      seed:Math.random()*10,
+      color:'#facc15'
+    };
+  }
+
   function unlockWave(type,lv){
     const schedule={
       1:{swarm:2,dash:3,armor:4,split:5},
@@ -39,6 +57,7 @@
   function pickBehavior(e){
     const lv=LV||1;
     const w=Math.max(1,game.wave||1);
+    if(lv===0) return null;
 
     game.__enemyIntroSeen=game.__enemyIntroSeen||{};
 
@@ -95,7 +114,12 @@
       oldSpawn();
       for(let i=before;i<game.enemies.length;i++){
         const e=game.enemies[i];
-        applyBehavior(e,pickBehavior(e));
+        const behavior=pickBehavior(e);
+        applyBehavior(e,behavior);
+        if(behavior==='swarm'){
+          const extra=2+Math.floor(Math.random()*3);
+          for(let n=0;n<extra;n++)game.enemies.push(makeSwarmChild(e.x,e.y));
+        }
       }
     };
     spawnEnemy.__scheduleV85=true;
