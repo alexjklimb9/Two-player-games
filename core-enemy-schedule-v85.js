@@ -16,11 +16,13 @@
     return colors[b] ? colors[b][t] : e.color;
   }
 
-  function makeSwarmChild(x,y){
-    const a=Math.random()*6.283;
+  function makeSwarmChild(x,y,n,total){
+    const spread=18;
+    const row=(n%3)-1;
+    const col=Math.floor(n/3);
     return {
-      x:x+Math.cos(a)*12,
-      y:y+Math.sin(a)*12,
+      x:x+row*spread+(Math.random()*8-4),
+      y:y+col*spread+(Math.random()*8-4),
       hp:2,
       maxHp:2,
       speed:54+Math.random()*10,
@@ -117,8 +119,8 @@
         const behavior=pickBehavior(e);
         applyBehavior(e,behavior);
         if(behavior==='swarm'){
-          const extra=2+Math.floor(Math.random()*3);
-          for(let n=0;n<extra;n++)game.enemies.push(makeSwarmChild(e.x,e.y));
+          const total=3+Math.floor(Math.random()*3);
+          for(let n=1;n<total;n++)game.enemies.push(makeSwarmChild(e.x,e.y,n,total));
         }
       }
     };
