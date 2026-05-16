@@ -81,9 +81,12 @@
         if(prev==null)continue;
         const dealt=prev-e.hp;
         if(dealt>0&&e.behavior==='armor'){
-          // Beam-colored hits get a bonus against armored enemies.
           const recentBeam=game.shots.some(s=>s&&s.color===TYPES[1].color&&s.life>.12&&Math.hypot((s.tx||0)-e.x,(s.ty||0)-e.y)<e.r+8);
           if(recentBeam)e.hp-=dealt*.28;
+        }
+        if(dealt>0&&e.behavior==='swarm'){
+          const recentWave=game.shots.some(s=>s&&s.color===TYPES[3].color&&s.life>.12&&s.beam);
+          if(recentWave)e.hp-=dealt*.18;
         }
         if(e.behavior==='dash'&&e.slow>0){
           e.slow=Math.max(e.slow,1.05);
@@ -95,7 +98,6 @@
 
     const oldUpdateEnemies=updateEnemies;
     updateEnemies=function(dt){
-      const ar=arena();
       for(const e of game.enemies){
         if(e.behavior==='dash'&&e.slow>0){e.dashTime=0;e.dashCd=Math.max(e.dashCd||0,.85)}
       }
