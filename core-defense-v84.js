@@ -14,6 +14,156 @@
       TYPES[3].color='#34d399';
     }
 
+    function installEnemyBehaviorsAndBoosts(){
+      const BEHAVIOR_NAMES={swarm:'SWARM',dash:'DASHER',armor:'ARMORED',split:'SPLITTER'};
+      const SPECIAL_NAMES=['RAPID','PIERCE','NOVA','SHOCK'];
+      const BOOST_FLASH_TIME=.32;
+      game.boostBursts=[];
+      game.enemyNote='';
+      game.enemyNoteTime=0;
+
+      function markEnemy(e){
+        if(!e||e.behavior)return e;
+        const w=Math.max(1,game.wave||1),lv=LV||1;
+        let behavior=null,roll=Math.random();
+        if(lv>=2&&w>=3&&e.kind==='small'&&roll<.24)behavior='swarm';
+        else if(lv>=3&&w>=4&&e.kind!=='large'&&roll<.18)behavior='dash';
+        else if(lv>=3&&w>=5&&e.kind==='large'&&roll<.30)behavior='armor';
+        else if(lv>=4&&w>=6&&e.kind==='medium'&&roll<.22)behavior='split';
+        if(!behavior)return e;
+        e.behavior=behavior;
+        e.behaviorSeen=false;
+        e.dashCd=.9+Math.random()*.8;
+        e.dashTime=0;
+        e.armor=.45;
+        e.splitDone=false;
+        if(behavior==='swarm'){e.r=Math.max(7,e.r*.72);e.speed*=1.32;e.reward=Math.max(1,e.reward-1);e.hp=Math.max(1,Math.ceil(e.hp*.62));e.maxHp=e.hp;e.color='#fef08a'}
+        if(behavior==='dash'){e.color='#fb7185';e.speed*=.92;e.hp=Math.ceil(e.hp*1.05);e.maxHp=e.hp}
+        if(behavior==='armor'){e.color='#93a4b8';e.hp=Math.ceil(e.hp*1.35);e.maxHp=e.hp;e.reward+=2}
+        if(behavior==='split'){e.color='#c084fc';e.hp=Math.ceil(e.hp*1.18);e.maxHp=e.hp;e.reward+=1}
+        return e;
+      }
+
+      function showEnemyNote(text,color=C.gold){
+        if(game.enemyNote===text&&game.enemyNoteTime>.2)return;
+        game.enemyNote=text;game.enemyNoteColor=color;game.enemyNoteTime=1.15;
+      }
+
+      const oldSpawnEnemy=spawnEnemy;
+      spawnEnemy=function(){
+        const before=game.enemies.length;
+        oldSpawnEnemy();
+        for(let i=before;i<game.enemies.length;i++){
+          const e=markEnemy(game.enemies[i]);
+          if(e.behavior&&!e.behaviorSeen){e.behaviorSeen=true;showEnemyNote(BEHAVIOR_NAMES[e.behavior],e.color||C.gold)}
+        }
+      };
+
+      function splitEnemy(e){
+        if(!e||e.splitDone)return;
+        e.splitDone=true;
+        const n=2;
+        for(let k=0;k<n;k++){
+          const a=Math.random()*Math.PI*2;
+          game.enemies.push({x:e.x+Math.cos(a)*10,y:e.y+Math.sin(a)*10,hp:Math.max(1,Math.ceil(e.maxHp*.32)),maxHp:Math.max(1,Math.ceil(e.maxHp*.32)),speed:e.speed*1.35,slow:0,r:9,reward:1,kind:'small',color:'#ddd6fe',behavior:'swarm',behaviorSeen:true});
+        }
+        spark(e.x,e.y,'#c084fc',18);
+      }
+
+      function addBoostBurst(x,y,color,type){
+        game.boostBursts.push({x,y,color,type,life:BOOST_FLASH_TIME,max:BOOST_FLASH_TIME});
+      }
+
+      const oldSpecial=special;
+      special=function(){
+        const s=game.slots[game.selected],p=slotPos(game.selected),wasReady=game.specialCd<=0&&!empty(s);
+        oldSpecial();
+        if(!wasReady||empty(s))return;
+        const type=s.type;
+        addBoostBurst(p.x,p.y,TYPES[type].color,type);
+        showEnemyNote(SPECIAL_NAMES[type]+' BOOST',TYPES[type].color);
+        if(type===2){
+          for(const e of game.enemies){
+            const d=Math.hypot(e.x-p.x,e.y-p.y);
+            if(d<210){e.slow=Math.max(e.slow||0,2.6);e.hp-=.55*s.level}}
+        }else if(type===3){
+          for(const e of game.enemies){
+            const d=Math.hypot(e.x-p.x,e.y-p.y);
+            if(d<185){e.hp-=.85*s.level;e.slow=Math.max(e.slow||0,.35)}}
+        }
+      };
+
+      const oldUpdateTowers=updateTowers;
+      updateTowers=function(dt){
+        oldUpdateTowers(dt);
+        for(let i=game.enemies.length-1;i>=0;i--){
+          const e=game.enemies[i];
+          if(e.hp<=0&&e.behavior==='split')splitEnemy(e);
+        }
+      };
+
+      const oldUpdateEnemies=updateEnemies;
+      updateEnemies=function(dt){
+        for(const e of game.enemies){
+          if(e.behavior==='dash'){
+            e.dashCd-=dt;
+            if(e.dashTime>0)e.dashTime-=dt;
+            else if(e.dashCd<=0){e.dashTime=.34;e.dashCd=1.7+Math.random()*.9;spark(e.x,e.y,'#fb7185',6)}
+            e._dashBoost=e.dashTime>0?2.55:1;
+          }else e._dashBoost=1;
+        }
+        const originalSpeeds=game.enemies.map(e=>e.speed);
+        for(let i=0;i<game.enemies.length;i++)if(game.enemies[i]._dashBoost>1)game.enemies[i].speed*=game.enemies[i]._dashBoost;
+        oldUpdateEnemies(dt);
+        for(let i=0;i<game.enemies.length;i++)if(originalSpeeds[i]!==undefined)game.enemies[i].speed=originalSpeeds[i];
+      };
+
+      const oldDrawEnemies=drawEnemies;
+      drawEnemies=function(){
+        oldDrawEnemies();
+        for(const e of game.enemies){
+          if(!e.behavior)continue;
+          ctx.save();ctx.translate(e.x,e.y);ctx.lineWidth=2;ctx.strokeStyle=e.color||C.white;ctx.globalAlpha=.85;
+          if(e.behavior==='swarm'){ctx.beginPath();ctx.moveTo(0,-e.r-5);ctx.lineTo(e.r+5,0);ctx.lineTo(0,e.r+5);ctx.lineTo(-e.r-5,0);ctx.closePath();ctx.stroke()}
+          else if(e.behavior==='dash'){ctx.beginPath();ctx.arc(0,0,e.r+5,Math.PI*.15,Math.PI*1.15);ctx.stroke();ctx.beginPath();ctx.moveTo(e.r+8,0);ctx.lineTo(e.r+1,-5);ctx.lineTo(e.r+1,5);ctx.closePath();ctx.stroke()}
+          else if(e.behavior==='armor'){ctx.strokeStyle='rgba(226,232,240,.9)';ctx.beginPath();ctx.arc(0,0,e.r+6,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(0,0,e.r+10,-Math.PI*.85,-Math.PI*.15);ctx.stroke()}
+          else if(e.behavior==='split'){ctx.beginPath();ctx.arc(-5,0,e.r*.42,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(6,0,e.r*.42,0,Math.PI*2);ctx.stroke()}
+          ctx.restore();ctx.globalAlpha=1;
+        }
+      };
+
+      const oldUpdate=update;
+      update=function(dt){
+        oldUpdate(dt);
+        game.enemyNoteTime=Math.max(0,(game.enemyNoteTime||0)-dt);
+        if(game.boostBursts){for(let i=game.boostBursts.length-1;i>=0;i--){game.boostBursts[i].life-=dt;if(game.boostBursts[i].life<=0)game.boostBursts.splice(i,1)}}
+      };
+
+      function drawBoostBursts(){
+        if(!game.boostBursts)return;
+        for(const b of game.boostBursts){
+          const pct=1-b.life/b.max,r=28+pct*90;
+          ctx.save();ctx.globalAlpha=(1-pct)*.75;ctx.strokeStyle=b.color;ctx.fillStyle=b.color;ctx.lineWidth=b.type===1?5:3;ctx.shadowColor=b.color;ctx.shadowBlur=16;
+          if(b.type===0){for(let i=0;i<10;i++){const a=i*Math.PI*2/10+game.timer*5;ctx.beginPath();ctx.moveTo(b.x+Math.cos(a)*20,b.y+Math.sin(a)*20);ctx.lineTo(b.x+Math.cos(a)*r,b.y+Math.sin(a)*r);ctx.stroke()}}
+          else if(b.type===1){ctx.beginPath();ctx.moveTo(b.x-r,b.y);ctx.lineTo(b.x+r,b.y);ctx.stroke();ctx.beginPath();ctx.moveTo(b.x,b.y-r);ctx.lineTo(b.x,b.y+r);ctx.stroke()}
+          else if(b.type===2){ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(b.x,b.y,r*.62,0,Math.PI*2);ctx.stroke()}
+          else{ctx.beginPath();ctx.arc(b.x,b.y,r,0,Math.PI*2);ctx.stroke();for(let i=0;i<6;i++){const a=i*Math.PI*2/6;ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x+Math.cos(a)*r,b.y+Math.sin(a)*r);ctx.stroke()}}
+          ctx.restore();ctx.globalAlpha=1;
+        }
+      }
+
+      function drawEnemyNote(){
+        if(!game.running||!game.enemyNoteTime)return;
+        const a=Math.min(1,game.enemyNoteTime/.25);
+        ctx.save();ctx.globalAlpha=Math.min(.88,a);ctx.translate(cx(),cy()+78);
+        ctx.fillStyle='rgba(17,24,39,.48)';ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=1.2;rr(-90,-18,180,36,18);
+        ctx.fillStyle=game.enemyNoteColor||C.gold;ctx.font='900 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(game.enemyNote,0,1);ctx.restore();ctx.globalAlpha=1;
+      }
+
+      const oldRender=render;
+      render=function(){oldRender();drawBoostBursts();drawEnemyNote()};
+    }
+
     function buttonSurface(x,y,w,h,label,on,color,opts={}){
       const muted=opts.muted||false,rotate=opts.rotate||false,accent=opts.accent||color||C.blue,ready=opts.ready||false;
       const pulse=Math.sin(game.timer*5)*.5+.5;
@@ -112,6 +262,7 @@
     function install(){
       if(!wait())return setTimeout(install,50);
       applyTowerColors();
+      installEnemyBehaviorsAndBoosts();
       const baseUpdate=update;update=function(dt){baseUpdate(dt);updateMessages(dt)};
       const baseRender=render;render=function(){baseRender();drawWaveMessage();drawCoreHealthRing()};
       drawSlots=function(){drawSlotsEnhanced();drawSlotClarity()};
