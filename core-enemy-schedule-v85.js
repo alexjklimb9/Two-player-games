@@ -1,4 +1,4 @@
-// Core enemy schedule v85: tutorial enemy intro + all enemy types across every level.
+// Core enemy schedule v85: all enemy types can appear on any wave, odds rise by wave.
 (function(){
   function wait(){
     if(typeof game==='object'&&typeof spawnEnemy==='function'&&Array.isArray(game.enemies)&&typeof LV!=='undefined') install();
@@ -36,19 +36,7 @@
     };
   }
 
-  function unlockWave(type,lv){
-    const schedule={
-      1:{swarm:2,dash:3,armor:4,split:5},
-      2:{swarm:3,dash:5,armor:7,split:9},
-      3:{swarm:2,dash:4,armor:6,split:8},
-      4:{swarm:2,dash:3,armor:5,split:6},
-      5:{swarm:2,dash:3,armor:4,split:5}
-    };
-    return (schedule[lv]||schedule[3])[type]||99;
-  }
-
-  function canUse(type,e,w,lv){
-    if(w<unlockWave(type,lv)) return false;
+  function canUse(type,e){
     if(type==='swarm') return e.kind==='small';
     if(type==='dash') return e.kind!=='large';
     if(type==='armor') return e.kind==='large';
@@ -56,25 +44,33 @@
     return false;
   }
 
+  function weightedPick(options,w,lv){
+    const waveBoost=Math.min(.34,(Math.max(1,w)-1)*.032);
+    const levelBoost=Math.max(0,lv-1)*.025;
+    const weights={
+      swarm:.10+waveBoost+levelBoost,
+      dash:.08+waveBoost*.85+levelBoost,
+      armor:.07+waveBoost*.75+levelBoost,
+      split:.055+waveBoost*.68+levelBoost
+    };
+    let total=0;
+    for(const o of options)total+=weights[o]||0;
+    let r=Math.random()*total;
+    for(const o of options){r-=weights[o]||0;if(r<=0)return o}
+    return options[0]||null;
+  }
+
   function pickBehavior(e){
     const lv=LV||1;
     const w=Math.max(1,game.wave||1);
     if(lv===0) return null;
 
-    game.__enemyIntroSeen=game.__enemyIntroSeen||{};
-
-    if(lv===1){
-      if(w===2&&e.kind==='small'&&!game.__enemyIntroSeen.swarm){game.__enemyIntroSeen.swarm=1;return 'swarm'}
-      if(w===3&&e.kind!=='large'&&!game.__enemyIntroSeen.dash){game.__enemyIntroSeen.dash=1;return 'dash'}
-      if(w===4&&e.kind==='large'&&!game.__enemyIntroSeen.armor){game.__enemyIntroSeen.armor=1;return 'armor'}
-      if(w>=5&&e.kind==='medium'&&!game.__enemyIntroSeen.split){game.__enemyIntroSeen.split=1;return 'split'}
-    }
-
-    const options=['split','armor','dash','swarm'].filter(type=>canUse(type,e,w,lv));
+    const options=['split','armor','dash','swarm'].filter(type=>canUse(type,e));
     if(!options.length) return null;
-    const chance=lv===1?.35:lv===2?.22:lv===3?.28:lv===4?.34:.42;
+
+    const chance=Math.min(.72,.10+(w-1)*.045+(lv-1)*.035);
     if(Math.random()>chance) return null;
-    return options[Math.floor(Math.random()*options.length)];
+    return weightedPick(options,w,lv);
   }
 
   function applyBehavior(e,b){
