@@ -19,6 +19,7 @@
 // - v131: Wave towers deal a little extra damage against swarm units.
 // - v132: Basic circle enemies of the same size use fixed speed, and only Freeze can slow them.
 // - v133: Basic circle enemies now preserve one locked speed from spawn to death.
+// - v134: all enemies start at 50% of their previous movement speed.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -26,7 +27,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '133';
+  const VERSION = '134';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -72,7 +73,7 @@
     if(window.__coreEnemySpeedReduced) return;
     window.__coreEnemySpeedReduced = true;
 
-    const SPEED_SCALE = 0.8;
+    const SPEED_SCALE = 0.5;
 
     function applyScale(){
       if(!window.game || !Array.isArray(game.enemies)) return;
