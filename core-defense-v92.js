@@ -22,6 +22,7 @@
 // - v134: all enemies start at 50% of their previous movement speed.
 // - v135: enemies now use fixed speed buckets instead of inheriting wave-scaled spawn speed.
 // - v136: dash enemies keep fixed base speed while retaining their burst behavior.
+// - v138: reduced all fixed enemy movement buckets again for better pacing.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -29,7 +30,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '136';
+  const VERSION = '138';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -119,16 +120,14 @@
     const FREEZE_SLOW_THRESHOLD = 1.0;
     const FREEZE_SPEED_SCALE = 0.52;
 
-    // These are intentionally much lower than the original wave-scaled speeds.
-    // Same key = same movement speed every time.
     const FIXED_SPEEDS = {
-      small: 16,
-      medium: 13,
-      large: 9,
-      swarm: 17,
-      dash: 15,
-      armor: 8,
-      split: 13
+      small: 12,
+      medium: 10,
+      large: 7,
+      swarm: 13,
+      dash: 12,
+      armor: 6,
+      split: 10
     };
 
     function enemyKey(enemy){
