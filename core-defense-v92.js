@@ -18,6 +18,7 @@
 // - v130: reduce all enemy base movement speeds by 20%.
 // - v131: Wave towers deal a little extra damage against swarm units.
 // - v132: Basic circle enemies of the same size use fixed speed, and only Freeze can slow them.
+// - v133: Basic circle enemies now preserve one locked speed from spawn to death.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -25,7 +26,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '132';
+  const VERSION = '133';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -138,7 +139,6 @@
     if(window.__coreBasicCircleNormalizeV132) return;
     window.__coreBasicCircleNormalizeV132 = true;
 
-    const speedBySize = Object.create(null);
     const FREEZE_SLOW_THRESHOLD = 1.0;
 
     function isBasicCircle(enemy){
@@ -152,15 +152,16 @@
         if(!isBasicCircle(enemy)) continue;
 
         if(typeof enemy.speed === 'number'){
-          if(speedBySize[enemy.kind] == null){
-            speedBySize[enemy.kind] = enemy.speed;
-          }else{
-            enemy.speed = speedBySize[enemy.kind];
+          if(enemy.__lockedBaseSpeed == null){
+            enemy.__lockedBaseSpeed = enemy.speed;
           }
-        }
 
-        if(enemy.slow > 0 && enemy.slow < FREEZE_SLOW_THRESHOLD){
-          enemy.slow = 0;
+          if(enemy.slow > FREEZE_SLOW_THRESHOLD){
+            enemy.speed = enemy.__lockedBaseSpeed * 0.52;
+          }else{
+            enemy.speed = enemy.__lockedBaseSpeed;
+            enemy.slow = 0;
+          }
         }
       }
     }
