@@ -55,16 +55,23 @@
       setMessage(l.title,l.body+' Use TYPE if needed, then tap BUILD. Tutorial tower builds are free; upgrades still cost money.');
     }
 
+    function levelMatchedSpeed(kind,behavior){
+      const easyBaseSpeed=6.5;
+      const kindSpeed={small:1.45,medium:1,large:.62};
+      const behaviorSpeed={swarm:1.18,dash:1.04,armor:.82,split:1};
+      return easyBaseSpeed*(kindSpeed[kind]||1)*(behaviorSpeed[behavior]||1);
+    }
+
     function makeEnemy(type,x,y){
-      const e={x:x,y:y,hp:3,maxHp:3,speed:34,slow:0,r:13,reward:1,kind:'medium',color:'#a8a29e',seed:Math.random()*10};
+      const e={x:x,y:y,hp:3,maxHp:3,speed:levelMatchedSpeed('medium',null),slow:0,r:13,reward:1,kind:'medium',color:'#a8a29e',seed:Math.random()*10};
       if(type==='swarm'){
-        e.behavior='swarm';e.kind='small';e.r=8;e.hp=2;e.maxHp=2;e.speed=46;e.color='#facc15';
+        e.behavior='swarm';e.kind='small';e.r=8;e.hp=2;e.maxHp=2;e.speed=levelMatchedSpeed('small','swarm');e.color='#facc15';
       }else if(type==='dash'){
-        e.behavior='dash';e.kind='medium';e.r=14;e.hp=5;e.maxHp=5;e.speed=30;e.dashCd=1.25;e.dashTime=0;e.color='#fb7185';
+        e.behavior='dash';e.kind='medium';e.r=14;e.hp=5;e.maxHp=5;e.speed=levelMatchedSpeed('medium','dash');e.dashCd=1.25;e.dashTime=0;e.color='#fb7185';
       }else if(type==='armor'){
-        e.behavior='armor';e.kind='large';e.r=22;e.hp=13;e.maxHp=13;e.speed=22;e.color='#93a4b8';
+        e.behavior='armor';e.kind='large';e.r=22;e.hp=13;e.maxHp=13;e.speed=levelMatchedSpeed('large','armor');e.color='#93a4b8';
       }else if(type==='split'){
-        e.behavior='split';e.kind='medium';e.r=15;e.hp=7;e.maxHp=7;e.speed=27;e.splitDone=false;e.color='#c084fc';
+        e.behavior='split';e.kind='medium';e.r=15;e.hp=7;e.maxHp=7;e.speed=levelMatchedSpeed('medium','split');e.splitDone=false;e.color='#c084fc';
       }
       return e;
     }
