@@ -21,6 +21,7 @@
 // - v133: Basic circle enemies now preserve one locked speed from spawn to death.
 // - v134: all enemies start at 50% of their previous movement speed.
 // - v135: enemies now use fixed speed buckets instead of inheriting wave-scaled spawn speed.
+// - v136: dash enemies keep fixed base speed while retaining their burst behavior.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -28,7 +29,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '135';
+  const VERSION = '136';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -153,11 +154,6 @@
         }else{
           enemy.speed = fixedSpeed;
           enemy.slow = 0;
-        }
-
-        if(enemy.behavior === 'dash'){
-          enemy.dashTime = 0;
-          enemy.dashCd = Math.max(enemy.dashCd || 0, 999);
         }
       }
     }
