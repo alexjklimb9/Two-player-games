@@ -100,12 +100,12 @@
       e.maxHp=e.hp;
       e.reward=Math.max(1,(e.reward||2)-1);
     }else if(b==='dash'){
-      e.speed*=.94;
+      e.speed*=1.04;
       e.hp=Math.ceil(e.hp*1.08);
       e.maxHp=e.hp;
     }else if(b==='armor'){
       e.speed*=.82;
-      e.hp=Math.ceil(e.hp*1.45);
+      e.hp=Math.ceil(e.hp*1.6);
       e.maxHp=e.hp;
       e.reward=(e.reward||3)+2;
     }else if(b==='split'){
