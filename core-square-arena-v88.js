@@ -81,7 +81,7 @@
       const ar=arena();
       const side=game.spawnPattern.length?game.spawnPattern[game.spawnIndex++%game.spawnPattern.length]:Math.floor(Math.random()*4),m=24;
       let x,y;if(side===0){x=ar.left-m;y=ar.top+ar.size*(.10+Math.random()*.80)}else if(side===1){x=ar.left+ar.size+m;y=ar.top+ar.size*(.10+Math.random()*.80)}else if(side===2){x=ar.left+ar.size*(.10+Math.random()*.80);y=ar.top-m}else{x=ar.left+ar.size*(.10+Math.random()*.80);y=ar.top+ar.size+m}
-      const easy=LV<=1,t=pickEnemy(),baseHp=easy?2.4+game.wave*.55:3.2+game.wave*.75+LV*.55,baseSp=easy?25+game.wave*1.8:30+game.wave*2.4+LV*2.5;
+      const easy=LV<=1,t=pickEnemy(),baseHp=easy?2.4+game.wave*.55:3.2+game.wave*.75+LV*.55,baseSp=easy?13+game.wave*.9:15+game.wave*1.2+LV*1.1;
       const hp=Math.max(1,Math.ceil(baseHp*t.hp));
       const speed=baseSp*t.sp;
       const reward=t.reward+(easy?1:0)+Math.floor(hp/8);
@@ -107,7 +107,6 @@
         oldBg();
         const a=arena();
         ctx.save();
-        // No arena rectangle or border. Only a very faint grid continuation inside the active area.
         ctx.strokeStyle='rgba(248,250,252,.018)';
         ctx.lineWidth=1;
         for(let x=a.left+48;x<a.left+a.size;x+=48){ctx.beginPath();ctx.moveTo(x,a.top);ctx.lineTo(x,a.top+a.size);ctx.stroke()}
