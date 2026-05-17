@@ -11,7 +11,7 @@
 // 2. core-square-arena-v88.js         Square arena layout, spawn positions, and enemy movement
 // 3. core-balance-tuning-v89.js       Balance/counter tuning and softer visuals
 // 4. core-enemy-schedule-v85.js       Enemy behavior scheduling
-// 5. core-tutorial-v86.js             Tutorial-only lesson flow
+// 5. core-tutorial-v86.js             Tutorial-only lesson flow, loaded only on level=0
 // 6. core-slow-outline-v87.js         Freeze slow outline visual
 //
 // Active balance edit in this entry:
@@ -23,14 +23,16 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '140';
+  const VERSION = '141';
+  const params = new URLSearchParams(window.location.search);
+  const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
     { name: 'arena', file: 'core-square-arena-v88.js' },
     { name: 'balance', file: 'core-balance-tuning-v89.js' },
     { name: 'enemySchedule', file: 'core-enemy-schedule-v85.js' },
-    { name: 'tutorial', file: 'core-tutorial-v86.js' },
+    ...(isTutorialLevel ? [{ name: 'tutorial', file: 'core-tutorial-v86.js' }] : []),
     { name: 'slowOutline', file: 'core-slow-outline-v87.js' }
   ];
 
@@ -66,8 +68,8 @@
   }
 
   function buffWaveVsSwarm(){
-    if(window.__coreWaveSwarmBuffV140) return;
-    window.__coreWaveSwarmBuffV140 = true;
+    if(window.__coreWaveSwarmBuffV141) return;
+    window.__coreWaveSwarmBuffV141 = true;
 
     const EXTRA_SWARM_DAMAGE = 0.15;
 
@@ -85,7 +87,7 @@
 
       oldUpdateTowers.call(this, dt);
 
-      if(!window.game || !Array.isArray(game.enemies) || !Array.isArray(game.shots)) return;
+      if(!window.game || !Array.isArray(game.enemies) || !Array.isArray(game.shots) || !Array.isArray(TYPES) || !TYPES[3]) return;
 
       const recentWaveHit = game.shots.some(function(shot){
         return shot && shot.beam && shot.color === TYPES[3].color && shot.life > 0.1;
