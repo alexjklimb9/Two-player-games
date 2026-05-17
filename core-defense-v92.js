@@ -4,12 +4,12 @@
 // Why this exists:
 // - index.html should only load one Core file.
 // - The current working gameplay is preserved in proven versioned layers.
-// - Movement speed is controlled by core-square-arena-v88.js, not this loader.
+// - Movement speed is controlled by core-square-arena-v88.js and core-balance-tuning-v89.js.
 //
 // Current safe load order:
 // 1. core-defense-v84.js              Base polished Core wrapper, built on v80 + countdown
 // 2. core-square-arena-v88.js         Square arena layout, spawn positions, and enemy movement
-// 3. core-balance-tuning-v89.js       Balance/counter tuning and softer visuals
+// 3. core-balance-tuning-v89.js       Balance/counter tuning and fixed readable enemy pacing
 // 4. core-enemy-schedule-v85.js       Enemy behavior scheduling
 // 5. core-tutorial-v86.js             Tutorial-only lesson flow, loaded only on level=0
 // 6. core-slow-outline-v87.js         Freeze slow outline visual
@@ -17,6 +17,7 @@
 // Active balance edit in this entry:
 // - Wave towers deal a little extra damage against swarm units.
 // - Enemy speed cleanup is restored by enemy object, not array index.
+// - Tutorial enemies are scaled to the same fixed-speed baseline used in levels.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -24,7 +25,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '142';
+  const VERSION = '143';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -68,9 +69,32 @@
     panel.appendChild(msg);
   }
 
+  function tuneTutorialSpeed(){
+    if(!isTutorialLevel || window.__coreTutorialSpeedV143) return;
+    window.__coreTutorialSpeedV143 = true;
+    if(typeof update !== 'function') return;
+
+    const TUTORIAL_OLD_BASE = 6.5;
+    const LEVEL_FIXED_BASE = 11;
+    const SCALE = LEVEL_FIXED_BASE / TUTORIAL_OLD_BASE;
+    const oldUpdate = update;
+
+    update = function(dt){
+      oldUpdate.call(this, dt);
+      if(!window.game || !Array.isArray(game.enemies)) return;
+
+      for(const enemy of game.enemies){
+        if(!enemy || enemy.__tutorialSpeedMatched) continue;
+        if(!enemy.behavior) continue;
+        enemy.speed *= SCALE;
+        enemy.__tutorialSpeedMatched = true;
+      }
+    };
+  }
+
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV142) return;
-    window.__coreStableSpeedRestoreV142 = true;
+    if(window.__coreStableSpeedRestoreV143) return;
+    window.__coreStableSpeedRestoreV143 = true;
 
     if(typeof updateEnemies !== 'function') return;
 
@@ -99,8 +123,8 @@
   }
 
   function buffWaveVsSwarm(){
-    if(window.__coreWaveSwarmBuffV142) return;
-    window.__coreWaveSwarmBuffV142 = true;
+    if(window.__coreWaveSwarmBuffV143) return;
+    window.__coreWaveSwarmBuffV143 = true;
 
     const EXTRA_SWARM_DAMAGE = 0.15;
 
@@ -144,6 +168,7 @@
       await loadLayer(layer);
     }
 
+    tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
     buffWaveVsSwarm();
 
