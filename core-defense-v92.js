@@ -16,6 +16,7 @@
 //
 // Active balance edit in this entry:
 // - Wave towers deal a little extra damage against swarm units.
+// - Enemy speed cleanup is restored by enemy object, not array index.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -23,7 +24,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '141';
+  const VERSION = '142';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -67,9 +68,39 @@
     panel.appendChild(msg);
   }
 
+  function stabilizeEnemySpeedRestore(){
+    if(window.__coreStableSpeedRestoreV142) return;
+    window.__coreStableSpeedRestoreV142 = true;
+
+    if(typeof updateEnemies !== 'function') return;
+
+    const oldUpdateEnemies = updateEnemies;
+    updateEnemies = function(dt){
+      const speedByEnemy = new Map();
+
+      if(window.game && Array.isArray(game.enemies)){
+        for(const enemy of game.enemies){
+          if(enemy && typeof enemy.speed === 'number'){
+            speedByEnemy.set(enemy, enemy.speed);
+          }
+        }
+      }
+
+      oldUpdateEnemies.call(this, dt);
+
+      if(!window.game || !Array.isArray(game.enemies)) return;
+
+      for(const enemy of game.enemies){
+        if(enemy && speedByEnemy.has(enemy)){
+          enemy.speed = speedByEnemy.get(enemy);
+        }
+      }
+    };
+  }
+
   function buffWaveVsSwarm(){
-    if(window.__coreWaveSwarmBuffV141) return;
-    window.__coreWaveSwarmBuffV141 = true;
+    if(window.__coreWaveSwarmBuffV142) return;
+    window.__coreWaveSwarmBuffV142 = true;
 
     const EXTRA_SWARM_DAMAGE = 0.15;
 
@@ -113,6 +144,7 @@
       await loadLayer(layer);
     }
 
+    stabilizeEnemySpeedRestore();
     buffWaveVsSwarm();
 
     window.__coreDefenseV92Ready = true;
