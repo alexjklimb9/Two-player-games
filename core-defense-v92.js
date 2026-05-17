@@ -17,6 +17,7 @@
 // Balance edits in this entry:
 // - v130: reduce all enemy base movement speeds by 20%.
 // - v131: Wave towers deal a little extra damage against swarm units.
+// - v132: Basic circle enemies of the same size use fixed speed, and only Freeze can slow them.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -24,7 +25,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '131';
+  const VERSION = '132';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -133,6 +134,46 @@
     };
   }
 
+  function normalizeBasicCircleEnemies(){
+    if(window.__coreBasicCircleNormalizeV132) return;
+    window.__coreBasicCircleNormalizeV132 = true;
+
+    const speedBySize = Object.create(null);
+    const FREEZE_SLOW_THRESHOLD = 1.0;
+
+    function isBasicCircle(enemy){
+      return enemy && !enemy.behavior && (enemy.kind === 'small' || enemy.kind === 'medium' || enemy.kind === 'large');
+    }
+
+    function applyBasicRules(){
+      if(!window.game || !Array.isArray(game.enemies)) return;
+
+      for(const enemy of game.enemies){
+        if(!isBasicCircle(enemy)) continue;
+
+        if(typeof enemy.speed === 'number'){
+          if(speedBySize[enemy.kind] == null){
+            speedBySize[enemy.kind] = enemy.speed;
+          }else{
+            enemy.speed = speedBySize[enemy.kind];
+          }
+        }
+
+        if(enemy.slow > 0 && enemy.slow < FREEZE_SLOW_THRESHOLD){
+          enemy.slow = 0;
+        }
+      }
+    }
+
+    if(typeof updateEnemies === 'function'){
+      const oldUpdateEnemies = updateEnemies;
+      updateEnemies = function(dt){
+        applyBasicRules();
+        oldUpdateEnemies.call(this, dt);
+      };
+    }
+  }
+
   async function boot(){
     for(const layer of CORE_STACK){
       await loadLayer(layer);
@@ -140,6 +181,7 @@
 
     reduceEnemySpeed();
     buffWaveVsSwarm();
+    normalizeBasicCircleEnemies();
 
     window.__coreDefenseV92Ready = true;
   }
