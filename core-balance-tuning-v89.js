@@ -69,8 +69,8 @@
       const t=pickEnemy();
       const baseHp=easy?2.4+game.wave*.55:3.2+game.wave*.75+LV*.55;
 
-      // Fixed slower pacing. No wave speed scaling.
-      const baseSp=easy?6.5:7.5+LV*.55;
+      // Fixed readable pacing. No wave speed scaling.
+      const baseSp=easy?11:13+LV*.9;
 
       const hp=Math.max(1,Math.ceil(baseHp*t.hp));
       const speed=baseSp*t.sp;
