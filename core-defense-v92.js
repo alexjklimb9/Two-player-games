@@ -20,6 +20,7 @@
 // - v132: Basic circle enemies of the same size use fixed speed, and only Freeze can slow them.
 // - v133: Basic circle enemies now preserve one locked speed from spawn to death.
 // - v134: all enemies start at 50% of their previous movement speed.
+// - v135: enemies now use fixed speed buckets instead of inheriting wave-scaled spawn speed.
 //
 // Editing rule:
 // Do NOT add another script to index.html. Add/merge Core behavior here, then test.
@@ -27,7 +28,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '134';
+  const VERSION = '135';
 
   const CORE_STACK = [
     { name: 'base', file: 'core-defense-v84.js' },
@@ -67,32 +68,6 @@
     msg.style.color = '#ff5c4a';
     msg.textContent = 'Core Defense failed to load. Refresh and try again.';
     panel.appendChild(msg);
-  }
-
-  function reduceEnemySpeed(){
-    if(window.__coreEnemySpeedReduced) return;
-    window.__coreEnemySpeedReduced = true;
-
-    const SPEED_SCALE = 0.5;
-
-    function applyScale(){
-      if(!window.game || !Array.isArray(game.enemies)) return;
-
-      for(const enemy of game.enemies){
-        if(enemy && !enemy.__speedReduced && typeof enemy.speed === 'number'){
-          enemy.speed *= SPEED_SCALE;
-          enemy.__speedReduced = true;
-        }
-      }
-    }
-
-    if(typeof updateEnemies === 'function'){
-      const oldUpdateEnemies = updateEnemies;
-      updateEnemies = function(dt){
-        applyScale();
-        oldUpdateEnemies.call(this, dt);
-      };
-    }
   }
 
   function buffWaveVsSwarm(){
@@ -136,33 +111,53 @@
     };
   }
 
-  function normalizeBasicCircleEnemies(){
-    if(window.__coreBasicCircleNormalizeV132) return;
-    window.__coreBasicCircleNormalizeV132 = true;
+  function normalizeEnemySpeeds(){
+    if(window.__coreFixedEnemySpeedV135) return;
+    window.__coreFixedEnemySpeedV135 = true;
 
     const FREEZE_SLOW_THRESHOLD = 1.0;
+    const FREEZE_SPEED_SCALE = 0.52;
 
-    function isBasicCircle(enemy){
-      return enemy && !enemy.behavior && (enemy.kind === 'small' || enemy.kind === 'medium' || enemy.kind === 'large');
+    // These are intentionally much lower than the original wave-scaled speeds.
+    // Same key = same movement speed every time.
+    const FIXED_SPEEDS = {
+      small: 16,
+      medium: 13,
+      large: 9,
+      swarm: 17,
+      dash: 15,
+      armor: 8,
+      split: 13
+    };
+
+    function enemyKey(enemy){
+      if(!enemy) return null;
+      if(enemy.behavior && FIXED_SPEEDS[enemy.behavior] != null) return enemy.behavior;
+      if(enemy.kind && FIXED_SPEEDS[enemy.kind] != null) return enemy.kind;
+      return null;
     }
 
-    function applyBasicRules(){
+    function applyFixedSpeeds(){
       if(!window.game || !Array.isArray(game.enemies)) return;
 
       for(const enemy of game.enemies){
-        if(!isBasicCircle(enemy)) continue;
+        const key = enemyKey(enemy);
+        if(!key) continue;
 
-        if(typeof enemy.speed === 'number'){
-          if(enemy.__lockedBaseSpeed == null){
-            enemy.__lockedBaseSpeed = enemy.speed;
-          }
+        const fixedSpeed = FIXED_SPEEDS[key];
+        enemy.__fixedSpeedKey = key;
+        enemy.__lockedBaseSpeed = fixedSpeed;
 
-          if(enemy.slow > FREEZE_SLOW_THRESHOLD){
-            enemy.speed = enemy.__lockedBaseSpeed * 0.52;
-          }else{
-            enemy.speed = enemy.__lockedBaseSpeed;
-            enemy.slow = 0;
-          }
+        if(enemy.slow > FREEZE_SLOW_THRESHOLD){
+          enemy.speed = fixedSpeed * FREEZE_SPEED_SCALE;
+        }else{
+          enemy.speed = fixedSpeed;
+          enemy.slow = 0;
+        }
+
+        if(enemy.behavior === 'dash'){
+          enemy.dashTime = 0;
+          enemy.dashCd = Math.max(enemy.dashCd || 0, 999);
         }
       }
     }
@@ -170,8 +165,9 @@
     if(typeof updateEnemies === 'function'){
       const oldUpdateEnemies = updateEnemies;
       updateEnemies = function(dt){
-        applyBasicRules();
+        applyFixedSpeeds();
         oldUpdateEnemies.call(this, dt);
+        applyFixedSpeeds();
       };
     }
   }
@@ -181,9 +177,8 @@
       await loadLayer(layer);
     }
 
-    reduceEnemySpeed();
     buffWaveVsSwarm();
-    normalizeBasicCircleEnemies();
+    normalizeEnemySpeeds();
 
     window.__coreDefenseV92Ready = true;
   }
