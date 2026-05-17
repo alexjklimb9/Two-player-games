@@ -64,11 +64,22 @@
       const ar=arena();
       const side=game.spawnPattern.length?game.spawnPattern[game.spawnIndex++%game.spawnPattern.length]:Math.floor(Math.random()*4),m=24;
       let x,y;if(side===0){x=ar.left-m;y=ar.top+ar.size*(.10+Math.random()*.80)}else if(side===1){x=ar.left+ar.size+m;y=ar.top+ar.size*(.10+Math.random()*.80)}else if(side===2){x=ar.left+ar.size*(.10+Math.random()*.80);y=ar.top-m}else{x=ar.left+ar.size*(.10+Math.random()*.80);y=ar.top+ar.size+m}
-      const easy=LV<=1,t=pickEnemy(),baseHp=easy?2.4+game.wave*.55:3.2+game.wave*.75+LV*.55,baseSp=easy?25+game.wave*1.8:30+game.wave*2.4+LV*2.5;
+
+      const easy=LV<=1;
+      const t=pickEnemy();
+      const baseHp=easy?2.4+game.wave*.55:3.2+game.wave*.75+LV*.55;
+
+      // Fixed slower pacing. No wave speed scaling.
+      const baseSp=easy?6.5:7.5+LV*.55;
+
       const hp=Math.max(1,Math.ceil(baseHp*t.hp));
       const speed=baseSp*t.sp;
       const reward=t.reward+(easy?1:0)+Math.floor(hp/8);
-      game.enemies.push({x,y,hp,maxHp:hp,speed,slow:0,r:t.r*.88,reward,kind:t.name,color:t.color});
+
+      game.enemies.push({
+        x,y,hp,maxHp:hp,speed,slow:0,
+        r:t.r*.88,reward,kind:t.name,color:t.color
+      });
     };
 
     const oldUpdateTowers=updateTowers;
@@ -99,15 +110,26 @@
     const oldUpdateEnemies=updateEnemies;
     updateEnemies=function(dt){
       for(const e of game.enemies){
-        if(e.behavior==='dash'&&e.slow>0){e.dashTime=0;e.dashCd=Math.max(e.dashCd||0,.85)}
+        if(e.behavior==='dash'&&e.slow>0){
+          e.dashTime=0;
+          e.dashCd=Math.max(e.dashCd||0,.85);
+        }
       }
+
       oldUpdateEnemies(dt);
+
       for(const e of game.enemies){
         if(e.behavior==='armor'&&!e.__armorV89){
           const add=Math.ceil(e.maxHp*.12);
-          e.maxHp+=add;e.hp+=add;e.__armorV89=true;
+          e.maxHp+=add;
+          e.hp+=add;
+          e.__armorV89=true;
         }
-        if(e.r)e.r*=e.__smallV89?1:.94,e.__smallV89=true;
+
+        if(e.r){
+          e.r*=e.__smallV89?1:.94;
+          e.__smallV89=true;
+        }
       }
     };
   }
