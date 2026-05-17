@@ -1,5 +1,4 @@
 // Core enemy schedule v85: all enemy types can appear on any wave, odds rise by wave.
-// v137 tuning: special enemies are still random, but a basic streak now forces variety.
 (function(){
   function wait(){
     if(typeof game==='object'&&typeof spawnEnemy==='function'&&Array.isArray(game.enemies)&&typeof LV!=='undefined') install();
@@ -21,7 +20,20 @@
     const spread=18;
     const row=(n%3)-1;
     const col=Math.floor(n/3);
-    return {x:x+row*spread+(Math.random()*8-4),y:y+col*spread+(Math.random()*8-4),hp:2,maxHp:2,speed:54+Math.random()*10,slow:0,r:8,reward:1,kind:'small',behavior:'swarm',seed:Math.random()*10,color:'#facc15'};
+    return {
+      x:x+row*spread+(Math.random()*8-4),
+      y:y+col*spread+(Math.random()*8-4),
+      hp:2,
+      maxHp:2,
+      speed:6+Math.random()*1.5,
+      slow:0,
+      r:8,
+      reward:1,
+      kind:'small',
+      behavior:'swarm',
+      seed:Math.random()*10,
+      color:'#facc15'
+    };
   }
 
   function canUse(type,e){
@@ -35,11 +47,22 @@
   function weightedPick(options,w,lv){
     const waveBoost=Math.min(.34,(Math.max(1,w)-1)*.032);
     const levelBoost=Math.max(0,lv-1)*.025;
-    const weights={swarm:.13+waveBoost+levelBoost,dash:.11+waveBoost*.85+levelBoost,armor:.09+waveBoost*.75+levelBoost,split:.08+waveBoost*.68+levelBoost};
+    const weights={
+      swarm:.13+waveBoost+levelBoost,
+      dash:.11+waveBoost*.85+levelBoost,
+      armor:.09+waveBoost*.75+levelBoost,
+      split:.08+waveBoost*.68+levelBoost
+    };
+
     let total=0;
-    for(const o of options)total+=weights[o]||0;
+    for(const o of options) total+=weights[o]||0;
+
     let r=Math.random()*total;
-    for(const o of options){r-=weights[o]||0;if(r<=0)return o}
+    for(const o of options){
+      r-=weights[o]||0;
+      if(r<=0) return o;
+    }
+
     return options[0]||null;
   }
 
@@ -51,22 +74,19 @@
     const lv=LV||1;
     const w=Math.max(1,game.wave||1);
     if(lv===0) return null;
+
     const options=behaviorOptions(e);
     if(!options.length) return null;
-    const chance=Math.min(.80,.18+(w-1)*.055+(lv-1)*.04);
+
+    const chance=Math.min(.55,.10+(w-1)*.03+(lv-1)*.025);
     if(Math.random()>chance) return null;
+
     return weightedPick(options,w,lv);
   }
 
-  function forceBehavior(e){
-    const lv=LV||1;
-    const w=Math.max(1,game.wave||1);
-    const options=behaviorOptions(e);
-    return options.length ? weightedPick(options,w,lv) : null;
-  }
-
   function applyBehavior(e,b){
-    if(!e||e.behavior||!b) return;
+    if(!e||e.behavior||!b) return false;
+
     e.behavior=b;
     e.seed=Math.random()*10;
     e.dashCd=.8+Math.random();
@@ -75,7 +95,7 @@
 
     if(b==='swarm'){
       e.r=Math.max(8,e.r*.78);
-      e.speed*=1.35;
+      e.speed*=1.18;
       e.hp=Math.max(1,Math.ceil(e.hp*.65));
       e.maxHp=e.hp;
       e.reward=Math.max(1,(e.reward||2)-1);
@@ -93,31 +113,36 @@
       e.maxHp=e.hp;
       e.reward=(e.reward||3)+1;
     }
+
     e.color=colorFor(e,b);
+    return true;
   }
 
   function install(){
     if(spawnEnemy.__scheduleV85) return;
+
     const oldSpawn=spawnEnemy;
-    let basicStreak=0;
+
     spawnEnemy=function(){
       const before=game.enemies.length;
       oldSpawn();
-      for(let i=before;i<game.enemies.length;i++){
-        const e=game.enemies[i];
-        let behavior=pickBehavior(e);
-        if(!behavior && LV!==0){
-          basicStreak++;
-          if(basicStreak>=3) behavior=forceBehavior(e);
-        }
-        if(behavior) basicStreak=0;
-        applyBehavior(e,behavior);
-        if(behavior==='swarm'){
+
+      const spawned=game.enemies.slice(before);
+
+      for(const e of spawned){
+        const behavior=pickBehavior(e);
+        const applied=applyBehavior(e,behavior);
+
+        if(applied && behavior==='swarm'){
           const total=3+Math.floor(Math.random()*3);
-          for(let n=1;n<total;n++)game.enemies.push(makeSwarmChild(e.x,e.y,n,total));
+
+          for(let n=1;n<total;n++){
+            game.enemies.push(makeSwarmChild(e.x,e.y,n,total));
+          }
         }
       }
     };
+
     spawnEnemy.__scheduleV85=true;
   }
 
