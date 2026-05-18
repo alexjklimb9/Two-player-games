@@ -56,7 +56,7 @@
     }
 
     function levelMatchedSpeed(kind,behavior){
-      const easyBaseSpeed=6.5;
+      const easyBaseSpeed=11;
       const kindSpeed={small:1.45,medium:1,large:.62};
       const behaviorSpeed={swarm:1.18,dash:1.04,armor:.82,split:1};
       return easyBaseSpeed*(kindSpeed[kind]||1)*(behaviorSpeed[behavior]||1);
