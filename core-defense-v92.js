@@ -4,10 +4,12 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '154';
+  const VERSION = '155';
   const params = new URLSearchParams(window.location.search);
+  const selectedLevel = parseInt(params.get('level') || '2', 10) || 2;
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
-  const levelCap = Math.max(1, Math.min(5, parseInt(params.get('level') || '2', 10) || 2));
+  const isEndlessLevel = selectedLevel >= 5;
+  const levelCap = isEndlessLevel ? Infinity : Math.max(1, Math.min(5, selectedLevel + 1));
 
   const CORE_STACK = [
     { name:'base', file:'core-defense-v84.js' },
@@ -20,7 +22,11 @@
 
   window.CORE_DEFENSE_VERSION = 'v92';
   window.CORE_DEFENSE_STACK = CORE_STACK.map(layer => layer.file);
-  window.CORE_TOWER_LEVEL_CAP = levelCap;
+  window.CORE_TOWER_LEVEL_CAP = isEndlessLevel ? 'endless' : levelCap;
+
+  function endlessUpgradeCost(level){
+    return Math.ceil(70 * Math.pow(1.45, Math.max(0, level - 4)));
+  }
 
   function loadLayer(layer){
     return new Promise(function(resolve,reject){
@@ -46,8 +52,8 @@
   }
 
   function tuneTowerStats(){
-    if(window.__coreTowerStatsV154 || !Array.isArray(window.TYPES)) return;
-    window.__coreTowerStatsV154 = true;
+    if(window.__coreTowerStatsV155 || !Array.isArray(window.TYPES)) return;
+    window.__coreTowerStatsV155 = true;
     TYPES[0].range = 158;
     TYPES[0].rate = 0.62;
     TYPES[0].damage = 0.72;
@@ -63,16 +69,31 @@
   }
 
   function capTowerUpgrades(){
-    if(window.__coreTowerCapV154 || typeof buildUpgrade !== 'function') return;
-    window.__coreTowerCapV154 = true;
+    if(window.__coreTowerCapV155 || typeof buildUpgrade !== 'function') return;
+    window.__coreTowerCapV155 = true;
     const oldBuildUpgrade = buildUpgrade;
     buildUpgrade = function(){
       if(window.game && Array.isArray(game.slots)){
         const slot = game.slots[game.selected];
-        if(slot && !empty(slot) && slot.level >= levelCap){
-          const p = slotPos(game.selected);
-          if(typeof spark === 'function') spark(p.x, p.y, C.white, 6);
-          return;
+        if(slot && !empty(slot)){
+          if(!isEndlessLevel && slot.level >= levelCap){
+            const p = slotPos(game.selected);
+            if(typeof spark === 'function') spark(p.x, p.y, C.white, 6);
+            return;
+          }
+          if(isEndlessLevel && slot.level >= 5){
+            const p = slotPos(game.selected);
+            const cost = endlessUpgradeCost(slot.level);
+            if(game.money < cost){
+              if(typeof spark === 'function') spark(p.x, p.y, C.danger, 8);
+              return;
+            }
+            game.money -= cost;
+            slot.level += 1;
+            slot.flash = 1;
+            if(typeof spark === 'function') spark(p.x, p.y, TYPES[slot.type].color, 18);
+            return;
+          }
         }
       }
       oldBuildUpgrade.call(this);
@@ -85,8 +106,8 @@
         const h = 56;
         const s = game.slots[game.selected];
         const tower = TYPES[game.buildType];
-        const capped = !empty(s) && s.level >= levelCap;
-        const buildCost = price(s);
+        const capped = !isEndlessLevel && !empty(s) && s.level >= levelCap;
+        const buildCost = empty(s) ? BUILD : (isEndlessLevel && s.level >= 5 ? endlessUpgradeCost(s.level) : price(s));
         const canBuy = !capped && game.money >= buildCost;
         const b = empty(s) ? 'BUILD $' + BUILD : capped ? 'MAX' : 'UP $' + buildCost;
         let boost = 'BOOST';
@@ -105,8 +126,8 @@
   }
 
   function flattenUpgradeScaling(){
-    if(window.__coreUpgradeScalingV154 || typeof updateTowers !== 'function') return;
-    window.__coreUpgradeScalingV154 = true;
+    if(window.__coreUpgradeScalingV155 || typeof updateTowers !== 'function') return;
+    window.__coreUpgradeScalingV155 = true;
     const oldUpdateTowers = updateTowers;
     const virtualLevel = function(slot){
       const level = Math.max(1, slot.level || 1);
@@ -131,8 +152,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV154 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV154 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV155 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV155 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -148,8 +169,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV154 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV154 = true;
+    if(window.__coreStableSpeedRestoreV155 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV155 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByUnit = new Map();
@@ -167,8 +188,8 @@
   }
 
   function boostSpecialDurability(){
-    if(window.__coreSpecialDurabilityV154 || typeof spawnEnemy !== 'function') return;
-    window.__coreSpecialDurabilityV154 = true;
+    if(window.__coreSpecialDurabilityV155 || typeof spawnEnemy !== 'function') return;
+    window.__coreSpecialDurabilityV155 = true;
     const oldSpawnEnemy = spawnEnemy;
     spawnEnemy = function(){
       const before = window.game && Array.isArray(game.enemies) ? game.enemies.length : 0;
@@ -176,7 +197,7 @@
       if(!window.game || !Array.isArray(game.enemies)) return;
       for(let i = before; i < game.enemies.length; i++){
         const unit = game.enemies[i];
-        if(!unit || !unit.behavior || unit.__specialDurabilityV154) continue;
+        if(!unit || !unit.behavior || unit.__specialDurabilityV155) continue;
         let mult = 1;
         if(unit.behavior === 'swarm') mult = 1.45;
         else if(unit.behavior === 'dash') mult = 1.30;
@@ -185,15 +206,15 @@
         if(mult > 1 && typeof unit.hp === 'number'){
           unit.hp = Math.ceil(unit.hp * mult);
           unit.maxHp = unit.hp;
-          unit.__specialDurabilityV154 = true;
+          unit.__specialDurabilityV155 = true;
         }
       }
     };
   }
 
   function rebalanceTowerRoles(){
-    if(window.__coreTowerRolesV154 || typeof updateTowers !== 'function') return;
-    window.__coreTowerRolesV154 = true;
+    if(window.__coreTowerRolesV155 || typeof updateTowers !== 'function') return;
+    window.__coreTowerRolesV155 = true;
     const oldUpdateTowers = updateTowers;
     updateTowers = function(dt){
       const before = new Map();
