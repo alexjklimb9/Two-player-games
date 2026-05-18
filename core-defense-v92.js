@@ -1,10 +1,10 @@
 // Core Defense v92
-// Single entry point. Loads the proven Core layers, then applies small final tuning patches.
+// Single entry point. Loads the proven Core layers, then applies safe final tuning patches.
 (function(){
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '147';
+  const VERSION = '148';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -44,8 +44,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV147 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV147 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV148 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV148 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -61,8 +61,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV147 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV147 = true;
+    if(window.__coreStableSpeedRestoreV148 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV148 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByEnemy = new Map();
@@ -79,74 +79,10 @@
     };
   }
 
-  function strengthenCounters(){
-    if(window.__coreCountersV147 || typeof updateTowers !== 'function') return;
-    window.__coreCountersV147 = true;
-    const oldUpdateTowers = updateTowers;
-    updateTowers = function(dt){
-      const hpBefore = new Map();
-      if(window.game && Array.isArray(game.enemies)){
-        for(const enemy of game.enemies){
-          if(enemy) hpBefore.set(enemy, enemy.hp);
-        }
-      }
-      oldUpdateTowers.call(this, dt);
-      if(!window.game || !Array.isArray(game.enemies) || !Array.isArray(game.shots) || !Array.isArray(TYPES)) return;
-
-      function hitBy(typeIndex, enemy){
-        const type = TYPES[typeIndex];
-        if(!type) return false;
-        return game.shots.some(function(shot){
-          if(!shot || shot.color !== type.color || shot.life <= 0.06) return false;
-          const nearEnd = Math.hypot((shot.tx || 0) - enemy.x, (shot.ty || 0) - enemy.y) < enemy.r + 18;
-          const waveReach = shot.beam && Math.hypot((shot.x || 0) - enemy.x, (shot.y || 0) - enemy.y) < (type.range || 0) + 90;
-          return nearEnd || waveReach;
-        });
-      }
-
-      for(const enemy of game.enemies){
-        if(!enemy || !enemy.behavior || !hpBefore.has(enemy)) continue;
-        const dealt = hpBefore.get(enemy) - enemy.hp;
-        if(dealt <= 0) continue;
-
-        let counter = false;
-        let bonus = 0.35;
-        let resist = 0.70;
-
-        if(enemy.behavior === 'split'){
-          counter = hitBy(0, enemy);      // Pulse
-          bonus = 0.38;
-          resist = 0.68;
-        }else if(enemy.behavior === 'armor'){
-          counter = hitBy(1, enemy);      // Beam
-          bonus = 0.58;
-          resist = 0.78;
-        }else if(enemy.behavior === 'dash'){
-          counter = hitBy(2, enemy) || enemy.slow > 0; // Freeze
-          bonus = 0.40;
-          resist = 0.70;
-        }else if(enemy.behavior === 'swarm'){
-          counter = hitBy(3, enemy);      // Wave
-          bonus = 0.54;
-          resist = 0.74;
-        }else{
-          continue;
-        }
-
-        if(counter){
-          enemy.hp -= dealt * bonus;
-        }else{
-          enemy.hp = Math.min(enemy.maxHp, enemy.hp + dealt * resist);
-        }
-      }
-    };
-  }
-
   async function boot(){
     for(const layer of CORE_STACK) await loadLayer(layer);
     tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
-    strengthenCounters();
     window.__coreDefenseV92Ready = true;
   }
 
