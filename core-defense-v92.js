@@ -4,7 +4,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '155';
+  const VERSION = '157';
   const params = new URLSearchParams(window.location.search);
   const selectedLevel = parseInt(params.get('level') || '2', 10) || 2;
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
@@ -51,9 +51,35 @@
     panel.appendChild(msg);
   }
 
+  function runtimeReady(){
+    return typeof game === 'object' &&
+      Array.isArray(game.slots) &&
+      typeof TYPES !== 'undefined' && Array.isArray(TYPES) &&
+      typeof buildUpgrade === 'function' &&
+      typeof update === 'function' &&
+      typeof updateTowers === 'function' &&
+      typeof updateEnemies === 'function' &&
+      typeof spawnEnemy === 'function' &&
+      typeof slotPos === 'function' &&
+      typeof empty === 'function' &&
+      typeof price === 'function';
+  }
+
+  function waitForRuntime(){
+    return new Promise(function(resolve,reject){
+      const started = Date.now();
+      function check(){
+        if(runtimeReady()) return resolve();
+        if(Date.now() - started > 8000) return reject(new Error('Core runtime functions did not become ready'));
+        setTimeout(check, 40);
+      }
+      check();
+    });
+  }
+
   function tuneTowerStats(){
-    if(window.__coreTowerStatsV155 || !Array.isArray(window.TYPES)) return;
-    window.__coreTowerStatsV155 = true;
+    if(window.__coreTowerStatsV157 || !Array.isArray(TYPES)) return;
+    window.__coreTowerStatsV157 = true;
     TYPES[0].range = 158;
     TYPES[0].rate = 0.62;
     TYPES[0].damage = 0.72;
@@ -68,9 +94,22 @@
     TYPES[3].damage = 0.52;
   }
 
+  function installPriceCap(){
+    if(window.__corePriceCapV157 || typeof price !== 'function') return;
+    window.__corePriceCapV157 = true;
+    const oldPrice = price;
+    price = function(slot){
+      if(slot && !empty(slot)){
+        if(!isEndlessLevel && slot.level >= levelCap) return 0;
+        if(isEndlessLevel && slot.level >= 5) return endlessUpgradeCost(slot.level);
+      }
+      return oldPrice.call(this, slot);
+    };
+  }
+
   function capTowerUpgrades(){
-    if(window.__coreTowerCapV155 || typeof buildUpgrade !== 'function') return;
-    window.__coreTowerCapV155 = true;
+    if(window.__coreTowerCapV157 || typeof buildUpgrade !== 'function') return;
+    window.__coreTowerCapV157 = true;
     const oldBuildUpgrade = buildUpgrade;
     buildUpgrade = function(){
       if(window.game && Array.isArray(game.slots)){
@@ -79,6 +118,7 @@
           if(!isEndlessLevel && slot.level >= levelCap){
             const p = slotPos(game.selected);
             if(typeof spark === 'function') spark(p.x, p.y, C.white, 6);
+            slot.__levelCapHit = true;
             return;
           }
           if(isEndlessLevel && slot.level >= 5){
@@ -98,36 +138,54 @@
       }
       oldBuildUpgrade.call(this);
     };
+  }
 
-    if(typeof controls === 'function' && typeof buttonSurface === 'function'){
-      controls = function(){
-        if(!game.running) return;
-        const w = canvas.width * .31;
-        const h = 56;
-        const s = game.slots[game.selected];
-        const tower = TYPES[game.buildType];
-        const capped = !isEndlessLevel && !empty(s) && s.level >= levelCap;
-        const buildCost = empty(s) ? BUILD : (isEndlessLevel && s.level >= 5 ? endlessUpgradeCost(s.level) : price(s));
-        const canBuy = !capped && game.money >= buildCost;
-        const b = empty(s) ? 'BUILD $' + BUILD : capped ? 'MAX' : 'UP $' + buildCost;
-        let boost = 'BOOST';
-        let boostState = 'ready';
-        if(s && s.boost > 0){boost = 'BOOST ' + Math.ceil(s.boost) + 's';boostState = 'active'}
-        else if(game.specialCd > 0){boost = 'WAIT ' + Math.ceil(game.specialCd) + 's';boostState = 'cooldown'}
-        buttonSurface(canvas.width * .02, 76, w, h, 'TYPE ' + tower.name, game.input.topLeft, tower.color, {rotate:true});
-        buttonSurface(canvas.width * .345, 76, w, h, b, game.input.topMid, C.blue, {rotate:true, muted:!canBuy, ready:canBuy});
-        buttonSurface(canvas.width * .67, 76, w, h, 'SLOT ' + (game.selected + 1) + '/12', game.input.topRight, C.blue, {rotate:true});
-        const y = canvas.height - 90;
-        buttonSurface(canvas.width * .02, y, w, h, 'ROT ◀', game.input.bottomLeft, C.rose);
-        buttonSurface(canvas.width * .345, y, w, h, boost, game.input.bottomMid, C.rose, {ready:boostState === 'ready'});
-        buttonSurface(canvas.width * .67, y, w, h, 'ROT ▶', game.input.bottomRight, C.rose);
-      };
-    }
+  function installCapEnforcer(){
+    if(window.__coreCapEnforcerV157 || typeof update !== 'function') return;
+    window.__coreCapEnforcerV157 = true;
+    const oldUpdate = update;
+    update = function(dt){
+      oldUpdate.call(this, dt);
+      if(isEndlessLevel || !window.game || !Array.isArray(game.slots)) return;
+      for(const slot of game.slots){
+        if(slot && !empty(slot) && slot.level > levelCap){
+          slot.level = levelCap;
+          slot.__levelCapHit = true;
+        }
+      }
+    };
+  }
+
+  function installCapControls(){
+    if(window.__coreCapControlsV157 || typeof controls !== 'function' || typeof buttonSurface !== 'function') return;
+    window.__coreCapControlsV157 = true;
+    controls = function(){
+      if(!game.running) return;
+      const w = canvas.width * .31;
+      const h = 56;
+      const s = game.slots[game.selected];
+      const tower = TYPES[game.buildType];
+      const capped = !isEndlessLevel && !empty(s) && s.level >= levelCap;
+      const buildCost = empty(s) ? BUILD : (isEndlessLevel && s.level >= 5 ? endlessUpgradeCost(s.level) : price(s));
+      const canBuy = !capped && game.money >= buildCost;
+      const b = empty(s) ? 'BUILD $' + BUILD : capped ? 'MAX' : 'UP $' + buildCost;
+      let boost = 'BOOST';
+      let boostState = 'ready';
+      if(s && s.boost > 0){boost = 'BOOST ' + Math.ceil(s.boost) + 's';boostState = 'active'}
+      else if(game.specialCd > 0){boost = 'WAIT ' + Math.ceil(game.specialCd) + 's';boostState = 'cooldown'}
+      buttonSurface(canvas.width * .02, 76, w, h, 'TYPE ' + tower.name, game.input.topLeft, tower.color, {rotate:true});
+      buttonSurface(canvas.width * .345, 76, w, h, b, game.input.topMid, C.blue, {rotate:true, muted:!canBuy, ready:canBuy});
+      buttonSurface(canvas.width * .67, 76, w, h, 'SLOT ' + (game.selected + 1) + '/12', game.input.topRight, C.blue, {rotate:true});
+      const y = canvas.height - 90;
+      buttonSurface(canvas.width * .02, y, w, h, 'ROT ◀', game.input.bottomLeft, C.rose);
+      buttonSurface(canvas.width * .345, y, w, h, boost, game.input.bottomMid, C.rose, {ready:boostState === 'ready'});
+      buttonSurface(canvas.width * .67, y, w, h, 'ROT ▶', game.input.bottomRight, C.rose);
+    };
   }
 
   function flattenUpgradeScaling(){
-    if(window.__coreUpgradeScalingV155 || typeof updateTowers !== 'function') return;
-    window.__coreUpgradeScalingV155 = true;
+    if(window.__coreUpgradeScalingV157 || typeof updateTowers !== 'function') return;
+    window.__coreUpgradeScalingV157 = true;
     const oldUpdateTowers = updateTowers;
     const virtualLevel = function(slot){
       const level = Math.max(1, slot.level || 1);
@@ -152,8 +210,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV155 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV155 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV157 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV157 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -169,8 +227,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV155 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV155 = true;
+    if(window.__coreStableSpeedRestoreV157 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV157 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByUnit = new Map();
@@ -188,8 +246,8 @@
   }
 
   function boostSpecialDurability(){
-    if(window.__coreSpecialDurabilityV155 || typeof spawnEnemy !== 'function') return;
-    window.__coreSpecialDurabilityV155 = true;
+    if(window.__coreSpecialDurabilityV157 || typeof spawnEnemy !== 'function') return;
+    window.__coreSpecialDurabilityV157 = true;
     const oldSpawnEnemy = spawnEnemy;
     spawnEnemy = function(){
       const before = window.game && Array.isArray(game.enemies) ? game.enemies.length : 0;
@@ -197,7 +255,7 @@
       if(!window.game || !Array.isArray(game.enemies)) return;
       for(let i = before; i < game.enemies.length; i++){
         const unit = game.enemies[i];
-        if(!unit || !unit.behavior || unit.__specialDurabilityV155) continue;
+        if(!unit || !unit.behavior || unit.__specialDurabilityV157) continue;
         let mult = 1;
         if(unit.behavior === 'swarm') mult = 1.45;
         else if(unit.behavior === 'dash') mult = 1.30;
@@ -206,15 +264,15 @@
         if(mult > 1 && typeof unit.hp === 'number'){
           unit.hp = Math.ceil(unit.hp * mult);
           unit.maxHp = unit.hp;
-          unit.__specialDurabilityV155 = true;
+          unit.__specialDurabilityV157 = true;
         }
       }
     };
   }
 
   function rebalanceTowerRoles(){
-    if(window.__coreTowerRolesV155 || typeof updateTowers !== 'function') return;
-    window.__coreTowerRolesV155 = true;
+    if(window.__coreTowerRolesV157 || typeof updateTowers !== 'function') return;
+    window.__coreTowerRolesV157 = true;
     const oldUpdateTowers = updateTowers;
     updateTowers = function(dt){
       const before = new Map();
@@ -256,13 +314,17 @@
 
   async function boot(){
     for(const layer of CORE_STACK) await loadLayer(layer);
+    await waitForRuntime();
     tuneTowerStats();
+    installPriceCap();
     capTowerUpgrades();
+    installCapControls();
     flattenUpgradeScaling();
     tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
     boostSpecialDurability();
     rebalanceTowerRoles();
+    installCapEnforcer();
     window.__coreDefenseV92Ready = true;
   }
 
