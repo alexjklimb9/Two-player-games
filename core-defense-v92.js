@@ -4,9 +4,10 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '153';
+  const VERSION = '154';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
+  const levelCap = Math.max(1, Math.min(5, parseInt(params.get('level') || '2', 10) || 2));
 
   const CORE_STACK = [
     { name:'base', file:'core-defense-v84.js' },
@@ -19,6 +20,7 @@
 
   window.CORE_DEFENSE_VERSION = 'v92';
   window.CORE_DEFENSE_STACK = CORE_STACK.map(layer => layer.file);
+  window.CORE_TOWER_LEVEL_CAP = levelCap;
 
   function loadLayer(layer){
     return new Promise(function(resolve,reject){
@@ -44,8 +46,8 @@
   }
 
   function tuneTowerStats(){
-    if(window.__coreTowerStatsV153 || !Array.isArray(window.TYPES)) return;
-    window.__coreTowerStatsV153 = true;
+    if(window.__coreTowerStatsV154 || !Array.isArray(window.TYPES)) return;
+    window.__coreTowerStatsV154 = true;
     TYPES[0].range = 158;
     TYPES[0].rate = 0.62;
     TYPES[0].damage = 0.72;
@@ -60,9 +62,51 @@
     TYPES[3].damage = 0.52;
   }
 
+  function capTowerUpgrades(){
+    if(window.__coreTowerCapV154 || typeof buildUpgrade !== 'function') return;
+    window.__coreTowerCapV154 = true;
+    const oldBuildUpgrade = buildUpgrade;
+    buildUpgrade = function(){
+      if(window.game && Array.isArray(game.slots)){
+        const slot = game.slots[game.selected];
+        if(slot && !empty(slot) && slot.level >= levelCap){
+          const p = slotPos(game.selected);
+          if(typeof spark === 'function') spark(p.x, p.y, C.white, 6);
+          return;
+        }
+      }
+      oldBuildUpgrade.call(this);
+    };
+
+    if(typeof controls === 'function' && typeof buttonSurface === 'function'){
+      controls = function(){
+        if(!game.running) return;
+        const w = canvas.width * .31;
+        const h = 56;
+        const s = game.slots[game.selected];
+        const tower = TYPES[game.buildType];
+        const capped = !empty(s) && s.level >= levelCap;
+        const buildCost = price(s);
+        const canBuy = !capped && game.money >= buildCost;
+        const b = empty(s) ? 'BUILD $' + BUILD : capped ? 'MAX' : 'UP $' + buildCost;
+        let boost = 'BOOST';
+        let boostState = 'ready';
+        if(s && s.boost > 0){boost = 'BOOST ' + Math.ceil(s.boost) + 's';boostState = 'active'}
+        else if(game.specialCd > 0){boost = 'WAIT ' + Math.ceil(game.specialCd) + 's';boostState = 'cooldown'}
+        buttonSurface(canvas.width * .02, 76, w, h, 'TYPE ' + tower.name, game.input.topLeft, tower.color, {rotate:true});
+        buttonSurface(canvas.width * .345, 76, w, h, b, game.input.topMid, C.blue, {rotate:true, muted:!canBuy, ready:canBuy});
+        buttonSurface(canvas.width * .67, 76, w, h, 'SLOT ' + (game.selected + 1) + '/12', game.input.topRight, C.blue, {rotate:true});
+        const y = canvas.height - 90;
+        buttonSurface(canvas.width * .02, y, w, h, 'ROT ◀', game.input.bottomLeft, C.rose);
+        buttonSurface(canvas.width * .345, y, w, h, boost, game.input.bottomMid, C.rose, {ready:boostState === 'ready'});
+        buttonSurface(canvas.width * .67, y, w, h, 'ROT ▶', game.input.bottomRight, C.rose);
+      };
+    }
+  }
+
   function flattenUpgradeScaling(){
-    if(window.__coreUpgradeScalingV153 || typeof updateTowers !== 'function') return;
-    window.__coreUpgradeScalingV153 = true;
+    if(window.__coreUpgradeScalingV154 || typeof updateTowers !== 'function') return;
+    window.__coreUpgradeScalingV154 = true;
     const oldUpdateTowers = updateTowers;
     const virtualLevel = function(slot){
       const level = Math.max(1, slot.level || 1);
@@ -87,8 +131,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV153 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV153 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV154 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV154 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -104,8 +148,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV153 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV153 = true;
+    if(window.__coreStableSpeedRestoreV154 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV154 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByUnit = new Map();
@@ -123,8 +167,8 @@
   }
 
   function boostSpecialDurability(){
-    if(window.__coreSpecialDurabilityV153 || typeof spawnEnemy !== 'function') return;
-    window.__coreSpecialDurabilityV153 = true;
+    if(window.__coreSpecialDurabilityV154 || typeof spawnEnemy !== 'function') return;
+    window.__coreSpecialDurabilityV154 = true;
     const oldSpawnEnemy = spawnEnemy;
     spawnEnemy = function(){
       const before = window.game && Array.isArray(game.enemies) ? game.enemies.length : 0;
@@ -132,7 +176,7 @@
       if(!window.game || !Array.isArray(game.enemies)) return;
       for(let i = before; i < game.enemies.length; i++){
         const unit = game.enemies[i];
-        if(!unit || !unit.behavior || unit.__specialDurabilityV153) continue;
+        if(!unit || !unit.behavior || unit.__specialDurabilityV154) continue;
         let mult = 1;
         if(unit.behavior === 'swarm') mult = 1.45;
         else if(unit.behavior === 'dash') mult = 1.30;
@@ -141,15 +185,15 @@
         if(mult > 1 && typeof unit.hp === 'number'){
           unit.hp = Math.ceil(unit.hp * mult);
           unit.maxHp = unit.hp;
-          unit.__specialDurabilityV153 = true;
+          unit.__specialDurabilityV154 = true;
         }
       }
     };
   }
 
   function rebalanceTowerRoles(){
-    if(window.__coreTowerRolesV153 || typeof updateTowers !== 'function') return;
-    window.__coreTowerRolesV153 = true;
+    if(window.__coreTowerRolesV154 || typeof updateTowers !== 'function') return;
+    window.__coreTowerRolesV154 = true;
     const oldUpdateTowers = updateTowers;
     updateTowers = function(dt){
       const before = new Map();
@@ -192,6 +236,7 @@
   async function boot(){
     for(const layer of CORE_STACK) await loadLayer(layer);
     tuneTowerStats();
+    capTowerUpgrades();
     flattenUpgradeScaling();
     tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
