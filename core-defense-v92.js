@@ -4,7 +4,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '149';
+  const VERSION = '150';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -44,8 +44,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV149 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV149 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV150 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV150 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -61,8 +61,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV149 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV149 = true;
+    if(window.__coreStableSpeedRestoreV150 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV150 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByUnit = new Map();
@@ -80,8 +80,8 @@
   }
 
   function boostSpecialDurability(){
-    if(window.__coreSpecialDurabilityV149 || typeof spawnEnemy !== 'function') return;
-    window.__coreSpecialDurabilityV149 = true;
+    if(window.__coreSpecialDurabilityV150 || typeof spawnEnemy !== 'function') return;
+    window.__coreSpecialDurabilityV150 = true;
     const oldSpawnEnemy = spawnEnemy;
     spawnEnemy = function(){
       const before = window.game && Array.isArray(game.enemies) ? game.enemies.length : 0;
@@ -89,7 +89,7 @@
       if(!window.game || !Array.isArray(game.enemies)) return;
       for(let i = before; i < game.enemies.length; i++){
         const unit = game.enemies[i];
-        if(!unit || !unit.behavior || unit.__specialDurabilityV149) continue;
+        if(!unit || !unit.behavior || unit.__specialDurabilityV150) continue;
         let mult = 1;
         if(unit.behavior === 'swarm') mult = 1.45;
         else if(unit.behavior === 'dash') mult = 1.30;
@@ -98,7 +98,63 @@
         if(mult > 1 && typeof unit.hp === 'number'){
           unit.hp = Math.ceil(unit.hp * mult);
           unit.maxHp = unit.hp;
-          unit.__specialDurabilityV149 = true;
+          unit.__specialDurabilityV150 = true;
+        }
+      }
+    };
+  }
+
+  function rebalanceTowerRoles(){
+    if(window.__coreTowerRolesV150 || typeof updateTowers !== 'function') return;
+    window.__coreTowerRolesV150 = true;
+    const oldUpdateTowers = updateTowers;
+    updateTowers = function(dt){
+      const before = new Map();
+      if(window.game && Array.isArray(game.enemies)){
+        for(const unit of game.enemies){
+          if(unit) before.set(unit, unit.hp);
+        }
+      }
+      oldUpdateTowers.call(this, dt);
+      if(!window.game || !Array.isArray(game.enemies) || !Array.isArray(game.shots) || !Array.isArray(TYPES)) return;
+
+      function hitBy(typeIndex, unit){
+        const type = TYPES[typeIndex];
+        if(!type) return false;
+        return game.shots.some(function(shot){
+          if(!shot || shot.color !== type.color || shot.life <= 0.06) return false;
+          const endHit = Math.hypot((shot.tx || 0) - unit.x, (shot.ty || 0) - unit.y) < unit.r + 18;
+          const beamHit = shot.beam && Math.hypot((shot.x || 0) - unit.x, (shot.y || 0) - unit.y) < (type.range || 0) + 80;
+          return endHit || beamHit;
+        });
+      }
+
+      for(const unit of game.enemies){
+        if(!unit || !unit.behavior || !before.has(unit)) continue;
+        const dealt = before.get(unit) - unit.hp;
+        if(dealt <= 0) continue;
+
+        const pulse = hitBy(0, unit);
+        const beam = hitBy(1, unit);
+        const freeze = hitBy(2, unit) || unit.slow > 0;
+        const wave = hitBy(3, unit);
+
+        if(pulse && unit.behavior !== 'split'){
+          unit.hp = Math.min(unit.maxHp, unit.hp + dealt * 0.58);
+        }
+        if(unit.behavior === 'armor' && beam){
+          unit.hp -= dealt * 0.28;
+        }
+        if(unit.behavior === 'dash' && freeze){
+          unit.hp -= dealt * 0.18;
+          unit.slow = Math.max(unit.slow || 0, 1.2);
+          unit.dashTime = 0;
+        }
+        if(unit.behavior === 'swarm' && wave){
+          unit.hp -= dealt * 0.26;
+        }
+        if(unit.behavior === 'split' && pulse){
+          unit.hp -= dealt * 0.20;
         }
       }
     };
@@ -109,6 +165,7 @@
     tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
     boostSpecialDurability();
+    rebalanceTowerRoles();
     window.__coreDefenseV92Ready = true;
   }
 
