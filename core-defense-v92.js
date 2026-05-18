@@ -4,7 +4,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '146';
+  const VERSION = '147';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -44,8 +44,8 @@
   }
 
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV146 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV146 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV147 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV147 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -61,8 +61,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV146 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV146 = true;
+    if(window.__coreStableSpeedRestoreV147 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV147 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByEnemy = new Map();
@@ -80,8 +80,8 @@
   }
 
   function strengthenCounters(){
-    if(window.__coreCountersV146 || typeof updateTowers !== 'function') return;
-    window.__coreCountersV146 = true;
+    if(window.__coreCountersV147 || typeof updateTowers !== 'function') return;
+    window.__coreCountersV147 = true;
     const oldUpdateTowers = updateTowers;
     updateTowers = function(dt){
       const hpBefore = new Map();
@@ -110,25 +110,25 @@
         if(dealt <= 0) continue;
 
         let counter = false;
-        let bonus = 0.22;
-        let resist = 0.42;
+        let bonus = 0.35;
+        let resist = 0.70;
 
         if(enemy.behavior === 'split'){
           counter = hitBy(0, enemy);      // Pulse
-          bonus = 0.24;
-          resist = 0.42;
+          bonus = 0.38;
+          resist = 0.68;
         }else if(enemy.behavior === 'armor'){
           counter = hitBy(1, enemy);      // Beam
-          bonus = 0.42;
-          resist = 0.52;
+          bonus = 0.58;
+          resist = 0.78;
         }else if(enemy.behavior === 'dash'){
           counter = hitBy(2, enemy) || enemy.slow > 0; // Freeze
-          bonus = 0.24;
-          resist = 0.42;
+          bonus = 0.40;
+          resist = 0.70;
         }else if(enemy.behavior === 'swarm'){
           counter = hitBy(3, enemy);      // Wave
-          bonus = 0.38;
-          resist = 0.48;
+          bonus = 0.54;
+          resist = 0.74;
         }else{
           continue;
         }
