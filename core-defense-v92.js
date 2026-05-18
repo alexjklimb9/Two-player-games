@@ -4,7 +4,7 @@
   if(window.__coreDefenseV92Loaded) return;
   window.__coreDefenseV92Loaded = true;
 
-  const VERSION = '151';
+  const VERSION = '152';
   const params = new URLSearchParams(window.location.search);
   const isTutorialLevel = params.get('game') === 'core' && params.get('level') === '0';
 
@@ -44,8 +44,8 @@
   }
 
   function tuneTowerStats(){
-    if(window.__coreTowerStatsV151 || !Array.isArray(window.TYPES)) return;
-    window.__coreTowerStatsV151 = true;
+    if(window.__coreTowerStatsV152 || !Array.isArray(window.TYPES)) return;
+    window.__coreTowerStatsV152 = true;
     TYPES[0].range = 158;
     TYPES[0].rate = 0.62;
     TYPES[0].damage = 0.72;
@@ -60,9 +60,32 @@
     TYPES[3].damage = 0.52;
   }
 
+  function flattenUpgradeScaling(){
+    if(window.__coreUpgradeScalingV152 || typeof updateTowers !== 'function') return;
+    window.__coreUpgradeScalingV152 = true;
+    const oldUpdateTowers = updateTowers;
+    const virtualLevel = function(level){
+      return 1 + (Math.max(1, level || 1) - 1) * 0.72;
+    };
+    updateTowers = function(dt){
+      if(!window.game || !Array.isArray(game.slots)) return oldUpdateTowers.call(this, dt);
+      const saved = [];
+      for(const slot of game.slots){
+        if(slot && typeof slot.level === 'number' && slot.level > 1){
+          saved.push([slot, slot.level]);
+          slot.level = virtualLevel(slot.level);
+        }
+      }
+      oldUpdateTowers.call(this, dt);
+      for(const pair of saved){
+        pair[0].level = pair[1];
+      }
+    };
+  }
+
   function tuneTutorialSpeed(){
-    if(!isTutorialLevel || window.__coreTutorialSpeedV151 || typeof update !== 'function') return;
-    window.__coreTutorialSpeedV151 = true;
+    if(!isTutorialLevel || window.__coreTutorialSpeedV152 || typeof update !== 'function') return;
+    window.__coreTutorialSpeedV152 = true;
     const scale = 11 / 6.5;
     const oldUpdate = update;
     update = function(dt){
@@ -78,8 +101,8 @@
   }
 
   function stabilizeEnemySpeedRestore(){
-    if(window.__coreStableSpeedRestoreV151 || typeof updateEnemies !== 'function') return;
-    window.__coreStableSpeedRestoreV151 = true;
+    if(window.__coreStableSpeedRestoreV152 || typeof updateEnemies !== 'function') return;
+    window.__coreStableSpeedRestoreV152 = true;
     const oldUpdateEnemies = updateEnemies;
     updateEnemies = function(dt){
       const speedByUnit = new Map();
@@ -97,8 +120,8 @@
   }
 
   function boostSpecialDurability(){
-    if(window.__coreSpecialDurabilityV151 || typeof spawnEnemy !== 'function') return;
-    window.__coreSpecialDurabilityV151 = true;
+    if(window.__coreSpecialDurabilityV152 || typeof spawnEnemy !== 'function') return;
+    window.__coreSpecialDurabilityV152 = true;
     const oldSpawnEnemy = spawnEnemy;
     spawnEnemy = function(){
       const before = window.game && Array.isArray(game.enemies) ? game.enemies.length : 0;
@@ -106,7 +129,7 @@
       if(!window.game || !Array.isArray(game.enemies)) return;
       for(let i = before; i < game.enemies.length; i++){
         const unit = game.enemies[i];
-        if(!unit || !unit.behavior || unit.__specialDurabilityV151) continue;
+        if(!unit || !unit.behavior || unit.__specialDurabilityV152) continue;
         let mult = 1;
         if(unit.behavior === 'swarm') mult = 1.45;
         else if(unit.behavior === 'dash') mult = 1.30;
@@ -115,15 +138,15 @@
         if(mult > 1 && typeof unit.hp === 'number'){
           unit.hp = Math.ceil(unit.hp * mult);
           unit.maxHp = unit.hp;
-          unit.__specialDurabilityV151 = true;
+          unit.__specialDurabilityV152 = true;
         }
       }
     };
   }
 
   function rebalanceTowerRoles(){
-    if(window.__coreTowerRolesV151 || typeof updateTowers !== 'function') return;
-    window.__coreTowerRolesV151 = true;
+    if(window.__coreTowerRolesV152 || typeof updateTowers !== 'function') return;
+    window.__coreTowerRolesV152 = true;
     const oldUpdateTowers = updateTowers;
     updateTowers = function(dt){
       const before = new Map();
@@ -166,6 +189,7 @@
   async function boot(){
     for(const layer of CORE_STACK) await loadLayer(layer);
     tuneTowerStats();
+    flattenUpgradeScaling();
     tuneTutorialSpeed();
     stabilizeEnemySpeedRestore();
     boostSpecialDurability();
