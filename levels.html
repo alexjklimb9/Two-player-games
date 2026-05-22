@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Choose Level</title>
-    <link rel="stylesheet" href="style.css?v=120" />
-    <link rel="stylesheet" href="level-cards.css?v=120" />
+    <link rel="stylesheet" href="style.css?v=161" />
+    <link rel="stylesheet" href="level-cards.css?v=161" />
   </head>
   <body>
     <main id="app">
@@ -15,11 +15,12 @@
           <h1 id="title">Choose Level</h1>
           <p id="subtitle" class="home-subtitle">Pick a challenge.</p>
           <div id="levelGrid" class="game-grid level-grid"></div>
-          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=120">Back to Games</a></p>
+          <p style="text-align:center;margin-top:22px"><a class="secondary-button" href="./?v=161">Back to Games</a></p>
         </div>
       </section>
     </main>
 
+    <script src="app-config.js?v=161"></script>
     <script>
       const params = new URLSearchParams(window.location.search);
       const game = params.get('game') || 'balance';
@@ -94,7 +95,8 @@
         const levelNumber = level[2];
         const levelClass = levelNumber === 0 ? 'level-tutorial' : levelClasses[levelNumber] || 'level-normal';
         a.className = `game-card level-card ${levelClass}`;
-        a.href = `./?game=${game}&level=${levelNumber}&v=120`;
+        const cacheVersion = (window.AppConfig && window.AppConfig.CACHE_VERSION) || '161';
+        a.href = `./?game=${game}&level=${levelNumber}&v=${cacheVersion}`;
         const kicker = level[3] || (levelNumber === 5 ? 'Endless Mode' : `Difficulty ${levelNumber}`);
         const filled = levelNumber === 0 ? 1 : Math.min(levelNumber, 5);
         const pips = levelNumber === 5

@@ -1,15 +1,10 @@
-// Asteroid Crew v3 clean testing entry
-// Single page-loaded file for Asteroid Crew testing. Keeps legacy files behind one entry point for now.
 (function(){
-  function load(src,done){
-    const s=document.createElement('script');
-    s.src=src;
-    s.onload=done||function(){};
-    document.body.appendChild(s);
+  if (!window.GameScriptLoader) {
+    console.error('GameScriptLoader is missing.');
+    return;
   }
-  load('asteroids-crew-v2.js?v=112',function(){
-    load('asteroid-start-flow-v52.js?v=112',function(){
-      load('asteroid-mode-v50.js?v=112');
-    });
+
+  window.GameScriptLoader.loadScriptChain(['asteroids-crew-v2.js?v=112', 'asteroid-start-flow-v52.js?v=112', 'asteroid-mode-v50.js?v=112'], null, function(src) {
+    console.error('Failed to load chain script:', src);
   });
 })();
