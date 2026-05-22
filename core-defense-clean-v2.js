@@ -409,7 +409,7 @@
     const easy = LV <= 1;
     const enemyType = pickEnemyType();
     const baseHp = easy ? 2.4 + game.wave * 0.55 : 3.2 + game.wave * 0.75 + LV * 0.55;
-    const baseSpeed = easy ? 25 + game.wave * 1.8 : 30 + game.wave * 2.4 + LV * 2.5;
+    const baseSpeed = easy ? 22 + game.wave * 1.35 : 26 + game.wave * 1.75 + LV * 2.0;
     const hp = Math.max(1, Math.ceil(baseHp * enemyType.hpMult));
     const speed = baseSpeed * enemyType.speedMult;
 
