@@ -71,9 +71,44 @@
     </main>
 
     <script src="hero-loader.js?v=161"></script>
-    <script src="app-config.js?v=161"></script>
-    <script src="script-loader.js?v=161"></script>
-    <script src="app-boot.js?v=161"></script>
-
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const selectedGame = params.get('game');
+      const games = {
+        balance: { script: 'balance-board-v2.js?v=161', extraScript: '' },
+        seesaw: { script: 'seesaw-entry-v2.js?v=161', extraScript: '' },
+        asteroids: { script: 'asteroids-crew-v3.js?v=161', extraScript: '' },
+        core: { script: 'core-defense-clean-v2.js?v=161', extraScript: '' },
+        dual: { script: 'dual-gravity-v3.js?v=161', extraScript: '' }
+      };
+      function loadExtraScripts(extraScript) {
+        if (!extraScript) return;
+        extraScript.split('|').forEach(src => {
+          const extra = document.createElement('script');
+          extra.src = src;
+          document.body.appendChild(extra);
+        });
+      }
+      if (selectedGame && games[selectedGame]) {
+        const game = games[selectedGame];
+        document.getElementById('homeScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        if (selectedGame === 'dual') {
+          document.getElementById('gameEyebrow').textContent = 'Two Player Games · Dual Gravity';
+          document.getElementById('gameTitle').textContent = 'Dual Gravity';
+          document.getElementById('gameDescription').textContent = 'Shared-line mirrored gravity co-op with tutorial and progression levels.';
+          document.getElementById('gameTip').textContent = 'Tutorial plus Levels 1–5 are now playable.';
+          document.getElementById('topPlayerLabel').textContent = 'Top Player';
+          document.getElementById('topPlayerInstructions').textContent = 'Walk on the shared line and jump upward.';
+          document.getElementById('bottomPlayerLabel').textContent = 'Bottom Player';
+          document.getElementById('bottomPlayerInstructions').textContent = 'Hang from the same line and jump downward.';
+          document.getElementById('homeButton').href = 'levels.html?game=dual&v=161';
+        }
+        const script = document.createElement('script');
+        script.src = game.script;
+        script.onload = () => loadExtraScripts(game.extraScript);
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 </html>

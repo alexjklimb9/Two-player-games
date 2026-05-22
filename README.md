@@ -26,10 +26,3 @@ A local co-op collection designed for two players sharing one phone.
 
 This repo contains versioned script snapshots (`*-vNN.js`) from game iteration.
 To keep editing safe, this cleanup preserves them, while documenting the currently loaded files above.
-
-
-## Known maintenance notes
-
-- `levels.html` and `index.html` now both use cache version `v=161` for consistency.
-- `dual-gravity-v3.js` no longer attempts to load missing `dual-gravity-level1-polish-v91.js`.
-- Historical versioned files are still present; only scripts referenced by `index.html` are active entry launchers.
