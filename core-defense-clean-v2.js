@@ -17,6 +17,7 @@
 
   const params = new URLSearchParams(location.search);
   const LV = parseInt(params.get('level') || '2', 10) || 2;
+  const IS_TUTORIAL = LV === 0;
   const ENDLESS = LV >= 5;
   const TARGET_WAVES = ({ 0: 3, 1: 5, 2: 8, 3: 12, 4: 15, 5: 999999 }[LV] || 8);
   const LEVEL_CAP = ENDLESS ? 999 : Math.max(1, Math.min(5, LV + 1));
@@ -46,13 +47,13 @@
   ];
 
   const ENEMY_TYPES = [
-    { kind: 'small', color: '#facc15', hpMult: 0.65, speedMult: 1.45, radius: 10, reward: 2 },
-    { kind: 'medium', color: '#a8a29e', hpMult: 1.00, speedMult: 1.00, radius: 15, reward: 3 },
-    { kind: 'large', color: '#f97316', hpMult: 1.85, speedMult: 0.62, radius: 22, reward: 5 }
+    { kind: 'small', color: '#facc15', hpMult: 0.65, speedMult: 1.42, radius: 8, reward: 2 },
+    { kind: 'medium', color: '#a8a29e', hpMult: 0.95, speedMult: 0.98, radius: 12, reward: 3 },
+    { kind: 'large', color: '#f97316', hpMult: 1.65, speedMult: 0.60, radius: 18, reward: 6 }
   ];
 
-  const BUILD_COST = 6;
-  const UPGRADE_COSTS = { 1: 15, 2: 25, 3: 42, 4: 70 };
+  const BUILD_COST = 5;
+  const UPGRADE_COSTS = { 1: 14, 2: 23, 3: 39, 4: 66 };
   const BOOST_COOLDOWN = 10;
   const BOOST_TIME = 4.8;
 
@@ -127,7 +128,7 @@
       spawnPattern: [],
       spawnIndex: 0,
       kills: 0,
-      money: LV <= 1 ? 12 : LV === 2 ? 10 : 8,
+      money: LV <= 1 ? 13 : LV === 2 ? 11 : 9,
       coreHp: LV <= 1 ? 8 : 7,
       maxCoreHp: LV <= 1 ? 8 : 7,
       ringAngle: 0,
@@ -141,6 +142,10 @@
       particles: [],
       input: { topLeft: false, topMid: false, topRight: false, bottomLeft: false, bottomMid: false, bottomRight: false }
     };
+
+    if (IS_TUTORIAL) {
+      game.tutorial = { step: 0, phase: 'build', waveStarted: false, enemiesSpawned: 0, prevCount: 0 };
+    }
   }
 
   initGame();
@@ -274,12 +279,12 @@
   function getSpecialBehavior(kind) {
     const wave = Math.max(1, game.wave);
     const options = [];
-    const chance = Math.min(0.72, 0.22 + wave * 0.025 + Math.max(0, LV - 1) * 0.06);
+    const chance = Math.min(0.74, 0.28 + wave * 0.02 + Math.max(0, LV - 1) * 0.045);
 
-    if (LV >= 1 && wave >= 2 && kind === 'small') options.push('swarm');
-    if (LV >= 2 && wave >= 3 && kind !== 'large') options.push('dash');
-    if (LV >= 3 && wave >= 4 && kind === 'large') options.push('armor');
-    if (LV >= 4 && wave >= 5 && kind === 'medium') options.push('split');
+    if (kind === 'small') options.push('swarm');
+    if (kind !== 'large') options.push('dash');
+    if (kind === 'large') options.push('armor');
+    if (kind === 'medium') options.push('split');
 
     if (!options.length) return null;
 
@@ -293,6 +298,7 @@
   }
 
   function applySpecialBehavior(enemy) {
+    if (IS_TUTORIAL) return;
     const behavior = getSpecialBehavior(enemy.kind);
     if (!behavior) return;
 
@@ -345,7 +351,7 @@
         maxHp: hp,
         speed: enemy.speed * 1.35,
         slow: 0,
-        radius: 9,
+        radius: 7,
         reward: 1,
         kind: 'small',
         color: '#facc15',
@@ -365,7 +371,7 @@
 
     const easy = LV <= 1;
     const base = easy ? 3 : 4;
-    const add = easy ? 1.25 : 1.65;
+    const add = easy ? 1.2 : 1.5;
 
     game.enemiesLeftToSpawn = Math.ceil(base + game.wave * add + Math.max(0, LV - 1));
     game.spawnClock = 0.35;
@@ -384,6 +390,7 @@
   }
 
   function spawnEnemy() {
+    if (IS_TUTORIAL) return;
     const side = game.spawnPattern.length
       ? game.spawnPattern[game.spawnIndex++ % game.spawnPattern.length]
       : Math.floor(Math.random() * 4);
@@ -408,8 +415,8 @@
 
     const easy = LV <= 1;
     const enemyType = pickEnemyType();
-    const baseHp = easy ? 2.4 + game.wave * 0.55 : 3.2 + game.wave * 0.75 + LV * 0.55;
-    const baseSpeed = easy ? 22 + game.wave * 1.35 : 26 + game.wave * 1.75 + LV * 2.0;
+    const baseHp = easy ? 2.25 + game.wave * 0.5 : 3.0 + game.wave * 0.66 + LV * 0.5;
+    const baseSpeed = easy ? 22 : 24;
     const hp = Math.max(1, Math.ceil(baseHp * enemyType.hpMult));
     const speed = baseSpeed * enemyType.speedMult;
 
@@ -464,15 +471,14 @@
   function applyTowerCounter(enemy, towerType, damageDealt) {
     if (!enemy.behavior || damageDealt <= 0) return;
 
-    if (towerType === 0 && enemy.behavior !== 'split') enemy.hp += damageDealt * 0.4;
-    if (towerType === 1 && enemy.behavior === 'armor') enemy.hp -= damageDealt * 0.45;
+    if (towerType === 0 && enemy.behavior === 'split') enemy.hp -= damageDealt * 0.7;
+    if (towerType === 1 && enemy.behavior === 'armor') enemy.hp -= damageDealt * 0.75;
     if (towerType === 2 && enemy.behavior === 'dash') {
-      enemy.hp -= damageDealt * 0.3;
-      enemy.slow = Math.max(enemy.slow || 0, 1.35);
+      enemy.hp -= damageDealt * 0.55;
+      enemy.slow = Math.max(enemy.slow || 0, 1.85);
       enemy.dashTime = 0;
     }
-    if (towerType === 3 && enemy.behavior === 'swarm') enemy.hp -= damageDealt * 0.45;
-    if (towerType === 0 && enemy.behavior === 'split') enemy.hp -= damageDealt * 0.35;
+    if (towerType === 3 && enemy.behavior === 'swarm') enemy.hp -= damageDealt * 0.75;
   }
 
   function updateTowers(dt) {
@@ -577,6 +583,7 @@
   }
 
   function updateWaves(dt) {
+    if (IS_TUTORIAL) return;
     if (!game.waveActive) {
       game.waveTimer -= dt;
       if (game.waveTimer <= 0) startWave();
@@ -585,7 +592,9 @@
 
     game.spawnClock -= dt;
     if (game.enemiesLeftToSpawn > 0 && game.spawnClock <= 0) {
-      game.spawnClock = LV <= 1 ? 0.95 : Math.max(0.48, 1 - game.wave * 0.035 - LV * 0.035);
+      game.spawnClock = LV <= 1
+        ? Math.max(0.62, 0.98 - game.wave * 0.04)
+        : Math.max(0.34, 0.9 - game.wave * 0.045 - LV * 0.02);
       game.enemiesLeftToSpawn -= 1;
       spawnEnemy();
     }
@@ -667,6 +676,7 @@
 
       game.boostCooldown = Math.max(0, game.boostCooldown - dt);
       updateWaves(dt);
+      updateTutorial();
       updateTowers(dt);
       updateEnemies(dt);
       updateShots(dt);
@@ -938,8 +948,13 @@
   function drawControls() {
     if (!game.running) return;
 
-    const w = canvas.width * 0.31;
-    const h = 56;
+    const w = clamp(canvas.width * 0.29, 100, 220);
+    const h = clamp(canvas.height * 0.075, 46, 60);
+    const gap = clamp(canvas.width * 0.02, 8, 18);
+    const xA = Math.max(8, (canvas.width - (w * 3 + gap * 2)) / 2);
+    const xB = xA + w + gap;
+    const xC = xB + w + gap;
+    const topY = clamp(canvas.height * 0.095, 66, 106);
     const slot = game.slots[game.selectedSlot];
     const buildTower = TOWERS[game.buildType];
     const cost = upgradeCost(slot);
@@ -958,22 +973,122 @@
       boostReady = false;
     }
 
-    drawButton(canvas.width * 0.02, 76, w, h, 'TYPE ' + buildTower.name, game.input.topLeft, buildTower.color, { rotate: true });
-    drawButton(canvas.width * 0.345, 76, w, h, buildLabel, game.input.topMid, C.blue, { rotate: true, muted: !canBuy, ready: canBuy });
-    drawButton(canvas.width * 0.67, 76, w, h, 'SLOT ' + (game.selectedSlot + 1) + '/12', game.input.topRight, C.blue, { rotate: true });
+    drawButton(xA, topY, w, h, 'TYPE ' + buildTower.name, game.input.topLeft, buildTower.color, { rotate: true });
+    drawButton(xB, topY, w, h, buildLabel, game.input.topMid, C.blue, { rotate: true, muted: !canBuy, ready: canBuy });
+    drawButton(xC, topY, w, h, 'SLOT ' + (game.selectedSlot + 1) + '/12', game.input.topRight, C.blue, { rotate: true });
 
-    const y = canvas.height - 90;
-    drawButton(canvas.width * 0.02, y, w, h, 'ROT ◀', game.input.bottomLeft, C.rose);
-    drawButton(canvas.width * 0.345, y, w, h, boostLabel, game.input.bottomMid, C.rose, { ready: boostReady });
-    drawButton(canvas.width * 0.67, y, w, h, 'ROT ▶', game.input.bottomRight, C.rose);
+    const y = canvas.height - h - clamp(canvas.height * 0.04, 20, 34);
+    drawButton(xA, y, w, h, 'ROT ◀', game.input.bottomLeft, C.rose);
+    drawButton(xB, y, w, h, boostLabel, game.input.bottomMid, C.rose, { ready: boostReady });
+    drawButton(xC, y, w, h, 'ROT ▶', game.input.bottomRight, C.rose);
+  }
+
+  function tutorialSteps() {
+    return [
+      { tower: 0, enemy: 'split', count: 1, title: 'Pulse vs Split', body: 'Build a Pulse tower. It counters Split enemies.' },
+      { tower: 1, enemy: 'armor', count: 1, title: 'Beam vs Armor', body: 'Build a Beam tower. It melts Armor enemies.' },
+      { tower: 2, enemy: 'dash', count: 2, title: 'Freeze vs Dash', body: 'Build a Freeze tower. It stops Dash bursts.' },
+      { tower: 3, enemy: 'swarm', count: 5, title: 'Wave vs Swarm', body: 'Build a Wave tower. It clears Swarm packs.' }
+    ];
+  }
+
+  function spawnTutorialEnemy(behavior) {
+    const side = game.tutorial.enemiesSpawned % 4;
+    const margin = 34;
+    let x = -margin;
+    let y = centerY();
+    if (side === 1) { x = canvas.width + margin; y = centerY(); }
+    if (side === 2) { x = centerX(); y = -margin; }
+    if (side === 3) { x = centerX(); y = canvas.height + margin; }
+
+    const enemy = { x, y, hp: 6, maxHp: 6, speed: 34, slow: 0, radius: 12, reward: 0, kind: 'medium', color: '#a8a29e', behavior: null };
+    if (behavior === 'swarm') { enemy.kind = 'small'; enemy.radius = 7; enemy.hp = enemy.maxHp = 2; enemy.speed = 44; enemy.color = '#facc15'; }
+    else if (behavior === 'dash') { enemy.hp = enemy.maxHp = 8; enemy.speed = 32; enemy.color = '#fb7185'; enemy.dashCooldown = 0.7; enemy.dashTime = 0; }
+    else if (behavior === 'armor') { enemy.kind = 'large'; enemy.radius = 18; enemy.hp = enemy.maxHp = 16; enemy.speed = 20; enemy.color = '#94a3b8'; }
+    else if (behavior === 'split') { enemy.radius = 12; enemy.hp = enemy.maxHp = 10; enemy.speed = 28; enemy.color = '#c084fc'; enemy.splitDone = false; }
+    enemy.behavior = behavior;
+    game.enemies.push(enemy);
+    game.tutorial.enemiesSpawned += 1;
+  }
+
+  function updateTutorial() {
+    if (!IS_TUTORIAL || !game.running) return;
+    const steps = tutorialSteps();
+    const t = game.tutorial;
+    const step = steps[Math.min(t.step, steps.length - 1)];
+
+    if (!t.waveStarted) {
+      game.money = 40;
+      game.coreHp = 10;
+      game.maxCoreHp = 10;
+      game.wave = 1;
+      t.waveStarted = true;
+      game.buildType = step.tower;
+      t.prevCount = game.slots.filter((s) => s.level > 0 && s.type === step.tower).length;
+    }
+
+    if (t.phase === 'build') {
+      game.buildType = step.tower;
+      const nowCount = game.slots.filter((s) => s.level > 0 && s.type === step.tower).length;
+      if (nowCount > t.prevCount) {
+        t.phase = 'fight';
+        t.enemiesSpawned = 0;
+      }
+      return;
+    }
+
+    if (t.phase === 'fight') {
+      if (game.enemies.length === 0 && t.enemiesSpawned < step.count) {
+        if (step.enemy === 'swarm') for (let i = 0; i < step.count; i++) spawnTutorialEnemy('swarm');
+        else spawnTutorialEnemy(step.enemy);
+      } else if (game.enemies.length === 0 && t.enemiesSpawned >= step.count) {
+        t.step += 1;
+        if (t.step >= steps.length) {
+          endGame('Tutorial complete. You are ready for Core Defense.', true);
+          return;
+        }
+        t.phase = 'build';
+        const nextStep = steps[t.step];
+        game.buildType = nextStep.tower;
+        t.prevCount = game.slots.filter((s) => s.level > 0 && s.type === nextStep.tower).length;
+      }
+    }
+  }
+
+  function drawTutorialMessage() {
+    if (!IS_TUTORIAL || !game.running) return;
+    const steps = tutorialSteps();
+    const t = game.tutorial;
+    const step = steps[Math.min(t.step, steps.length - 1)];
+    const title = t.phase === 'build' ? `Step ${t.step + 1}: ${step.title}` : `Counter Test: ${step.enemy.toUpperCase()}`;
+    const body = t.phase === 'build' ? `${step.body} Use TYPE if needed, then tap BUILD.` : 'Rotate the ring and defeat the spawned enemies.';
+
+    const w = Math.min(canvas.width * 0.92, 540);
+    const h = 88;
+    const x = canvas.width / 2 - w / 2;
+    const y = canvas.height - 210;
+    ctx.save();
+    ctx.fillStyle = 'rgba(17,24,39,.84)';
+    ctx.strokeStyle = 'rgba(255,255,255,.2)';
+    ctx.lineWidth = 1.2;
+    roundedRect(x, y, w, h, 14);
+    ctx.fillStyle = C.white;
+    ctx.font = '900 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(title, x + w / 2, y + 10);
+    ctx.fillStyle = 'rgba(248,250,252,.9)';
+    ctx.font = '700 12px Arial';
+    ctx.fillText(body, x + w / 2, y + 38);
+    ctx.restore();
   }
 
   function drawHud() {
     if (!game.running) return;
 
-    const y = 24;
-    const w = 118;
-    const h = 30;
+    const y = clamp(canvas.height * 0.02, 14, 28);
+    const w = clamp(canvas.width * 0.25, 110, 160);
+    const h = clamp(canvas.height * 0.042, 28, 36);
     const gap = 10;
     const x1 = canvas.width / 2 - (w * 2 + gap) / 2;
     const x2 = x1 + w + gap;
@@ -993,7 +1108,7 @@
       ctx.restore();
     }
 
-    pill(x1, 'Wave ' + Math.max(1, game.wave || 1) + '/' + (ENDLESS ? '∞' : TARGET_WAVES));
+    pill(x1, IS_TUTORIAL ? 'Tutorial' : 'Wave ' + Math.max(1, game.wave || 1) + '/' + (ENDLESS ? '∞' : TARGET_WAVES));
     pill(x2, 'Money $' + game.money);
   }
 
@@ -1006,6 +1121,7 @@
     drawParticles();
     drawHud();
     drawControls();
+    drawTutorialMessage();
 
     const oldHud = document.getElementById('hud');
     if (oldHud) oldHud.style.display = 'none';
