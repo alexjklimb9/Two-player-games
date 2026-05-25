@@ -1,5 +1,5 @@
 (function (global) {
-  const CACHE_VERSION = '161';
+  const CACHE_VERSION = '162';
 
   const GAME_SCRIPTS = {
     balance: 'balance-board-v2.js',
