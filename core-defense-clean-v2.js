@@ -16,7 +16,9 @@
   const finalStats = document.getElementById('finalStats');
 
   const params = new URLSearchParams(location.search);
-  const LV = parseInt(params.get('level') || '2', 10) || 2;
+  const rawLevel = params.get('level');
+  const parsedLevel = Number.parseInt(rawLevel ?? '2', 10);
+  const LV = Number.isNaN(parsedLevel) ? 2 : parsedLevel;
   const IS_TUTORIAL = LV === 0;
   const ENDLESS = LV >= 5;
   const TARGET_WAVES = ({ 0: 3, 1: 5, 2: 8, 3: 12, 4: 15, 5: 999999 }[LV] || 8);
@@ -47,11 +49,13 @@
   ];
 
   const ENEMY_TYPES = [
-    { kind: 'small', color: '#facc15', hpMult: 0.65, speedMult: 1.42, radius: 8, reward: 2 },
-    { kind: 'medium', color: '#a8a29e', hpMult: 0.95, speedMult: 0.98, radius: 12, reward: 3 },
-    { kind: 'large', color: '#f97316', hpMult: 1.65, speedMult: 0.60, radius: 18, reward: 6 }
+    { kind: 'small', color: '#facc15', hpMult: 0.65, speedMult: 1.42, radius: 8 * ENEMY_SIZE_SCALE, reward: 2 },
+    { kind: 'medium', color: '#a8a29e', hpMult: 0.95, speedMult: 0.98, radius: 12 * ENEMY_SIZE_SCALE, reward: 3 },
+    { kind: 'large', color: '#f97316', hpMult: 1.65, speedMult: 0.60, radius: 18 * ENEMY_SIZE_SCALE, reward: 6 }
   ];
 
+  const TOWER_SIZE_SCALE = 0.86;
+  const ENEMY_SIZE_SCALE = 0.86;
   const BUILD_COST = 5;
   const UPGRADE_COSTS = { 1: 14, 2: 23, 3: 39, 4: 66 };
   const BOOST_COOLDOWN = 10;
@@ -314,7 +318,7 @@
     enemy.splitDone = false;
 
     if (behavior === 'swarm') {
-      enemy.radius = Math.max(8, enemy.radius * 0.78);
+      enemy.radius = Math.max(8 * ENEMY_SIZE_SCALE, enemy.radius * 0.78);
       enemy.speed *= 1.35;
       enemy.hp = Math.ceil(enemy.hp * 0.65 * 1.2);
       enemy.reward = Math.max(1, enemy.reward - 1);
@@ -357,7 +361,7 @@
         maxHp: hp,
         speed: enemy.speed * 1.35,
         slow: 0,
-        radius: 7,
+        radius: 7 * ENEMY_SIZE_SCALE,
         reward: 1,
         kind: 'small',
         color: '#facc15',
@@ -754,6 +758,7 @@
 
   function drawTowerShape(type, level, color) {
     ctx.save();
+    ctx.scale(TOWER_SIZE_SCALE, TOWER_SIZE_SCALE);
     ctx.fillStyle = color;
     ctx.strokeStyle = 'rgba(255,255,255,.22)';
     ctx.lineWidth = 1.25;
@@ -804,15 +809,24 @@
       ctx.strokeStyle = selected ? C.white : 'rgba(255,255,255,.18)';
       ctx.lineWidth = selected ? 2.5 : 1.5;
       ctx.beginPath();
-      ctx.arc(0, 0, 24 + (slot.flash || 0) * 5, 0, Math.PI * 2);
+      ctx.arc(0, 0, (24 + (slot.flash || 0) * 5) * TOWER_SIZE_SCALE, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      if (!isEmptySlot(slot)) drawTowerShape(slot.type, slot.level, TOWERS[slot.type].color);
-      else {
+      if (!isEmptySlot(slot)) {
+        drawTowerShape(slot.type, slot.level, TOWERS[slot.type].color);
+        if (slot.boost > 0) {
+          const progress = clamp(slot.boost / BOOST_TIME, 0, 1);
+          ctx.strokeStyle = 'rgba(255,255,255,.92)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, 28 * TOWER_SIZE_SCALE, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress);
+          ctx.stroke();
+        }
+      } else {
         ctx.fillStyle = 'rgba(255,255,255,.22)';
-        ctx.fillRect(-8, -2, 16, 4);
-        ctx.fillRect(-2, -8, 4, 16);
+        ctx.fillRect(-8 * TOWER_SIZE_SCALE, -2 * TOWER_SIZE_SCALE, 16 * TOWER_SIZE_SCALE, 4 * TOWER_SIZE_SCALE);
+        ctx.fillRect(-2 * TOWER_SIZE_SCALE, -8 * TOWER_SIZE_SCALE, 4 * TOWER_SIZE_SCALE, 16 * TOWER_SIZE_SCALE);
       }
       ctx.restore();
 
@@ -825,7 +839,7 @@
         ctx.lineWidth = 2.4;
         ctx.globalAlpha = 0.55 + Math.sin(game.time * 7) * 0.15;
         ctx.beginPath();
-        ctx.arc(0, 0, 30, 0, Math.PI * 2);
+        ctx.arc(0, 0, 30 * TOWER_SIZE_SCALE, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
         ctx.globalAlpha = 1;
@@ -1015,11 +1029,11 @@
       if (side === 3) { x = centerX(); y = canvas.height + margin; }
     }
 
-    const enemy = { x, y, hp: 6, maxHp: 6, speed: 34, slow: 0, radius: 12, reward: 0, kind: 'medium', color: '#a8a29e', behavior: null };
-    if (behavior === 'swarm') { enemy.kind = 'small'; enemy.radius = 7; enemy.hp = enemy.maxHp = 2; enemy.speed = 44; enemy.color = '#facc15'; }
+    const enemy = { x, y, hp: 6, maxHp: 6, speed: 34, slow: 0, radius: 12 * ENEMY_SIZE_SCALE, reward: 0, kind: 'medium', color: '#a8a29e', behavior: null };
+    if (behavior === 'swarm') { enemy.kind = 'small'; enemy.radius = 7 * ENEMY_SIZE_SCALE; enemy.hp = enemy.maxHp = 2; enemy.speed = 44; enemy.color = '#facc15'; }
     else if (behavior === 'dash') { enemy.hp = enemy.maxHp = 8; enemy.speed = 32; enemy.color = '#fb7185'; enemy.dashCooldown = 0.7; enemy.dashTime = 0; }
-    else if (behavior === 'armor') { enemy.kind = 'large'; enemy.radius = 18; enemy.hp = enemy.maxHp = 16; enemy.speed = 20; enemy.color = '#94a3b8'; }
-    else if (behavior === 'split') { enemy.radius = 12; enemy.hp = enemy.maxHp = 10; enemy.speed = 28; enemy.color = '#c084fc'; enemy.splitDone = false; }
+    else if (behavior === 'armor') { enemy.kind = 'large'; enemy.radius = 18 * ENEMY_SIZE_SCALE; enemy.hp = enemy.maxHp = 16; enemy.speed = 20; enemy.color = '#94a3b8'; }
+    else if (behavior === 'split') { enemy.radius = 12 * ENEMY_SIZE_SCALE; enemy.hp = enemy.maxHp = 10; enemy.speed = 28; enemy.color = '#c084fc'; enemy.splitDone = false; }
     enemy.behavior = behavior;
     game.enemies.push(enemy);
     game.tutorial.enemiesSpawned += 1;
