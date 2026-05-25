@@ -144,7 +144,7 @@
     };
 
     if (IS_TUTORIAL) {
-      game.tutorial = { step: 0, phase: 'build', waveStarted: false, enemiesSpawned: 0, prevCount: 0 };
+      game.tutorial = { step: 0, phase: 'build', waveStarted: false, enemiesSpawned: 0, prevCount: 0, messageTime: 999, waitUntil: 0, completed: false };
     }
   }
 
@@ -205,7 +205,13 @@
   function buildOrUpgradeTower() {
     const slot = game.slots[game.selectedSlot];
     const position = slotPosition(game.selectedSlot);
-    const cost = upgradeCost(slot);
+    let cost = upgradeCost(slot);
+
+    if (IS_TUTORIAL && game.tutorial && game.tutorial.phase === 'build' && isEmptySlot(slot)) {
+      const steps = tutorialSteps();
+      const step = steps[Math.min(game.tutorial.step, steps.length - 1)];
+      if (game.buildType === step.tower) cost = 0;
+    }
 
     if (cost === null) {
       spawnParticles(position.x, position.y, C.white, 6);
@@ -985,21 +991,29 @@
 
   function tutorialSteps() {
     return [
-      { tower: 0, enemy: 'split', count: 1, title: 'Pulse vs Split', body: 'Build a Pulse tower. It counters Split enemies.' },
-      { tower: 1, enemy: 'armor', count: 1, title: 'Beam vs Armor', body: 'Build a Beam tower. It melts Armor enemies.' },
-      { tower: 2, enemy: 'dash', count: 2, title: 'Freeze vs Dash', body: 'Build a Freeze tower. It stops Dash bursts.' },
-      { tower: 3, enemy: 'swarm', count: 5, title: 'Wave vs Swarm', body: 'Build a Wave tower. It clears Swarm packs.' }
+      { tower: 0, enemy: 'split', count: 1, title: 'PULSE VS SPLITTERS', body: 'Build a free Pulse tower. Splitters break into small swarm enemies, and Pulse counters them with steady cleanup shots.' },
+      { tower: 1, enemy: 'armor', count: 1, title: 'BEAM VS ARMORED', body: 'Build a free Beam tower. Armored enemies have high health, and Beam counters them with focused damage.' },
+      { tower: 2, enemy: 'dash', count: 2, title: 'FREEZE VS DASHERS', body: 'Build a free Freeze tower. Dashers burst forward, and Freeze counters them by slowing the rush.' },
+      { tower: 3, enemy: 'swarm', count: 5, title: 'WAVE VS SWARM', body: 'Build a free Wave tower. Swarm enemies come in packs, and Wave counters them by hitting groups at once.' }
     ];
   }
 
-  function spawnTutorialEnemy(behavior) {
-    const side = game.tutorial.enemiesSpawned % 4;
+  function spawnTutorialEnemy(behavior, offset = 0) {
     const margin = 34;
     let x = -margin;
     let y = centerY();
-    if (side === 1) { x = canvas.width + margin; y = centerY(); }
-    if (side === 2) { x = centerX(); y = -margin; }
-    if (side === 3) { x = centerX(); y = canvas.height + margin; }
+
+    if (behavior === 'swarm') {
+      const dx = ((offset % 3) - 1) * 18;
+      const dy = (Math.floor(offset / 3) - 1) * 16;
+      x += dx;
+      y += dy;
+    } else {
+      const side = game.tutorial.enemiesSpawned % 4;
+      if (side === 1) { x = canvas.width + margin; y = centerY(); }
+      if (side === 2) { x = centerX(); y = -margin; }
+      if (side === 3) { x = centerX(); y = canvas.height + margin; }
+    }
 
     const enemy = { x, y, hp: 6, maxHp: 6, speed: 34, slow: 0, radius: 12, reward: 0, kind: 'medium', color: '#a8a29e', behavior: null };
     if (behavior === 'swarm') { enemy.kind = 'small'; enemy.radius = 7; enemy.hp = enemy.maxHp = 2; enemy.speed = 44; enemy.color = '#facc15'; }
@@ -1017,40 +1031,55 @@
     const t = game.tutorial;
     const step = steps[Math.min(t.step, steps.length - 1)];
 
+    t.messageTime = Math.max(0, (t.messageTime || 0) - (1 / 60));
+
     if (!t.waveStarted) {
-      game.money = 40;
+      game.money = 20;
       game.coreHp = 10;
       game.maxCoreHp = 10;
       game.wave = 1;
       t.waveStarted = true;
       game.buildType = step.tower;
       t.prevCount = game.slots.filter((s) => s.level > 0 && s.type === step.tower).length;
+      t.messageTime = 999;
     }
 
     if (t.phase === 'build') {
       game.buildType = step.tower;
       const nowCount = game.slots.filter((s) => s.level > 0 && s.type === step.tower).length;
       if (nowCount > t.prevCount) {
+        t.phase = 'explain';
+        t.waitUntil = game.time + 2.5;
+        t.messageTime = 3;
+      }
+      return;
+    }
+
+    if (t.phase === 'explain') {
+      if (game.time >= t.waitUntil) {
         t.phase = 'fight';
         t.enemiesSpawned = 0;
+        t.messageTime = 7;
       }
       return;
     }
 
     if (t.phase === 'fight') {
       if (game.enemies.length === 0 && t.enemiesSpawned < step.count) {
-        if (step.enemy === 'swarm') for (let i = 0; i < step.count; i++) spawnTutorialEnemy('swarm');
+        if (step.enemy === 'swarm') for (let i = 0; i < step.count; i++) spawnTutorialEnemy('swarm', i);
         else spawnTutorialEnemy(step.enemy);
       } else if (game.enemies.length === 0 && t.enemiesSpawned >= step.count) {
         t.step += 1;
         if (t.step >= steps.length) {
-          endGame('Tutorial complete. You are ready for Core Defense.', true);
+          t.completed = true;
+          endGame('Tutorial complete. You learned which towers counter each enemy type.', true);
           return;
         }
         t.phase = 'build';
         const nextStep = steps[t.step];
         game.buildType = nextStep.tower;
         t.prevCount = game.slots.filter((s) => s.level > 0 && s.type === nextStep.tower).length;
+        t.messageTime = 999;
       }
     }
   }
@@ -1060,11 +1089,15 @@
     const steps = tutorialSteps();
     const t = game.tutorial;
     const step = steps[Math.min(t.step, steps.length - 1)];
-    const title = t.phase === 'build' ? `Step ${t.step + 1}: ${step.title}` : `Counter Test: ${step.enemy.toUpperCase()}`;
-    const body = t.phase === 'build' ? `${step.body} Use TYPE if needed, then tap BUILD.` : 'Rotate the ring and defeat the spawned enemies.';
+    const title = t.phase === 'build' ? `Step ${t.step + 1}: ${step.title}` : t.phase === 'fight' ? `Counter Test: ${step.enemy.toUpperCase()}` : 'GOOD COUNTER';
+    const body = t.phase === 'build'
+      ? `${step.body} Use TYPE if needed, then tap BUILD.`
+      : t.phase === 'fight'
+        ? 'Rotate the ring and defeat the spawned enemies.'
+        : 'Nice. Next tower coming up.';
 
     const w = Math.min(canvas.width * 0.92, 540);
-    const h = 88;
+    const h = 96;
     const x = canvas.width / 2 - w / 2;
     const y = canvas.height - 210;
     ctx.save();
