@@ -21,7 +21,7 @@
   const LV = Number.isNaN(parsedLevel) ? 2 : parsedLevel;
   const IS_TUTORIAL = LV === 0;
   const ENDLESS = LV >= 5;
-  const TARGET_WAVES = ({ 0: 3, 1: 5, 2: 8, 3: 12, 4: 15, 5: 999999 }[LV] || 8);
+  const TARGET_WAVES = ({ 0: 3, 1: 5, 2: 10, 3: 15, 4: 20, 5: 999999 }[LV] || 10);
   const LEVEL_CAP = ENDLESS ? 999 : Math.max(1, Math.min(5, LV + 1));
 
   // ============================================================
@@ -48,14 +48,22 @@
     { name: 'Wave', color: '#34d399', range: 168, rate: 0.98, damage: 0.52, kind: 'wave', upgradeScale: 0.72, cone: 1.04 }
   ];
 
+  const TOWER_SIZE_SCALE = 0.86;
+  const ENEMY_SIZE_SCALE = 0.86;
+
   const ENEMY_TYPES = [
     { kind: 'small', color: '#facc15', hpMult: 0.65, speedMult: 1.42, radius: 8 * ENEMY_SIZE_SCALE, reward: 2 },
     { kind: 'medium', color: '#a8a29e', hpMult: 0.95, speedMult: 0.98, radius: 12 * ENEMY_SIZE_SCALE, reward: 3 },
     { kind: 'large', color: '#f97316', hpMult: 1.65, speedMult: 0.60, radius: 18 * ENEMY_SIZE_SCALE, reward: 6 }
   ];
+  const BOSS_TIERS = [
+    { name: 'Sentinel', color: '#ef4444', hpMult: 16.0, speedMult: 0.58, radiusMult: 2.25, rewardMult: 6.0, behavior: 'armor' },
+    { name: 'Overcharger', color: '#f97316', hpMult: 18.5, speedMult: 0.8, radiusMult: 2.0, rewardMult: 6.8, behavior: 'dash' },
+    { name: 'Split Warden', color: '#c084fc', hpMult: 20.5, speedMult: 0.67, radiusMult: 2.15, rewardMult: 7.5, behavior: 'split' },
+    { name: 'Swarm Prime', color: '#facc15', hpMult: 23.5, speedMult: 1.02, radiusMult: 1.85, rewardMult: 8.6, behavior: 'swarm' },
+    { name: 'Apex Obliterator', color: '#22d3ee', hpMult: 31.5, speedMult: 1.1, radiusMult: 2.4, rewardMult: 11.0, behavior: 'armor' }
+  ];
 
-  const TOWER_SIZE_SCALE = 0.86;
-  const ENEMY_SIZE_SCALE = 0.86;
   const BUILD_COST = 5;
   const UPGRADE_COSTS = { 1: 14, 2: 23, 3: 39, 4: 66 };
   const BOOST_COOLDOWN = 10;
@@ -131,6 +139,8 @@
       spawnClock: 0,
       spawnPattern: [],
       spawnIndex: 0,
+      pendingBosses: [],
+      bossesSpawned: false,
       kills: 0,
       money: LV <= 1 ? 13 : LV === 2 ? 11 : 9,
       coreHp: LV <= 1 ? 8 : 7,
@@ -387,6 +397,28 @@
     game.spawnClock = 0.35;
     game.spawnPattern = [];
     game.spawnIndex = 0;
+    game.pendingBosses = [];
+    game.bossesSpawned = false;
+    if (!IS_TUTORIAL) {
+      const standardBossWaves = [5, 10, 15, 20];
+      if (standardBossWaves.includes(game.wave)) {
+        const bossTier = standardBossWaves.indexOf(game.wave);
+        game.pendingBosses.push(bossTier);
+      }
+
+      if (ENDLESS) {
+        if (game.wave === 25) {
+          game.pendingBosses.push(4);
+        } else if (game.wave > 25) {
+          for (let i = 0; i < 5; i++) {
+            if (Math.random() < 0.12) game.pendingBosses.push(i);
+          }
+        }
+      } else if (game.wave === TARGET_WAVES) {
+        const topTier = clamp(LV, 1, 4);
+        game.pendingBosses = Array.from({ length: topTier }, (_, i) => i);
+      }
+    }
 
     const startSide = Math.floor(Math.random() * 4);
     for (let i = 0; i < game.enemiesLeftToSpawn; i++) {
@@ -446,6 +478,49 @@
 
     applySpecialBehavior(enemy);
     game.enemies.push(enemy);
+  }
+
+  function spawnBoss(tier) {
+    const data = BOSS_TIERS[clamp(tier, 0, BOSS_TIERS.length - 1)];
+    const side = Math.floor(Math.random() * 4);
+    const margin = 44;
+    let x;
+    let y;
+    if (side === 0) {
+      x = -margin;
+      y = canvas.height * (0.16 + Math.random() * 0.68);
+    } else if (side === 1) {
+      x = canvas.width + margin;
+      y = canvas.height * (0.16 + Math.random() * 0.68);
+    } else if (side === 2) {
+      x = canvas.width * (0.16 + Math.random() * 0.68);
+      y = -margin;
+    } else {
+      x = canvas.width * (0.16 + Math.random() * 0.68);
+      y = canvas.height + margin;
+    }
+
+    const baseHp = LV <= 1 ? 2.25 + game.wave * 0.5 : 3.0 + game.wave * 0.66 + LV * 0.5;
+    const baseSpeed = LV <= 1 ? 22 : 24;
+    const hp = Math.max(24, Math.ceil(baseHp * data.hpMult));
+    const speed = baseSpeed * data.speedMult;
+
+    game.enemies.push({
+      x,
+      y,
+      hp,
+      maxHp: hp,
+      speed,
+      slow: 0,
+      radius: Math.ceil(18 * ENEMY_SIZE_SCALE * data.radiusMult),
+      reward: Math.ceil(Math.max(8, hp / 6) * data.rewardMult / 6),
+      kind: 'large',
+      color: data.color,
+      behavior: data.behavior,
+      isBoss: true,
+      bossName: data.name
+    });
+    spawnParticles(x, y, data.color, 32);
   }
 
   // ============================================================
@@ -609,7 +684,14 @@
       spawnEnemy();
     }
 
-    if (game.enemiesLeftToSpawn <= 0 && game.enemies.length === 0) {
+    if (game.enemiesLeftToSpawn <= 0 && game.pendingBosses.length && game.enemies.length === 0) {
+      game.bossesSpawned = true;
+      const nextBoss = game.pendingBosses.shift();
+      spawnBoss(nextBoss);
+      game.spawnClock = 0.75;
+    }
+
+    if (game.enemiesLeftToSpawn <= 0 && game.enemies.length === 0 && game.pendingBosses.length === 0) {
       game.waveActive = false;
       game.waveTimer = LV <= 1 ? 3.2 : 2.6;
       if (!ENDLESS && game.wave >= TARGET_WAVES) endGame('You defended the core through every wave.', true);
@@ -856,7 +938,15 @@
       ctx.shadowColor = enemy.color;
       ctx.shadowBlur = enemy.behavior ? 7 : 0;
 
-      if (enemy.behavior === 'swarm') {
+      if (enemy.isBoss) {
+        polygon(8, enemy.radius + 8, game.time * 0.5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, 0, enemy.radius * 0.72, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      } else if (enemy.behavior === 'swarm') {
         polygon(4, enemy.radius + 4, 0.785);
         ctx.fill();
         ctx.stroke();
@@ -893,8 +983,16 @@
         const barWidth = Math.max(28, enemy.radius * 2.1);
         ctx.fillStyle = 'rgba(17,24,39,.8)';
         ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.radius - 12, barWidth, 4);
-        ctx.fillStyle = C.green;
+        ctx.fillStyle = enemy.isBoss ? C.danger : C.green;
         ctx.fillRect(enemy.x - barWidth / 2, enemy.y - enemy.radius - 12, barWidth * clamp(enemy.hp / enemy.maxHp, 0, 1), 4);
+      }
+
+      if (enemy.isBoss) {
+        ctx.fillStyle = C.white;
+        ctx.font = '900 11px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(enemy.bossName || 'Boss', enemy.x, enemy.y - enemy.radius - 16);
       }
     }
   }
